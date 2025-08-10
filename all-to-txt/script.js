@@ -9,6 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileListHeader = document.querySelector('#file-list-container h2');
 
     let processedFiles = [];
+    
+    // Danh sách các phần mở rộng tệp sẽ bị bỏ qua (không phân biệt chữ hoa, chữ thường)
+    const ignoredExtensions = [
+        'png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'ico',
+        'pdf',
+        'exe', 'msi'
+    ];
+
+    const isIgnored = (fileName) => {
+        const extension = fileName.split('.').pop()?.toLowerCase();
+        return extension ? ignoredExtensions.includes(extension) : false;
+    };
+
 
     // --- Hàm xử lý chính ---
     const handleFiles = async (files) => {
@@ -25,8 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             const newFilesArray = await Promise.all(filePromises);
-            const flattenedFiles = newFilesArray.flat(); 
+            // Lọc ra các tệp null (bị bỏ qua) và làm phẳng mảng
+            const flattenedFiles = newFilesArray.flat().filter(file => file !== null);
+            
             processedFiles.push(...flattenedFiles);
+            // Loại bỏ các tệp trùng lặp dựa trên đường dẫn
             const uniqueFiles = processedFiles.reduce((acc, current) => {
                 if (!acc.find(item => item.path === current.path)) {
                     acc.push(current);
@@ -44,15 +60,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const processSingleFile = (file) => {
         return new Promise((resolve, reject) => {
+            const path = file.webkitRelativePath || file.name;
+            
+            // Kiểm tra nếu tệp nên bị bỏ qua
+            if (isIgnored(path)) {
+                console.log(`Bỏ qua tệp bị lọc: ${path}`);
+                resolve(null); // Trả về null để lọc ra sau này
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = (e) => {
-                const path = file.webkitRelativePath || file.name;
                 resolve({ path, content: e.target.result });
             };
             reader.onerror = (e) => {
                 console.error(`Lỗi khi đọc tệp ${file.name}:`, e);
-                reject(e);
+                // Vẫn resolve null để không làm hỏng toàn bộ quá trình
+                resolve(null); 
             };
+            // Cố gắng đọc dưới dạng văn bản
             reader.readAsText(file);
         });
     };
@@ -65,19 +91,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     .then(zip => {
                         const fileReadPromises = [];
                         zip.forEach((relativePath, zipEntry) => {
-                            // Chỉ xử lý tệp, bỏ qua thư mục
-                            if (!zipEntry.dir) {
+                            // Chỉ xử lý tệp (không phải thư mục) và không nằm trong danh sách bỏ qua
+                            if (!zipEntry.dir && !isIgnored(zipEntry.name)) {
                                 const filePromise = zipEntry.async('string').then(content => {
                                     return { path: zipEntry.name, content };
+                                }).catch(err => {
+                                    console.log(`Không thể đọc tệp "${zipEntry.name}" trong ZIP dưới dạng văn bản, có thể đây là tệp nhị phân.`);
+                                    return null; // Bỏ qua tệp này nếu không đọc được
                                 });
                                 fileReadPromises.push(filePromise);
+                            } else if (!zipEntry.dir) {
+                                console.log(`Bỏ qua tệp bị lọc trong ZIP: ${zipEntry.name}`);
                             }
                         });
-                        // Đợi tất cả các tệp trong ZIP được đọc
                         return Promise.all(fileReadPromises);
                     })
                     .then(filesData => {
-                        resolve(filesData);
+                        // Lọc ra các tệp null không đọc được
+                        resolve(filesData.filter(file => file !== null));
                     })
                     .catch(err => {
                         console.error('Lỗi khi giải nén file ZIP:', err);
@@ -146,12 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fileInput.click();
     });
 
-    // Xử lý khi người dùng đã chọn tệp
     fileInput.addEventListener('change', (e) => {
         handleFiles(e.target.files);
     });
 
-    // Xử lý sự kiện kéo-thả
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault(); 
         dropZone.classList.add('drag-over');

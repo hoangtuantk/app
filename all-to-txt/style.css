@@ -127,7 +127,6 @@ header p {
     padding: 0.75rem 1rem;
     border-radius: 6px;
     margin-bottom: 0.5rem;
-
     font-size: 16px;
     color: var(--success-color);
     word-break: break-all;
@@ -144,6 +143,23 @@ header p {
     background-color: transparent !important;
     font-family: var(--font-family);
 }
+
+/* Kiểu cho phần thông báo lọc tệp */
+#filter-info {
+    background-color: var(--secondary-surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--secondary-text-color);
+}
+
+#filter-info strong {
+    color: var(--primary-text-color);
+}
+
 
 /* --- Các nút hành động --- */
 #actions {
@@ -225,6 +241,3 @@ footer {
 ::-webkit-scrollbar-thumb:hover {
     background: #666;
 }
-
-
-
