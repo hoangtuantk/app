@@ -1,0 +1,18 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #1a202c; /* Nền tối */
+    color: #e2e8f0; /* Chữ sáng */
+}
+.container {
+    max-width: 960px;
+}
+.file-list-container {
+    min-height: 150px;
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: #2d3748; /* Nền tối hơn */
+    border-color: #4a5568; /* Viền tối */
+}
+.list-item {
+    border-bottom-color: #4a5568;
+}
