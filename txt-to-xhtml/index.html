@@ -24,6 +24,16 @@
             <button id="decreaseFontBtn" class="font-size-btn-small" title="Giảm cỡ chữ">A-</button>
             <input type="text" id="currentFontSizeInput" class="font-size-input" value="22px" aria-label="Cỡ chữ hiện tại">
             <button id="increaseFontBtn" class="font-size-btn-small" title="Tăng cỡ chữ">A+</button>
+
+            <div class="w-px h-6 bg-gray-600 mx-4"></div>
+
+            <div class="flex items-center gap-2">
+                <label for="xhtmlConversionToggle" class="text-gray-300 font-medium cursor-pointer select-none">XHTML</label>
+                <label class="toggle-switch settings-toggle">
+                    <input type="checkbox" id="xhtmlConversionToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 mt-6">
@@ -196,15 +206,6 @@
             </div>
 
             <div class="p-6 space-y-6 overflow-y-auto">
-                <div class="flex items-center justify-between ">
-                    <label for="xhtmlConversionToggle" class="text-gray-300 font-medium">XHTML</label>
-                    <label class="toggle-switch settings-toggle settings-toggle-red">
-                        <input type="checkbox" id="xhtmlConversionToggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-
-            <hr class="border-gray-600">
 
                 <div class="setting-item-with-options pb-3">
                     <div class="flex items-center justify-between pt-3">
