@@ -102,6 +102,11 @@ const App = {
         this.dom.importRulesFromFileBtn = document.getElementById('importRulesFromFileBtn');
         this.dom.exportRulesToFileBtn = document.getElementById('exportRulesToFileBtn');
         this.dom.importRulesFileInput = document.getElementById('importRulesFileInput');
+        this.dom.autoCapitalizationToggle = document.getElementById('autoCapitalizationToggle');
+        this.dom.capitalizationOptionsBtn = document.getElementById('capitalizationOptionsBtn');
+        this.dom.capitalizationSubOptions = document.getElementById('capitalizationSubOptions');
+        this.dom.subCapitalization_firstLetter = document.getElementById('subCapitalization_firstLetter');
+        this.dom.subCapitalization_afterPunctuation = document.getElementById('subCapitalization_afterPunctuation');
     },
 
     //
@@ -200,10 +205,8 @@ const App = {
             if (forceClose || isOpen) {
                 this.dom.settingsModal.classList.add('hidden');
                 this.dom.settingsOverlay.classList.add('hidden');
-                this.dom.punctuationSubOptions.classList.add('hidden');
                 this._saveState(); 
             } else {
-                this._loadState();
                 this.dom.settingsModal.classList.remove('hidden');
                 this.dom.settingsOverlay.classList.remove('hidden');
             }
@@ -241,6 +244,16 @@ const App = {
             this.dom.punctuationSubOptions.classList.toggle('hidden');
             this._saveState();
         }); 
+        
+        this.dom.capitalizationOptionsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.dom.capitalizationSubOptions.classList.toggle('hidden');
+            this._saveState();
+        });
+
+        this.dom.autoCapitalizationToggle.addEventListener('change', debouncedUpdateAndSave);
+        this.dom.subCapitalization_firstLetter.addEventListener('change', debouncedUpdateAndSave);
+        this.dom.subCapitalization_afterPunctuation.addEventListener('change', debouncedUpdateAndSave);
 
         // Settings controls listeners
         const settingsToggles = [
@@ -272,12 +285,18 @@ const App = {
 
         const state = {
             isPunctuationOptionsOpen: !this.dom.punctuationSubOptions.classList.contains('hidden'),
+            isCapitalizationOptionsOpen: !this.dom.capitalizationSubOptions.classList.contains('hidden'), // Mới
             isXhtmlMode: this.dom.xhtmlConversionToggle.checked,
             autoProcessPunctuation: this.dom.autoProcessPunctuationToggle.checked,
             subPunctuation: {
                 normalizePeriodComma: this.dom.subPunctuationToggle_normalizePeriodComma.checked,
                 formatColon: this.dom.subPunctuationToggle_formatColon.checked,
                 normalizeBrackets: this.dom.subPunctuationToggle_normalizeBrackets.checked,
+            },
+            autoCapitalization: this.dom.autoCapitalizationToggle.checked, // Mới
+            subCapitalization: { // Mới
+                firstLetter: this.dom.subCapitalization_firstLetter.checked,
+                afterPunctuation: this.dom.subCapitalization_afterPunctuation.checked,
             },
             includeHeaderFooter: this.dom.includeHeaderFooterToggle.checked,
             useFilter: this.dom.filterSettingToggle.checked,
@@ -307,9 +326,16 @@ const App = {
         this.dom.xhtmlConversionToggle.checked = state.isXhtmlMode;
         this.dom.autoProcessPunctuationToggle.checked = state.autoProcessPunctuation;
         if (state.subPunctuation) {
-            this.dom.subPunctuationToggle_normalizePeriodComma.checked = state.subPunctuation.normalizePeriodComma ?? true; // Default to true for old states
+            this.dom.subPunctuationToggle_normalizePeriodComma.checked = state.subPunctuation.normalizePeriodComma ?? true;
             this.dom.subPunctuationToggle_formatColon.checked = state.subPunctuation.formatColon ?? true;
             this.dom.subPunctuationToggle_normalizeBrackets.checked = state.subPunctuation.normalizeBrackets ?? true;
+        }
+
+        // Mới: Tải cài đặt viết hoa
+        this.dom.autoCapitalizationToggle.checked = state.autoCapitalization ?? true;
+        if (state.subCapitalization) {
+            this.dom.subCapitalization_firstLetter.checked = state.subCapitalization.firstLetter ?? true;
+            this.dom.subCapitalization_afterPunctuation.checked = state.subCapitalization.afterPunctuation ?? true;
         }
 
         this.dom.includeHeaderFooterToggle.checked = state.includeHeaderFooter;
@@ -323,6 +349,9 @@ const App = {
 
         if (state.isPunctuationOptionsOpen) {
             this.dom.punctuationSubOptions.classList.remove('hidden');
+        }
+        if (state.isCapitalizationOptionsOpen) { // Mới
+            this.dom.capitalizationSubOptions.classList.remove('hidden');
         }
 
         // Apply naming format
@@ -343,6 +372,11 @@ const App = {
         return {
             isXhtmlMode: true,
             autoProcessPunctuation: true,
+            autoCapitalization: true, // Mới
+            subCapitalization: { // Mới
+                firstLetter: true,
+                afterPunctuation: true
+            },
             includeHeaderFooter: true,
             useFilter: false,
             useSyncScroll: false,
@@ -459,7 +493,6 @@ const App = {
 
         if (this.dom.autoProcessPunctuationToggle.checked) {
             if (this.dom.subPunctuationToggle_normalizePeriodComma.checked) {
-                // Combines removing space before and ensuring one space after for period and comma.
                 tempLine = tempLine.replace(/\s*([.,])\s*/g, '$1 ');
             }
             if (this.dom.subPunctuationToggle_formatColon.checked) {
@@ -470,7 +503,6 @@ const App = {
                 const openBrackets = /[\(\[{“‘]/g;
                 const closeBrackets = /[\)\]}”’]/g;
                 const allQuotes = /["']/g;
-                // This rule is more general and should be kept separate
                 tempLine = tempLine.replace(/\s+([\"'‘’“”])/g, '$1'); 
                 
                 tempLine = tempLine.replace(/([\(\[{“‘])\s+/g, '$1');
@@ -521,9 +553,21 @@ const App = {
             }
         }
         
-        tempLine = tempLine.replace(/(:\s+)([^a-zA-ZÀ-ỹ]*)([a-zA-ZÀ-ỹ])/gu, (match, p1, p2, p3) => p1 + p2 + p3.toUpperCase());
-        tempLine = tempLine.replace(/(\.\s+)([^a-zA-ZÀ-ỹ]*)([a-zA-ZÀ-ỹ])/gu, (match, p1, p2, p3) => p1 + p2 + p3.toUpperCase());
-        return this._capitalizeFirstAlphabetic(tempLine);
+        if (this.dom.autoCapitalizationToggle.checked) {
+            // Tùy chọn: Viết hoa sau dấu câu
+            if (this.dom.subCapitalization_afterPunctuation.checked) {
+                // Dấu . : ? ! và xử lý các ký tự không phải chữ cái sau dấu câu
+                tempLine = tempLine.replace(/([.:?!]\s+)([^a-zA-ZÀ-ỹ]*)([a-zA-ZÀ-ỹ])/gu, (match, p1, p2, p3) => {
+                    return p1 + p2 + p3.toUpperCase();
+                });
+            }
+
+            // Tùy chọn: Viết hoa chữ cái đầu dòng
+            if (this.dom.subCapitalization_firstLetter.checked) {
+                tempLine = this._capitalizeFirstAlphabetic(tempLine);
+            }
+        }
+        return tempLine;
     },
     
     _applyFilters(text) {
