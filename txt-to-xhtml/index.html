@@ -237,7 +237,7 @@
                     </div>
                 </div>
 
-                <div class="setting-item-with-options border-b border-gray-700 pb-3">
+                <div class="setting-item-with-options pb-3">
                     <div class="flex items-center justify-between pt-3">
                         <div class="flex items-center">
                             <label for="autoCapitalizationToggle" class="text-gray-300 font-medium">Tự động viết hoa</label>
@@ -267,7 +267,44 @@
                         </div>
                     </div>
                 </div>
-                
+
+                <div class="setting-item-with-options border-b border-gray-700 pb-3">
+                    <div class="flex items-center justify-between pt-3">
+                        <div class="flex items-center">
+                            <label for="autoProcessTitleToggle" class="text-gray-300 font-medium">Tự động xử lý tiêu đề</label>
+                            <button id="titleOptionsBtn" title="Mở tùy chọn chi tiết" class="ml-3 p-1 rounded-full hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            </button>
+                        </div>
+                        <label class="toggle-switch settings-toggle">
+                            <input type="checkbox" id="autoProcessTitleToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="titleSubOptions" class="pl-8 pt-4 space-y-4 hidden">
+                        <div class="flex items-center">
+                            <input id="subTitle_recognizeChapter" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                            <label for="subTitle_recognizeChapter" class="ml-3 block text-sm text-gray-300">Tự nhận diện và xử lý Chương</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="subTitle_insertIntoTitleTag" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                            <label for="subTitle_insertIntoTitleTag" class="ml-3 block text-sm text-gray-300">Tự chèn tiêu đề vào thẻ <code>&lt;title&gt;</code></label>
+                        </div>
+                        <div class="flex items-center">
+                             <label for="subTitle_headingLevelSelect" class="block text-sm text-gray-300 mr-3">Chọn thẻ cho tiêu đề:</label>
+                             <select id="subTitle_headingLevelSelect" class="rule-type-select">
+                                <option value="h1">h1</option>
+                                <option value="h2" selected>h2</option>
+                                <option value="h3">h3</option>
+                                <option value="h4">h4</option>
+                                <option value="h5">h5</option>
+                                <option value="h6">h6</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+           
                 <div class="flex items-center justify-between">
                     <label for="includeHeaderFooterToggle" class="text-gray-300 font-medium">Chèn Header/Footer</label>
                     <label class="toggle-switch settings-toggle">

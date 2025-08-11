@@ -107,6 +107,12 @@ const App = {
         this.dom.capitalizationSubOptions = document.getElementById('capitalizationSubOptions');
         this.dom.subCapitalization_firstLetter = document.getElementById('subCapitalization_firstLetter');
         this.dom.subCapitalization_afterPunctuation = document.getElementById('subCapitalization_afterPunctuation');
+        this.dom.autoProcessTitleToggle = document.getElementById('autoProcessTitleToggle');
+        this.dom.titleOptionsBtn = document.getElementById('titleOptionsBtn');
+        this.dom.titleSubOptions = document.getElementById('titleSubOptions');
+        this.dom.subTitle_recognizeChapter = document.getElementById('subTitle_recognizeChapter');
+        this.dom.subTitle_insertIntoTitleTag = document.getElementById('subTitle_insertIntoTitleTag');
+        this.dom.subTitle_headingLevelSelect = document.getElementById('subTitle_headingLevelSelect');
     },
 
     //
@@ -117,165 +123,131 @@ const App = {
             this._saveState();
         }, this.config.debounceDelay);
 
+        // --- CÁC LISTENER CƠ BẢN ---
         this.dom.convertBtn.addEventListener('click', () => this.performConversion());
         this.dom.copyBtn.addEventListener('click', () => this._copyToClipboard());
         this.dom.clearBtn.addEventListener('click', () => this._clearAll());
         this.dom.exportBtn.addEventListener('click', () => this._handleExport());
-        
-        this.dom.exportOptionSelect.addEventListener('change', () => {
-            this._updateFileNamePreview();
-            debouncedSave();
-        });
-
+        this.dom.exportOptionSelect.addEventListener('change', () => { this._updateFileNamePreview(); debouncedSave(); });
         this.dom.decreaseFontBtn.addEventListener('click', () => this._adjustGlobalFontSize('decrease'));
         this.dom.increaseFontBtn.addEventListener('click', () => this._adjustGlobalFontSize('increase'));
         this.dom.currentFontSizeInput.addEventListener('change', () => this._handleFontSizeInputChange());
-        this.dom.currentFontSizeInput.addEventListener('focus', (event) => {
-            const input = event.target;
-            const value = input.value;
-            const pxIndex = value.indexOf('px');
-            if (pxIndex !== -1) {
-                input.setSelectionRange(0, pxIndex);
-            } else {
-                input.select();
-            }
-        });
-
         this.dom.inputText.addEventListener('input', debouncedUpdateAndSave);
         this.dom.htmlHeaderInput.addEventListener('input', debouncedUpdateAndSave);
         this.dom.htmlFooterInput.addEventListener('input', debouncedUpdateAndSave);
-        this.dom.outputText.addEventListener('input', this._debounce(() => {
-            this._performReverseConversion();
-            this._updateTextareaStats();
-        }, this.config.debounceDelay));
-        
+        this.dom.outputText.addEventListener('input', this._debounce(() => { this._performReverseConversion(); this._updateTextareaStats(); }, this.config.debounceDelay));
         this.dom.inputText.addEventListener('scroll', () => this._syncScroll(this.dom.inputText, this.dom.outputText));
         this.dom.outputText.addEventListener('scroll', () => this._syncScroll(this.dom.outputText, this.dom.inputText));
-
-        this.dom.addFilterRuleBtn.addEventListener('click', () => {
-            this._addFilterRuleRow();
-            this._saveState();
-        });
+        
+        // --- CÁC LISTENER CHO BỘ LỌC, MODAL ---
+        this.dom.addFilterRuleBtn.addEventListener('click', () => { this._addFilterRuleRow(); this._saveState(); });
         this.dom.clearAllFilterRulesBtn.addEventListener('click', () => {
-            this._showConfirmationModal(
-                'Bạn có chắc chắn muốn xóa tất cả các quy tắc lọc không? Hành động này không thể hoàn tác.',
-                () => {
-                    this._clearAllFilterRules();
-                    this._saveState();
-                }
-            );
+            this._showConfirmationModal('Bạn có chắc chắn muốn xóa tất cả các quy tắc lọc không? Hành động này không thể hoàn tác.', () => { this._clearAllFilterRules(); this._saveState(); });
         });
         this.dom.toggleAllFiltersBtn.addEventListener('click', () => this._toggleAllFilterDetails());
-        this.dom.filterRulesContainer.addEventListener('click', (e) => {
-            this._handleFilterRuleActions(e);
-            if (e.target.closest('.action-btn')) {
-                debouncedSave();
-            }
-        });
+        this.dom.filterRulesContainer.addEventListener('click', (e) => { this._handleFilterRuleActions(e); if (e.target.closest('.action-btn')) { debouncedSave(); } });
         this.dom.filterRulesContainer.addEventListener('input', debouncedUpdateAndSave);
         this.dom.filterRulesContainer.addEventListener('change', (e) => {
             if (e.target.classList.contains('rule-type-select')) {
                 const ruleItem = e.target.closest('.filter-rule-item');
-                const newType = e.target.value;
-                if (ruleItem) {
-                    this._switchRuleContentType(ruleItem, newType);
-                }
+                if (ruleItem) this._switchRuleContentType(ruleItem, e.target.value);
             }
             this.updateAndPerformConversion();
             debouncedSave();
         });
-        
-        // Filter rule import/export
         this.dom.exportFilterRulesBtn.addEventListener('click', () => this._exportFilterRules());
         this.dom.importFilterRulesBtn.addEventListener('click', () => this._importFilterRules());
-        this.dom.loadImportedRulesBtn.addEventListener('click', () => {
-            this._loadImportedRules();
-            this._saveState();
-        });
+        this.dom.loadImportedRulesBtn.addEventListener('click', () => { this._loadImportedRules(); this._saveState(); });
         this.dom.closeExportImportAreaBtn.addEventListener('click', () => this.dom.exportImportArea.classList.add('hidden'));
         this.dom.exportRulesToFileBtn.addEventListener('click', () => this._exportRulesToFile());
         this.dom.importRulesFromFileBtn.addEventListener('click', () => this.dom.importRulesFileInput.click());
-        this.dom.importRulesFileInput.addEventListener('change', (e) => {
-            this._importRulesFromFile(e);
-        });
+        this.dom.importRulesFileInput.addEventListener('change', (e) => { this._importRulesFromFile(e); });
+        
+        const advancedSettings = [
+            { toggle: this.dom.autoProcessPunctuationToggle, optionsPanel: this.dom.punctuationSubOptions, optionsBtn: this.dom.punctuationOptionsBtn },
+            { toggle: this.dom.autoCapitalizationToggle, optionsPanel: this.dom.capitalizationSubOptions, optionsBtn: this.dom.capitalizationOptionsBtn },
+            { toggle: this.dom.autoProcessTitleToggle, optionsPanel: this.dom.titleSubOptions, optionsBtn: this.dom.titleOptionsBtn }
+        ];
 
-        // Settings Modal Listeners
         const toggleSettingsModal = (forceClose = false) => {
             const isOpen = !this.dom.settingsModal.classList.contains('hidden');
             if (forceClose || isOpen) {
                 this.dom.settingsModal.classList.add('hidden');
                 this.dom.settingsOverlay.classList.add('hidden');
-                this._saveState(); 
+                
+                // Đóng tất cả các tùy chọn con khi đóng modal
+                advancedSettings.forEach(setting => {
+                    setting.optionsPanel.classList.add('hidden');
+                });
+                
+                this._saveState();
             } else {
                 this.dom.settingsModal.classList.remove('hidden');
                 this.dom.settingsOverlay.classList.remove('hidden');
             }
         };
+
         this.dom.settingsBtn.addEventListener('click', () => toggleSettingsModal());
         this.dom.closeSettingsBtn.addEventListener('click', () => toggleSettingsModal(true));
-        this.dom.settingsModal.addEventListener('click', (e) => {
-            if (e.target === this.dom.settingsModal) {
-                toggleSettingsModal(true);
-            }
-        });
-        
+        this.dom.settingsModal.addEventListener('click', (e) => { if (e.target === this.dom.settingsModal) toggleSettingsModal(true); });
         this.dom.resetSettingsBtn.addEventListener('click', () => {
-            this._showConfirmationModal(
-                'Bạn có chắc muốn reset tất cả cài đặt về mặc định không?',
-                () => {
-                    this._resetSettings();
-                    this._saveState();
-                }
-            );
+            this._showConfirmationModal('Bạn có chắc muốn reset tất cả cài đặt về mặc định không?', () => { this._resetSettings(); this._saveState(); });
         });
-
-        // Confirmation Modal
         this.dom.cancelBtn.addEventListener('click', () => this._hideConfirmationModal());
         this.dom.confirmationOverlay.addEventListener('click', () => this._hideConfirmationModal());
         this.dom.confirmBtn.addEventListener('click', () => {
-            if (this.state.confirmationCallback) {
-                this.state.confirmationCallback();
-            }
+            if (this.state.confirmationCallback) this.state.confirmationCallback();
             this._hideConfirmationModal();
         });
 
-        this.dom.punctuationOptionsBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.dom.punctuationSubOptions.classList.toggle('hidden');
-            this._saveState();
-        }); 
-        
-        this.dom.capitalizationOptionsBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            this.dom.capitalizationSubOptions.classList.toggle('hidden');
-            this._saveState();
-        });
-
-        this.dom.autoCapitalizationToggle.addEventListener('change', debouncedUpdateAndSave);
-        this.dom.subCapitalization_firstLetter.addEventListener('change', debouncedUpdateAndSave);
-        this.dom.subCapitalization_afterPunctuation.addEventListener('change', debouncedUpdateAndSave);
-
-        // Settings controls listeners
-        const settingsToggles = [
-            this.dom.xhtmlConversionToggle, this.dom.autoProcessPunctuationToggle,
-            this.dom.includeHeaderFooterToggle, this.dom.filterSettingToggle,
+        const simpleToggles = [
+            this.dom.xhtmlConversionToggle,
+            this.dom.includeHeaderFooterToggle,
+            this.dom.filterSettingToggle,
             this.dom.syncScrollSettingToggle
         ];
-        settingsToggles.forEach(toggle => toggle.addEventListener('change', debouncedUpdateAndSave));
-        
-        this.dom.nameFormatRadios.forEach(radio => radio.addEventListener('change', () => {
-            this._handleNamingOptionChange();
-            debouncedUpdateAndSave();
-        }));
-        this.dom.customNameFormatInput.addEventListener('input', debouncedUpdateAndSave);
+        simpleToggles.forEach(toggle => {
+            if (toggle) toggle.addEventListener('change', debouncedUpdateAndSave);
+        });
 
-        // Other listeners
+        advancedSettings.forEach(({ toggle, optionsPanel, optionsBtn }) => {
+            if (!toggle) return;
+            toggle.addEventListener('change', () => {
+                const isChecked = toggle.checked;
+                optionsBtn.disabled = !isChecked; 
+                if (!isChecked) {
+                    optionsPanel.classList.add('hidden');
+                }
+                debouncedUpdateAndSave();
+            });
+            optionsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (toggle.checked) {
+                    const isCurrentlyOpen = !optionsPanel.classList.contains('hidden');
+                    advancedSettings.forEach(otherSetting => {
+                        otherSetting.optionsPanel.classList.add('hidden');
+                    });
+                    if (!isCurrentlyOpen) {
+                        optionsPanel.classList.remove('hidden');
+                    }
+                }
+            });
+        });
+
+        const subOptionControls = [
+            this.dom.subPunctuationToggle_normalizePeriodComma, this.dom.subPunctuationToggle_formatColon, this.dom.subPunctuationToggle_normalizeBrackets,
+            this.dom.subCapitalization_firstLetter, this.dom.subCapitalization_afterPunctuation,
+            this.dom.subTitle_recognizeChapter, this.dom.subTitle_insertIntoTitleTag, this.dom.subTitle_headingLevelSelect
+        ];
+        subOptionControls.forEach(control => {
+            if (control) control.addEventListener('change', debouncedUpdateAndSave);
+        });
+
+        this.dom.nameFormatRadios.forEach(radio => radio.addEventListener('change', () => { this._handleNamingOptionChange(); debouncedUpdateAndSave(); }));
+        this.dom.customNameFormatInput.addEventListener('input', debouncedUpdateAndSave);
         window.addEventListener('resize', this._debounce(() => this._syncTextareaHeights(), 100));
         this.dom.inputText.addEventListener('keydown', (e) => this._handleHomeEndKeys(e, this.dom.inputText));
         this.dom.outputText.addEventListener('keydown', (e) => this._handleHomeEndKeys(e, this.dom.outputText));
-        this.dom.subPunctuationToggle_normalizePeriodComma.addEventListener('change', debouncedUpdateAndSave);
-        this.dom.subPunctuationToggle_formatColon.addEventListener('change', debouncedUpdateAndSave);
-        this.dom.subPunctuationToggle_normalizeBrackets.addEventListener('change', debouncedUpdateAndSave);
     },
 
     // --- State Management ---
@@ -284,8 +256,7 @@ const App = {
                        .map(item => this._getRuleDataFromDOM(item));
 
         const state = {
-            isPunctuationOptionsOpen: !this.dom.punctuationSubOptions.classList.contains('hidden'),
-            isCapitalizationOptionsOpen: !this.dom.capitalizationSubOptions.classList.contains('hidden'), // Mới
+            // isPunctuationOptionsOpen, isCapitalizationOptionsOpen, isTitleOptionsOpen ĐÃ ĐƯỢC XÓA
             isXhtmlMode: this.dom.xhtmlConversionToggle.checked,
             autoProcessPunctuation: this.dom.autoProcessPunctuationToggle.checked,
             subPunctuation: {
@@ -293,10 +264,16 @@ const App = {
                 formatColon: this.dom.subPunctuationToggle_formatColon.checked,
                 normalizeBrackets: this.dom.subPunctuationToggle_normalizeBrackets.checked,
             },
-            autoCapitalization: this.dom.autoCapitalizationToggle.checked, // Mới
-            subCapitalization: { // Mới
+            autoCapitalization: this.dom.autoCapitalizationToggle.checked,
+            subCapitalization: {
                 firstLetter: this.dom.subCapitalization_firstLetter.checked,
                 afterPunctuation: this.dom.subCapitalization_afterPunctuation.checked,
+            },
+            autoProcessTitle: this.dom.autoProcessTitleToggle.checked,
+            subTitle: {
+                recognizeChapter: this.dom.subTitle_recognizeChapter.checked,
+                insertIntoTitleTag: this.dom.subTitle_insertIntoTitleTag.checked,
+                headingLevel: this.dom.subTitle_headingLevelSelect.value,
             },
             includeHeaderFooter: this.dom.includeHeaderFooterToggle.checked,
             useFilter: this.dom.filterSettingToggle.checked,
@@ -324,18 +301,28 @@ const App = {
 
         // Apply settings
         this.dom.xhtmlConversionToggle.checked = state.isXhtmlMode;
-        this.dom.autoProcessPunctuationToggle.checked = state.autoProcessPunctuation;
+        
+        this.dom.autoProcessPunctuationToggle.checked = state.autoProcessPunctuation ?? true;
+        this.dom.punctuationOptionsBtn.disabled = !(state.autoProcessPunctuation ?? true);
         if (state.subPunctuation) {
             this.dom.subPunctuationToggle_normalizePeriodComma.checked = state.subPunctuation.normalizePeriodComma ?? true;
             this.dom.subPunctuationToggle_formatColon.checked = state.subPunctuation.formatColon ?? true;
             this.dom.subPunctuationToggle_normalizeBrackets.checked = state.subPunctuation.normalizeBrackets ?? true;
         }
 
-        // Mới: Tải cài đặt viết hoa
         this.dom.autoCapitalizationToggle.checked = state.autoCapitalization ?? true;
+        this.dom.capitalizationOptionsBtn.disabled = !(state.autoCapitalization ?? true);
         if (state.subCapitalization) {
             this.dom.subCapitalization_firstLetter.checked = state.subCapitalization.firstLetter ?? true;
             this.dom.subCapitalization_afterPunctuation.checked = state.subCapitalization.afterPunctuation ?? true;
+        }
+        
+        this.dom.autoProcessTitleToggle.checked = state.autoProcessTitle ?? true;
+        this.dom.titleOptionsBtn.disabled = !(state.autoProcessTitle ?? true);
+        if (state.subTitle) {
+            this.dom.subTitle_recognizeChapter.checked = state.subTitle.recognizeChapter ?? true;
+            this.dom.subTitle_insertIntoTitleTag.checked = state.subTitle.insertIntoTitleTag ?? true;
+            this.dom.subTitle_headingLevelSelect.value = state.subTitle.headingLevel ?? 'h2';
         }
 
         this.dom.includeHeaderFooterToggle.checked = state.includeHeaderFooter;
@@ -346,14 +333,7 @@ const App = {
         this._applyFontSize(parseInt(state.fontSize, 10) || 22);
         this.dom.htmlHeaderInput.value = state.headerContent || this.config.defaultHeader;
         this.dom.htmlFooterInput.value = state.footerContent || this.config.defaultFooter;
-
-        if (state.isPunctuationOptionsOpen) {
-            this.dom.punctuationSubOptions.classList.remove('hidden');
-        }
-        if (state.isCapitalizationOptionsOpen) { // Mới
-            this.dom.capitalizationSubOptions.classList.remove('hidden');
-        }
-
+        
         // Apply naming format
         const nameFormatRadio = document.querySelector(`input[name="nameFormat"][value="${state.nameFormat}"]`);
         if (nameFormatRadio) nameFormatRadio.checked = true;
@@ -372,10 +352,16 @@ const App = {
         return {
             isXhtmlMode: true,
             autoProcessPunctuation: true,
-            autoCapitalization: true, // Mới
-            subCapitalization: { // Mới
+            autoCapitalization: true,
+            subCapitalization: {
                 firstLetter: true,
                 afterPunctuation: true
+            },
+            autoProcessTitle: true,
+            subTitle: {
+                recognizeChapter: true,
+                insertIntoTitleTag: true,
+                headingLevel: 'h2'
             },
             includeHeaderFooter: true,
             useFilter: false,
@@ -583,55 +569,69 @@ const App = {
 
     _buildHtml(lines) {
         if (lines.length === 0) return '';
+    
         let htmlOutput = '';
         let titleForHeader = '';
-        const chapterPattern = /^(?:(thứ)\s*)?(chương)?\s*([\d]+|[a-zA-ZÀ-ỹ\s]+)(?:(?::\s*|\s+)(.*))?$/i;
-        let firstMeaningfulProcessedLine = lines.find(l => l.trim()) || '';
-        
-        if (!firstMeaningfulProcessedLine) return '';
-
-        let match = firstMeaningfulProcessedLine.match(chapterPattern);
         let isChapterLine = false;
-        if (match) {
-            const hasChapterKeyword = (match[1] && match[1].toLowerCase() === 'thứ') || (match[2] && match[2].toLowerCase() === 'chương');
-            const hasNumberOrWord = match[3] && match[3].trim().length > 0;
-            isChapterLine = hasChapterKeyword && hasNumberOrWord;
-        }
-
-        if (isChapterLine) {
-            let chapterNumberDigits = this._convertVietnameseNumberWordsToDigits(match[3].trim());
-            let chapterTitleRaw = match[4] ? match[4].trim() : '';
-
-            if (chapterTitleRaw.toLowerCase().startsWith('chương: ')) {
-                chapterTitleRaw = chapterTitleRaw.substring(8).trim();
-            } else if (chapterTitleRaw.toLowerCase().startsWith('chương ')) {
-                chapterTitleRaw = chapterTitleRaw.substring(7).trim();
+        let linesToProcess = [...lines]; 
+    
+        const firstMeaningfulLine = lines.find(l => l.trim()) || '';
+        if (!firstMeaningfulLine) return '';
+    
+        // Logic xử lý tiêu đề, được điều khiển bởi các công tắc
+        if (this.dom.autoProcessTitleToggle.checked && this.dom.subTitle_recognizeChapter.checked) {
+            const chapterPattern = /^(?:(thứ)\s*)?(chương)?\s*([\d]+|[a-zA-ZÀ-ỹ\s]+)(?:(?::\s*|\s+)(.*))?$/i;
+            const match = firstMeaningfulLine.match(chapterPattern);
+    
+            if (match) {
+                const hasChapterKeyword = (match[1] && match[1].toLowerCase() === 'thứ') || (match[2] && match[2].toLowerCase() === 'chương');
+                const hasNumberOrWord = match[3] && match[3].trim().length > 0;
+                isChapterLine = hasChapterKeyword && hasNumberOrWord;
             }
-
-            titleForHeader = `Chương ${chapterNumberDigits}`;
-            if (chapterTitleRaw) {
-                titleForHeader += `: ${this._capitalizeFirstAlphabetic(chapterTitleRaw)}`;
+    
+            if (isChapterLine) {
+                let chapterNumberDigits = this._convertVietnameseNumberWordsToDigits(match[3].trim());
+                let chapterTitleRaw = match[4] ? match[4].trim() : '';
+    
+                if (chapterTitleRaw.toLowerCase().startsWith('chương: ')) {
+                    chapterTitleRaw = chapterTitleRaw.substring(8).trim();
+                } else if (chapterTitleRaw.toLowerCase().startsWith('chương ')) {
+                    chapterTitleRaw = chapterTitleRaw.substring(7).trim();
+                }
+    
+                titleForHeader = `Chương ${chapterNumberDigits}`;
+                if (chapterTitleRaw) {
+                    titleForHeader += `: ${this._capitalizeFirstAlphabetic(chapterTitleRaw)}`;
+                }
+                titleForHeader = titleForHeader.replace(/\.$/, '');
+    
+                const headingLevel = this.dom.subTitle_headingLevelSelect.value || 'h2';
+                htmlOutput += `<${headingLevel}>${titleForHeader}</${headingLevel}>\n\n`;
+                
+                linesToProcess.shift();
             }
-            titleForHeader = titleForHeader.replace(/\.$/, '');
-            htmlOutput += `<h2>${titleForHeader}</h2>\n\n`;
-            lines.slice(1).forEach(line => {
-                if(line.trim()) htmlOutput += `<p>${line}</p>\n`;
-            });
-        } else {
-            lines.forEach(line => {
-                if(line.trim()) htmlOutput += `<p>${line}</p>\n`;
-            });
         }
-
+    
+        // Xử lý các dòng còn lại
+        linesToProcess.forEach(line => {
+            if(line.trim()) htmlOutput += `<p>${line}</p>\n`;
+        });
+    
+        // Tạo title dự phòng nếu chưa có
         if (!titleForHeader) {
-            titleForHeader = firstMeaningfulProcessedLine.split(/\s+/).slice(0, 5).join(' ').replace(/\.$/, '') || 'Chuyển đổi văn bản';
+            titleForHeader = firstMeaningfulLine.split(/\s+/).slice(0, 5).join(' ').replace(/\.$/, '') || 'Chuyển đổi văn bản';
         }
-
+    
+        // Chèn header/footer và thẻ <title> nếu được chọn
         if (this.dom.includeHeaderFooterToggle.checked) {
             let header = this.dom.htmlHeaderInput.value;
-            header = header.replace(/<title>.*?<\/title>/, `<title>${titleForHeader}</title>`);
+            // Chỉ chèn vào thẻ <title> nếu tùy chọn được bật
+            if (this.dom.autoProcessTitleToggle.checked && this.dom.subTitle_insertIntoTitleTag.checked) {
+                header = header.replace(/<title>.*?<\/title>/, `<title>${titleForHeader}</title>`);
+            }
             htmlOutput = `${header}\n${htmlOutput.trim()}\n${this.dom.htmlFooterInput.value}`;
         }
+    
         return htmlOutput.trim();
     },
 
