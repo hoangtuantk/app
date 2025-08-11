@@ -1,23 +1,22 @@
-/* Apply Inter font to the entire page */
 body {
     font-family: 'Inter', sans-serif;
 }
-/* Hover effect for buttons */
+
 .btn-hover {
     transition: all 0.2s ease-in-out;
 }
+
 .btn-hover:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
-/* Add focus effect for improved visibility */
+
 textarea:focus, input:focus, select:focus {
     box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
     border-color: #60a5fa;
     outline: none;
 }
 
-/* Styles for main toggle switch */
 .toggle-switch {
     position: relative;
     display: inline-block;
@@ -38,7 +37,7 @@ textarea:focus, input:focus, select:focus {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc; /* Default gray color */
+    background-color: #ccc;
     -webkit-transition: .4s;
     transition: .4s;
     border-radius: 34px;
@@ -58,7 +57,7 @@ textarea:focus, input:focus, select:focus {
 }
 
 input:checked + .slider {
-    background-color: #2196F3; /* Blue color when checked */
+    background-color: #2196F3;
 }
 
 input:focus + .slider {
@@ -71,13 +70,12 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
-/* Styles for a smaller toggle switch (for individual filter rules) */
 .toggle-switch-small {
     position: relative;
     display: inline-block;
-    width: 38px; /* Smaller width */
-    height: 22px; /* Smaller height */
-    margin-right: 8px; /* Space between toggle and name */
+    width: 38px;
+    height: 22px;
+    margin-right: 8px;
 }
 
 .toggle-switch-small input {
@@ -102,8 +100,8 @@ input:checked + .slider:before {
 .slider-small:before {
     position: absolute;
     content: "";
-    height: 16px; /* Smaller knob */
-    width: 16px; /* Smaller knob */
+    height: 16px;
+    width: 16px;
     left: 3px;
     bottom: 3px;
     background-color: white;
@@ -113,7 +111,7 @@ input:checked + .slider:before {
 }
 
 .toggle-switch-small input:checked + .slider-small {
-    background-color: #10b981; /* Green when active (default for regular rules) */
+    background-color: #10b981;
 }
 
 .toggle-switch-small input:focus + .slider-small {
@@ -126,38 +124,35 @@ input:checked + .slider:before {
     transform: translateX(16px);
 }
 
-/* Blue toggle for settings panel */
 .settings-toggle input:checked + .slider {
-    background-color: #3b82f6; /* Tailwind blue-500 */
+    background-color: #3b82f6;
 }
 .settings-toggle input:focus + .slider {
     box-shadow: 0 0 1px #3b82f6;
 }
 
-/* Red toggle for important settings */
 .settings-toggle-red input:checked + .slider {
-    background-color: #ef4444; /* Tailwind red-500 */
+    background-color: #ef4444;
 }
 .settings-toggle-red input:focus + .slider {
     box-shadow: 0 0 1px #ef4444;
 }
 
-/* Styles for font size control */
 .font-size-control-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* Space between buttons and input */
-    margin-top: 1.5rem; /* Increased top margin for spacing */
-    margin-bottom: 1rem; /* Space below controls */
+    gap: 8px;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
 }
 .font-size-btn-small {
-    width: 36px; /* Smaller width */
-    height: 36px; /* Smaller height */
-    font-size: 0.9rem; /* Smaller font size for A-/A+ */
-    border-radius: 9999px; /* Fully rounded */
-    background-color: #4b5563; /* bg-gray-700 */
-    color: #e5e7eb; /* text-gray-200 */
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
+    border-radius: 9999px;
+    background-color: #4b5563;
+    color: #e5e7eb;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -167,45 +162,43 @@ input:checked + .slider:before {
     border: none;
 }
 .font-size-btn-small:hover {
-    background-color: #374151; /* hover:bg-gray-600 */
+    background-color: #374151;
     transform: translateY(-1px);
 }
 .font-size-input {
-    width: 80px; /* Adjusted width as per requirement */
+    width: 80px;
     text-align: center;
-    background-color: #4b5563; /* bg-gray-700 */
-    border: 1px solid #6b7280; /* border-gray-600 */
-    border-radius: 0.5rem; /* rounded-md */
-    color: #e5e7eb; /* text-gray-200 */
-    padding: 0.5rem 0.75rem; /* py-2 px-3 */
+    background-color: #4b5563;
+    border: 1px solid #6b7280;
+    border-radius: 0.5rem;
+    color: #e5e7eb;
+    padding: 0.5rem 0.75rem;
     font-size: 1rem;
     transition: all 0.2s ease-in-out;
 }
 .font-size-input:focus {
     outline: none;
-    border-color: #60a5fa; /* focus:border-blue-500 */
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5); /* focus:ring-blue-500 */
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
 }
 
-/* Styles for filter rules container (with fixed height/overflow) */
 #filterRulesContainer {
-    border: 1px solid #4a5568; /* Tailwind dark:border-gray-600 */
-    border-radius: 0.5rem; /* Tailwind rounded-lg */
-    background-color: #2d3748; /* Tailwind dark:bg-gray-700 */
+    border: 1px solid #4a5568;
+    border-radius: 0.5rem;
+    background-color: #2d3748;
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem; /* Space between filter rule items */
-    max-height: 800px; /* Reverted to original height */
-    overflow-y: auto; /* Add scrollbar if content exceeds max-height */
+    gap: 0.5rem;
+    max-height: 800px;
+    overflow-y: auto;
 }
 
-/* Styles for individual filter rule items (details element) */
 .filter-rule-item {
-    background-color: #1f2937; /* bg-gray-800 for individual items */
+    background-color: #1f2937;
     border-radius: 0.5rem;
-    overflow: hidden; /* Ensures rounded corners apply to content */
-    flex-shrink: 0; /* Ensures items don't shrink and force parent to scroll */
+    overflow: hidden;
+    flex-shrink: 0;
 }
 
 .filter-rule-item details {
@@ -219,20 +212,20 @@ input:checked + .slider:before {
     font-weight: 600;
     color: #e5e7eb;
     cursor: pointer;
-    background-color: #374151; /* bg-gray-700 for summary */
-    border-bottom: 1px solid #4a5568; /* Separator */
+    background-color: #374151;
+    border-bottom: 1px solid #4a5568;
     transition: background-color 0.2s ease-in-out;
 }
 
 .filter-rule-item summary:hover {
-    background-color: #4b5563; /* hover:bg-gray-600 */
+    background-color: #4b5563;
 }
 
 .filter-rule-item summary::-webkit-details-marker {
-    display: none; /* Hide default arrow */
+    display: none;
 }
 .filter-rule-item summary::before {
-    content: '▶'; /* Custom arrow */
+    content: '▶';
     margin-right: 0.5rem;
     transition: transform 0.2s ease-in-out;
     transform-origin: center;
@@ -242,24 +235,23 @@ input:checked + .slider:before {
 }
 
 .filter-rule-item .rule-name-input {
-    flex-grow: 1; /* Allow name input to take available space */
-    background-color: transparent; /* Transparent background */
+    flex-grow: 1;
+    background-color: transparent;
     border: none;
     color: #e5e7eb;
     font-weight: 600;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
     transition: background-color 0.2s ease-in-out;
-    cursor: text; /* Indicate it's editable */
+    cursor: text;
 }
 .filter-rule-item .rule-name-input:focus {
-    background-color: #4b5563; /* bg-gray-700 on focus */
+    background-color: #4b5563;
     outline: none;
     box-shadow: none;
-    cursor: text; /* Change cursor to text when editable */
+    cursor: text;
 }
 
-/* Styles for action buttons within rule content */
 .filter-rule-item .action-btn {
     padding: 0.5rem 0.75rem;
     border-radius: 0.375rem;
@@ -268,18 +260,18 @@ input:checked + .slider:before {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: 0.5rem; /* Space between name input and buttons */
+    margin-left: 0.5rem;
 }
 
 .filter-rule-item .move-btn {
-    background-color: #4b5563; /* bg-gray-600 */
+    background-color: #4b5563;
     color: white;
-    padding: 0.5rem; /* Smaller padding for icon-only button */
+    padding: 0.5rem;
 }
 .filter-rule-item .move-btn:hover {
-    background-color: #6b7280; /* hover:bg-gray-500 */
+    background-color: #6b7280;
 }
-/* Yêu cầu 4: Dim and disable move buttons instead of hiding */
+
 .filter-rule-item .move-btn.disabled {
     opacity: 0.4;
     cursor: not-allowed;
@@ -287,64 +279,63 @@ input:checked + .slider:before {
 }
 
 .filter-rule-item .duplicate-btn {
-     background-color: #f59e0b; /* Tailwind bg-amber-500 */
+     background-color: #f59e0b;
      color: white;
 }
 .filter-rule-item .duplicate-btn:hover {
-     background-color: #d97706; /* Tailwind hover:bg-amber-600 */
+     background-color: #d97706;
 }
 
 .filter-rule-item .delete-btn {
-    background-color: #ef4444; /* Tailwind bg-red-500 */
+    background-color: #ef4444;
     color: white;
 }
 
 .filter-rule-item .delete-btn:hover {
-    background-color: #dc2626; /* Tailwind hover:bg-red-600 */
+    background-color: #dc2626;
 }
 
 .filter-rule-item .case-toggle-btn {
-    background-color: #cbd5e0; /* Default gray color for inactive */
-    color: #4a5568; /* Default text color */
+    background-color: #cbd5e0;
+    color: #4a5568;
 }
 
 .filter-rule-item .case-toggle-btn.active {
-    background-color: #10b981; /* Tailwind bg-green-500 for active */
+    background-color: #10b981;
     color: white;
 }
 
 .filter-rule-item .case-toggle-btn:hover {
-    background-color: #94a3b8; /* Darker gray on hover */
+    background-color: #94a3b8;
 }
 
 .filter-rule-item .case-toggle-btn.active:hover {
-    background-color: #059669; /* Darker green on hover */
+    background-color: #059669;
 }
 
 .filter-rule-item .whole-word-toggle-btn {
-    background-color: #cbd5e0; /* Default gray color for inactive */
-    color: #4a5568; /* Default text color */
+    background-color: #cbd5e0;
+    color: #4a5568;
 }
 
 .filter-rule-item .whole-word-toggle-btn.active {
-    background-color: #3b82f6; /* Tailwind bg-blue-500 for active */
+    background-color: #3b82f6;
     color: white;
 }
 
 .filter-rule-item .whole-word-toggle-btn:hover {
-    background-color: #94a3b8; /* Darker gray on hover */
+    background-color: #94a3b8;
 }
 
 .filter-rule-item .whole-word-toggle-btn.active:hover {
-    background-color: #2563eb; /* Darker blue on hover */
+    background-color: #2563eb;
 }
 
-/* Styles for the rule type selector */
 .rule-type-select {
-    background-color: #4b5563; /* bg-gray-600 */
-    color: #e5e7eb; /* text-gray-200 */
-    border: 1px solid #6b7280; /* border-gray-500 */
-    border-radius: 0.375rem; /* rounded-md */
+    background-color: #4b5563; 
+    color: #e5e7eb; 
+    border: 1px solid #6b7280; 
+    border-radius: 0.375rem; 
     padding: 0.25rem 0.5rem;
     margin-left: 0.5rem;
     font-weight: 500;
@@ -352,7 +343,7 @@ input:checked + .slider:before {
 }
 
 
-/* Styles for export/import textarea */
+
 .export-import-area {
     width: 100%;
     min-height: 100px;
@@ -366,66 +357,66 @@ input:checked + .slider:before {
     margin-top: 1rem;
 }
 
-/* Custom CSS to expand details */
+
 .details-container {
     display: grid;
-    grid-template-columns: 1fr; /* Default single column on small screens */
-    gap: 1rem; /* Gap between detail elements */
+    grid-template-columns: 1fr; 
+    gap: 1rem; 
 }
 
-@media (min-width: 1024px) { /* On larger screens, arrange in 2 columns */
+@media (min-width: 1024px) { 
     .details-container {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    /* When a detail element is open, make it span both columns */
+    
     .details-container details[open] {
         grid-column: span 2 / span 2;
     }
 }
 
-/* Custom styles for convert button */
+
 #convertBtn {
-    position: relative; /* Ensure progress bar is positioned relative to the button */
+    position: relative; 
     overflow: hidden;
-    /* Set min-width/height to prevent collapsing before JS runs */
-    min-width: 160px; /* Adjust based on typical text width + padding */
-    min-height: 52px; /* Adjust based on typical text height + padding */
     
-    /* Base button styling */
-    background-color: #2563EB; /* Tailwind blue-600 */
+    min-width: 160px; 
+    min-height: 52px; 
+    
+    
+    background-color: #2563EB; 
     color: white;
     font-weight: 600;
-    padding: 12px 32px; /* py-3 px-8 */
-    border-radius: 8px; /* rounded-lg */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
+    padding: 12px 32px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Ensure text doesn't wrap */
+    
     white-space: nowrap;
 }
 
-/* Progress bar inside the button */
+
 #progressBar {
     position: absolute;
     top: 0;
     left: 0;
     height: 100%;
-    width: 0%; /* Start at 0% width */
-    background-color: rgba(96, 165, 250, 0.75); /* Light blue with transparency */
-    /* Transition currently controlled by JavaScript */
-    z-index: 0; /* Behind the text */
-    opacity: 0; /* Hidden by default */
+    width: 0%; 
+    background-color: rgba(96, 165, 250, 0.75); 
+    
+    z-index: 0; 
+    opacity: 0; 
 }
 
-/* Text inside the button */
+
 #convertBtnText {
-    position: relative; /* Keep text above progress bar */
-    z-index: 1; /* Ensure text is on top */
-    white-space: nowrap; /* Prevent text from wrapping */
+    position: relative; 
+    z-index: 1; 
+    white-space: nowrap; 
 }
-/* Styles for clock at the bottom (more subtle glow) */
+
 @keyframes subtle-glow {
     0%, 100% {
         text-shadow: 0 0 3px rgba(165, 243, 252, 0.3), 0 0 6px rgba(165, 243, 252, 0.2);
@@ -437,30 +428,30 @@ input:checked + .slider:before {
 .subtle-glowing-clock {
     font-family: 'Courier New', Courier, monospace;
     font-size: 1rem;
-    color: #e0f2fe; /* Light blue text color */
+    color: #e0f2fe; 
     animation: subtle-glow 4s ease-in-out infinite;
 }
 
-/* Styles for larger file export notification */
+
 #copyNotification {
-    font-size: 1.1rem; /* Increased font size */
-    padding: 1rem 1.5rem; /* Increased padding */
-    border-radius: 0.75rem; /* More rounded corners */
-    background-color: #1a202c; /* Darker background color */
-    color: #e2e8f0; /* Lighter text color */
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* More prominent shadow */
+    font-size: 1.1rem; 
+    padding: 1rem 1.5rem; 
+    border-radius: 0.75rem; 
+    background-color: #1a202c; 
+    color: #e2e8f0; 
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); 
     text-align: center;
-    /* Changed position from bottom to top */
-    top: 1.25rem; /* top-5 */
-    bottom: auto; /* Unset bottom */
+    
+    top: 1.25rem; 
+    bottom: auto; 
 }
 
-/* Styles for range filter specific elements */
+
 .range-filter-toggle-btn {
-    background-color: #4b5563; /* bg-gray-700 */
-    color: #e5e7eb; /* text-gray-200 */
-    padding: 0.4rem 0.8rem; /* Slightly larger padding */
-    font-size: 0.9rem; /* Slightly larger font size */
+    background-color: #4b5563; 
+    color: #e5e7eb; 
+    padding: 0.4rem 0.8rem; 
+    font-size: 0.9rem; 
     border-radius: 0.25rem;
     font-weight: 600;
     transition: background-color 0.2s ease-in-out;
@@ -468,16 +459,16 @@ input:checked + .slider:before {
     border: none;
 }
 .range-filter-toggle-btn.active {
-    background-color: #3b82f6; /* bg-blue-500 */
+    background-color: #3b82f6; 
 }
 .range-filter-toggle-btn:hover {
-    background-color: #374151; /* hover:bg-gray-600 */
+    background-color: #374151; 
 }
 .range-filter-toggle-btn.active:hover {
-    background-color: #2563eb; /* hover:bg-blue-600 */
+    background-color: #2563eb; 
 }
 
-/* Label for "Thay thế bằng" in range rules, now styled like a button */
+
 .range-replace-label {
     display: inline-flex;
     align-items: center;
