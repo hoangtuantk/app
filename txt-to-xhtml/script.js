@@ -444,7 +444,7 @@ const App = {
         }
         const startTime = Date.now();
         const rawText = rawTextOverride !== null ? rawTextOverride : this.dom.inputText.value;
-    
+
         if (!rawText.trim()) {
             if (rawTextOverride === null) {
                 this.dom.outputText.value = '';
@@ -454,30 +454,46 @@ const App = {
             }
             return '';
         }
-    
+
+        // --- Giai đoạn 1: Xử lý văn bản (Luôn thực hiện) ---
+
+        // 1. Áp dụng bộ lọc (filters)
         let processedText = rawText;
         if (this.dom.filterSettingToggle.checked) {
             processedText = this._applyFilters(processedText);
         }
-    
-        let htmlResult;
+
+        // 2. Áp dụng xử lý từng dòng (chuẩn hóa dấu câu, viết hoa)
+        // Logic này được chuyển ra ngoài để chạy cho cả hai chế độ.
+        processedText = processedText.split('\n')
+                                     .map(line => this._processLine(line))
+                                     .join('\n');
+
+        // --- Giai đoạn 2: Định dạng đầu ra (Tùy thuộc vào chế độ XHTML) ---
+        
+        let finalResult;
+        
         if (this.dom.xhtmlConversionToggle.checked) {
-            const linesForHtml = processedText.split('\n').map(line => this._processLine(line)).filter(line => line);
-            htmlResult = this._buildHtml(linesForHtml, rawText); // Pass rawText for filename generation
+            // Chế độ XHTML BẬT: Chuyển văn bản đã xử lý thành HTML
+            const linesForHtml = processedText.split('\n').filter(line => line.trim());
+            finalResult = this._buildHtml(linesForHtml, rawText); // _buildHtml sẽ thêm thẻ <p>, <h2>, header/footer
+            
             if (rawTextOverride === null) {
                 this.dom.outputLabel.textContent = 'Kết quả XHTML';
                 this.dom.xhtmlExportOption.textContent = 'Kết quả XHTML (.xhtml)';
             }
         } else {
-            htmlResult = processedText;
+            // Chế độ XHTML TẮT: Sử dụng trực tiếp văn bản đã xử lý
+            finalResult = processedText;
+            
             if (rawTextOverride === null) {
                 this.dom.outputLabel.textContent = 'Kết quả Chuyển Đổi';
                 this.dom.xhtmlExportOption.textContent = 'Kết quả Chuyển Đổi (.txt)';
             }
         }
-    
+
         if (rawTextOverride === null) {
-            this.dom.outputText.value = htmlResult;
+            this.dom.outputText.value = finalResult;
             const elapsedTime = Date.now() - startTime;
             const remainingTime = this.config.minBusyDisplayTime - elapsedTime;
             if (remainingTime > 0) {
@@ -487,8 +503,8 @@ const App = {
             this._updateTextareaStats();
             this._updateFileNamePreview();
         }
-    
-        return htmlResult;
+
+        return finalResult;
     },
     
     _performReverseConversion() {
