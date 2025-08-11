@@ -200,6 +200,8 @@ const App = {
             if (forceClose || isOpen) {
                 this.dom.settingsModal.classList.add('hidden');
                 this.dom.settingsOverlay.classList.add('hidden');
+                this.dom.punctuationSubOptions.classList.add('hidden');
+                this._saveState(); 
             } else {
                 this._loadState();
                 this.dom.settingsModal.classList.remove('hidden');
