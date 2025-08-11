@@ -19,7 +19,6 @@ const App = {
         notificationTimeout: null,
         notificationClickListener: null,
         confirmationCallback: null,
-        batchProcessedFiles: [],
     },
 
     // --- DOM ELEMENTS ---
@@ -114,23 +113,6 @@ const App = {
         this.dom.subTitle_recognizeChapter = document.getElementById('subTitle_recognizeChapter');
         this.dom.subTitle_insertIntoTitleTag = document.getElementById('subTitle_insertIntoTitleTag');
         this.dom.subTitle_headingLevelSelect = document.getElementById('subTitle_headingLevelSelect');
-
-        // Batch Processing Elements
-        this.dom.batchProcessBtn = document.getElementById('batchProcessBtn');
-        this.dom.batchProcessOverlay = document.getElementById('batchProcessOverlay');
-        this.dom.batchProcessModal = document.getElementById('batchProcessModal');
-        this.dom.closeBatchProcessModalBtn = document.getElementById('closeBatchProcessModalBtn');
-        this.dom.batchCancelBtn = document.getElementById('batchCancelBtn');
-        this.dom.batchDropzone = document.getElementById('batchDropzone');
-        this.dom.batchSelectFilesBtn = document.getElementById('batchSelectFilesBtn');
-        this.dom.batchFilesInput = document.getElementById('batchFilesInput');
-        this.dom.batchProgressContainer = document.getElementById('batchProgressContainer');
-        this.dom.batchStatusText = document.getElementById('batchStatusText');
-        this.dom.batchProgressPercentage = document.getElementById('batchProgressPercentage');
-        this.dom.batchProgressBar = document.getElementById('batchProgressBar');
-        this.dom.batchLogContainer = document.getElementById('batchLogContainer');
-        this.dom.batchLogOutput = document.getElementById('batchLogOutput');
-        this.dom.batchDownloadBtn = document.getElementById('batchDownloadBtn');
     },
 
     //
@@ -157,18 +139,6 @@ const App = {
         this.dom.inputText.addEventListener('scroll', () => this._syncScroll(this.dom.inputText, this.dom.outputText));
         this.dom.outputText.addEventListener('scroll', () => this._syncScroll(this.dom.outputText, this.dom.inputText));
         
-        // --- BATCH PROCESSING LISTENERS ---
-        this.dom.batchProcessBtn.addEventListener('click', () => this._showBatchModal());
-        this.dom.closeBatchProcessModalBtn.addEventListener('click', () => this._hideBatchModal());
-        this.dom.batchCancelBtn.addEventListener('click', () => this._hideBatchModal());
-        this.dom.batchProcessOverlay.addEventListener('click', () => this._hideBatchModal());
-        this.dom.batchSelectFilesBtn.addEventListener('click', () => this.dom.batchFilesInput.click());
-        this.dom.batchFilesInput.addEventListener('change', (e) => this._handleBatchFiles(e.target.files));
-        this.dom.batchDropzone.addEventListener('dragover', (e) => { e.preventDefault(); e.stopPropagation(); this.dom.batchDropzone.classList.add('dragover'); });
-        this.dom.batchDropzone.addEventListener('dragleave', (e) => { e.preventDefault(); e.stopPropagation(); this.dom.batchDropzone.classList.remove('dragover'); });
-        this.dom.batchDropzone.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); this.dom.batchDropzone.classList.remove('dragover'); this._handleBatchFiles(e.dataTransfer.files); });
-        this.dom.batchDownloadBtn.addEventListener('click', () => this._downloadBatchResults());
-
         // --- CÁC LISTENER CHO BỘ LỌC, MODAL ---
         this.dom.addFilterRuleBtn.addEventListener('click', () => { this._addFilterRuleRow(); this._saveState(); });
         this.dom.clearAllFilterRulesBtn.addEventListener('click', () => {
@@ -438,57 +408,45 @@ const App = {
         this._updateFileNamePreview();
     },
 
-    async performConversion(rawTextOverride = null) {
-        if (rawTextOverride === null) {
-            this._setBusyState(true);
-        }
+    async performConversion() {
+        this._setBusyState(true);
         const startTime = Date.now();
-        const rawText = rawTextOverride !== null ? rawTextOverride : this.dom.inputText.value;
-    
+        const rawText = this.dom.inputText.value;
+
         if (!rawText.trim()) {
-            if (rawTextOverride === null) {
-                this.dom.outputText.value = '';
-                this._setBusyState(false);
-                this._updateTextareaStats();
-                this._updateFileNamePreview();
-            }
-            return '';
+            this.dom.outputText.value = '';
+            this._setBusyState(false);
+            this._updateTextareaStats();
+            this._updateFileNamePreview();
+            return;
         }
-    
+
         let processedText = rawText;
         if (this.dom.filterSettingToggle.checked) {
             processedText = this._applyFilters(processedText);
         }
-    
+
         let htmlResult;
         if (this.dom.xhtmlConversionToggle.checked) {
             const linesForHtml = processedText.split('\n').map(line => this._processLine(line)).filter(line => line);
-            htmlResult = this._buildHtml(linesForHtml, rawText); // Pass rawText for filename generation
-            if (rawTextOverride === null) {
-                this.dom.outputLabel.textContent = 'Kết quả XHTML';
-                this.dom.xhtmlExportOption.textContent = 'Kết quả XHTML (.xhtml)';
-            }
+            htmlResult = this._buildHtml(linesForHtml);
+            this.dom.outputLabel.textContent = 'Kết quả XHTML';
+            this.dom.xhtmlExportOption.textContent = 'Kết quả XHTML (.xhtml)';
         } else {
             htmlResult = processedText;
-            if (rawTextOverride === null) {
-                this.dom.outputLabel.textContent = 'Kết quả Chuyển Đổi';
-                this.dom.xhtmlExportOption.textContent = 'Kết quả Chuyển Đổi (.txt)';
-            }
+            this.dom.outputLabel.textContent = 'Kết quả Chuyển Đổi';
+            this.dom.xhtmlExportOption.textContent = 'Kết quả Chuyển Đổi (.txt)';
         }
-    
-        if (rawTextOverride === null) {
-            this.dom.outputText.value = htmlResult;
-            const elapsedTime = Date.now() - startTime;
-            const remainingTime = this.config.minBusyDisplayTime - elapsedTime;
-            if (remainingTime > 0) {
-                await new Promise(resolve => setTimeout(resolve, remainingTime));
-            }
-            this._setBusyState(false);
-            this._updateTextareaStats();
-            this._updateFileNamePreview();
+
+        this.dom.outputText.value = htmlResult;
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = this.config.minBusyDisplayTime - elapsedTime;
+        if (remainingTime > 0) {
+            await new Promise(resolve => setTimeout(resolve, remainingTime));
         }
-    
-        return htmlResult;
+        this._setBusyState(false);
+        this._updateTextareaStats();
+        this._updateFileNamePreview();
     },
     
     _performReverseConversion() {
@@ -609,7 +567,7 @@ const App = {
         return currentText;
     },
 
-    _buildHtml(lines, originalText = '') {
+    _buildHtml(lines) {
         if (lines.length === 0) return '';
     
         let htmlOutput = '';
@@ -661,8 +619,7 @@ const App = {
     
         // Tạo title dự phòng nếu chưa có
         if (!titleForHeader) {
-            const textForTitle = originalText || lines.join(' ');
-            titleForHeader = textForTitle.trim().split(/\s+/).slice(0, 5).join(' ').replace(/\.$/, '') || 'Chuyển đổi văn bản';
+            titleForHeader = firstMeaningfulLine.split(/\s+/).slice(0, 5).join(' ').replace(/\.$/, '') || 'Chuyển đổi văn bản';
         }
     
         // Chèn header/footer và thẻ <title> nếu được chọn
@@ -1065,158 +1022,6 @@ const App = {
         });
     },
 
-    // --- Batch Processing ---
-    _showBatchModal() {
-        this.dom.batchProcessOverlay.classList.remove('hidden');
-        this.dom.batchProcessModal.classList.remove('hidden');
-        setTimeout(() => {
-            this.dom.batchProcessOverlay.classList.add('visible');
-            this.dom.batchProcessModal.querySelector('.transform').classList.add('scale-100', 'opacity-100');
-            this.dom.batchProcessModal.querySelector('.transform').classList.remove('scale-95', 'opacity-0');
-        }, 10);
-        this._resetBatchModalUI();
-    },
-
-    _hideBatchModal() {
-        this.dom.batchProcessModal.querySelector('.transform').classList.remove('scale-100', 'opacity-100');
-        this.dom.batchProcessModal.querySelector('.transform').classList.add('scale-95', 'opacity-0');
-        this.dom.batchProcessOverlay.classList.remove('visible');
-        setTimeout(() => {
-            this.dom.batchProcessOverlay.classList.add('hidden');
-            this.dom.batchProcessModal.classList.add('hidden');
-        }, 300);
-    },
-    
-    _resetBatchModalUI() {
-        this.dom.batchProgressContainer.classList.add('hidden');
-        this.dom.batchDropzone.classList.remove('hidden');
-        this.dom.batchLogOutput.innerHTML = '';
-        this.dom.batchProgressBar.style.width = '0%';
-        this.dom.batchProgressPercentage.textContent = '0%';
-        this.dom.batchStatusText.textContent = 'Đang chờ tệp...';
-        this.dom.batchDownloadBtn.classList.add('hidden');
-        this.state.batchProcessedFiles = [];
-        this.dom.batchFilesInput.value = ''; // Reset file input
-    },
-    
-    _addBatchLog(message, type = 'info') {
-        const logColors = {
-            info: 'text-gray-400',
-            success: 'text-green-400',
-            error: 'text-red-400',
-            warning: 'text-yellow-400',
-        };
-        const color = logColors[type] || logColors.info;
-        const timestamp = new Date().toLocaleTimeString();
-        this.dom.batchLogOutput.innerHTML += `<span class="${color}">[${timestamp}] ${message}</span>\n`;
-        this.dom.batchLogContainer.scrollTop = this.dom.batchLogContainer.scrollHeight;
-    },
-
-    async _handleBatchFiles(files) {
-        if (files.length === 0) return;
-
-        this.dom.batchDropzone.classList.add('hidden');
-        this.dom.batchProgressContainer.classList.remove('hidden');
-        this._addBatchLog(`Đã nhận ${files.length} mục. Bắt đầu xử lý...`);
-        
-        let fileQueue = [];
-        const zipFiles = Array.from(files).filter(file => file.name.endsWith('.zip'));
-        const otherFiles = Array.from(files).filter(file => !file.name.endsWith('.zip'));
-
-        fileQueue.push(...otherFiles);
-
-        for (const zipFile of zipFiles) {
-            try {
-                this._addBatchLog(`Đang giải nén tệp: ${zipFile.name}...`, 'warning');
-                const jszip = new JSZip();
-                const zip = await jszip.loadAsync(zipFile);
-                for (const filename in zip.files) {
-                    if (!zip.files[filename].dir) {
-                        const fileInZip = zip.files[filename];
-                        const blob = await fileInZip.async('blob');
-                        const extractedFile = new File([blob], fileInZip.name, { type: blob.type });
-                        const supportedExtensions = ['.txt', '.html', '.xhtml'];
-                        if (supportedExtensions.some(ext => extractedFile.name.endsWith(ext))) {
-                           fileQueue.push(extractedFile);
-                           this._addBatchLog(`Đã tìm thấy tệp hợp lệ trong zip: ${extractedFile.name}`);
-                        }
-                    }
-                }
-            } catch (error) {
-                this._addBatchLog(`Lỗi khi giải nén ${zipFile.name}: ${error.message}`, 'error');
-            }
-        }
-        
-        if (fileQueue.length === 0) {
-            this._addBatchLog(`Không tìm thấy tệp hợp lệ để xử lý.`, 'error');
-            this.dom.batchStatusText.textContent = 'Không có tệp hợp lệ.';
-            return;
-        }
-
-        await this._processFileQueue(fileQueue);
-    },
-    
-    async _processFileQueue(queue) {
-        const totalFiles = queue.length;
-        this.state.batchProcessedFiles = [];
-
-        for (let i = 0; i < totalFiles; i++) {
-            const file = queue[i];
-            const currentFileNumber = i + 1;
-
-            this.dom.batchStatusText.textContent = `Đang xử lý: ${file.name} (${currentFileNumber}/${totalFiles})`;
-            this._addBatchLog(`Bắt đầu xử lý tệp ${currentFileNumber}/${totalFiles}: ${file.name}`);
-
-            try {
-                const content = await file.text();
-                const processedContent = await this.performConversion(content);
-
-                const originalName = file.name.split('.').slice(0, -1).join('.');
-                const isXhtml = this.dom.xhtmlConversionToggle.checked;
-                const newExt = isXhtml ? '.xhtml' : '.txt';
-                const newFileName = `${originalName}${newExt}`;
-
-                this.state.batchProcessedFiles.push({ name: newFileName, content: processedContent });
-                this._addBatchLog(`✔ Xử lý thành công: ${file.name} -> ${newFileName}`, 'success');
-
-            } catch (error) {
-                this._addBatchLog(`❌ Lỗi khi xử lý ${file.name}: ${error.message}`, 'error');
-            }
-            
-            // Update progress bar
-            const progress = (currentFileNumber / totalFiles) * 100;
-            this.dom.batchProgressBar.style.width = `${progress}%`;
-            this.dom.batchProgressPercentage.textContent = `${Math.round(progress)}%`;
-
-            // small delay for UI update
-            await new Promise(resolve => setTimeout(resolve, 50));
-        }
-
-        this.dom.batchStatusText.textContent = `Hoàn tất! Đã xử lý ${totalFiles} tệp.`;
-        this._addBatchLog(`--- Xử lý hàng loạt hoàn tất ---`, 'success');
-
-        if(this.state.batchProcessedFiles.length > 0) {
-            this.dom.batchDownloadBtn.classList.remove('hidden');
-        }
-    },
-
-    async _downloadBatchResults() {
-        if (this.state.batchProcessedFiles.length === 0) {
-            this._addBatchLog("Không có tệp nào để tải xuống.", "error");
-            return;
-        }
-
-        this._addBatchLog("Đang nén các tệp kết quả...", "warning");
-        const zip = new JSZip();
-        for (const file of this.state.batchProcessedFiles) {
-            zip.file(file.name, file.content);
-        }
-
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-        this._downloadFile('Processed_Files.zip', zipBlob, 'application/zip');
-        this._addBatchLog("Đã tạo và tải xuống tệp ZIP.", "success");
-    },
-    
     _setBusyState(isBusy) {
         this.dom.convertBtn.disabled = isBusy;
         this.dom.copyBtn.disabled = isBusy;
@@ -1322,7 +1127,7 @@ const App = {
 
     _handleExport() {
         const option = this.dom.exportOptionSelect.value;
-        const baseFileName = this._getFileName(this.dom.inputText.value, this.dom.outputText.value);
+        const baseFileName = this._getFileName();
         let files = [];
 
         if (option === 'html' || option === 'both') {
@@ -1419,7 +1224,7 @@ const App = {
         });
     },
 
-    _getFileName(inputTextValue, outputTextValue) {
+    _getFileName() {
         const now = new Date();
         const dateParts = {
             YYYY: now.getFullYear(),
@@ -1432,8 +1237,8 @@ const App = {
             ampm: now.getHours() >= 12 ? 'pm' : 'am',
         };
         
-        const titleMatch = outputTextValue.match(/<title>(.*?)<\/title>/i);
-        let candidate = (titleMatch && titleMatch[1].trim()) || inputTextValue.trim().split(/\s+/).slice(0, 5).join(' ');
+        const titleMatch = this.dom.outputText.value.match(/<title>(.*?)<\/title>/i);
+        let candidate = (titleMatch && titleMatch[1].trim()) || this.dom.inputText.value.trim().split(/\s+/).slice(0, 5).join(' ');
         const chapterMatch = candidate.match(/^(?:chương\s*(?:thứ\s*)?)\s*([\d]+|[a-zA-ZÀ-ỹ\s]+)/i);
 
         let chapterNumber = '';
@@ -1477,7 +1282,7 @@ const App = {
     
     _updateFileNamePreview() {
         if (!this.dom.fileNamePreview) return;
-        const filename = this._getFileName(this.dom.inputText.value, this.dom.outputText.value);
+        const filename = this._getFileName();
         const exportOption = this.dom.exportOptionSelect.value;
         const isXhtml = this.dom.xhtmlConversionToggle.checked;
         const mainExt = isXhtml ? '.xhtml' : '.txt';
@@ -1517,10 +1322,8 @@ const App = {
     },
 
     _downloadFile(filename, content, mimeType) {
-        const blob = (typeof content === 'string') 
-            ? new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), content], { type: `${mimeType};charset=utf-8` })
-            : new Blob([content], { type: mimeType });
-
+        const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+        const blob = new Blob([bom, content], { type: `${mimeType};charset=utf-8` });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
