@@ -1,17 +1,11 @@
-/**
- * Application Module: Encapsulates all application logic.
- */
 const App = {
     // --- CONFIGURATION ---
     config: {
-        debounceDelay: 300, // Debounce delay for input events
-        minBusyDisplayTime: 200, // Minimum time (ms) to display busy state for progress bar
-        settingsKey: 'textConverterStateV3', // MODIFIED: Updated settings key for new structure
-        // Default header content for exported XHTML
+        debounceDelay: 300,
+        minBusyDisplayTime: 200,
+        settingsKey: 'textConverterStateV3',
         defaultHeader: `<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">\n\n<html xmlns="http://www.w3.org/1999/xhtml">\n<head>\n  <title></title>\n  <link href="../Styles/stylesheet.css" rel="stylesheet" type="text/css"/>\n</head>\n<body>`,
-        // Default footer content for exported XHTML
         defaultFooter: `</body>\n</html>`,
-        // Default filter rules
         defaultFilterRules: [
             { type: 'regular', name: '·', find: "·", replace: "", caseSensitive: false, wholeWord: false, enabled: false, lineMatchMode: 'contains' },
             { type: 'regular', name: 'demo', find: "demo", replace: "demo", caseSensitive: false, wholeWord: false, enabled: false, lineMatchMode: 'contains' }
@@ -20,34 +14,27 @@ const App = {
 
     // --- STATE ---
     state: {
-        isSyncingScroll: false, // Flag to prevent re-entrant scrolling during sync
-        cachedFilterRules: [], // Cache for compiled filter rules (RegExp objects)
-        notificationTimeout: null, // Variable to store notification timeout ID
-        notificationClickListener: null, // Variable to store notification click event listener
-        confirmationCallback: null, // Stores the function to run on confirmation
+        isSyncingScroll: false,
+        cachedFilterRules: [],
+        notificationTimeout: null,
+        notificationClickListener: null,
+        confirmationCallback: null,
     },
 
     // --- DOM ELEMENTS ---
     dom: {},
 
-    /**
-     * Initializes the application.
-     * Caches DOM elements, binds event listeners, loads initial content,
-     * performs an initial conversion, and starts the live clock.
-     */
     init() {
         this._cacheDomElements();
         this._bindEventListeners();
-        this._loadState(); // MODIFIED: Load the entire state
-        this.updateAndPerformConversion(); // Perform initial conversion on startup
-        this._updateClock(); // Update clock immediately
-        setInterval(() => this._updateClock(), 1000); // Update clock every second
-        this._updateTextareaStats(); // Update initial textarea stats
+        this._loadState();
+        this.updateAndPerformConversion();
+        this._updateClock();
+        setInterval(() => this._updateClock(), 1000);
+        this._updateTextareaStats();
     },
 
-    /**
-     * Caches all necessary DOM elements for efficient access.
-     */
+   //
     _cacheDomElements() {
         this.dom.inputText = document.getElementById('inputText');
         this.dom.outputText = document.getElementById('outputText');
@@ -81,7 +68,14 @@ const App = {
         this.dom.outputLabel = document.getElementById('outputLabel');
         this.dom.xhtmlExportOption = this.dom.exportOptionSelect.querySelector('option[value="html"]');
         this.dom.fileNamePreview = document.getElementById('fileNamePreview');
-        
+        this.dom.punctuationOptionsBtn = document.getElementById('punctuationOptionsBtn');
+        this.dom.punctuationSubOptions = document.getElementById('punctuationSubOptions');
+
+        // Punctuation Sub-options
+        this.dom.subPunctuationToggle_normalizePeriodComma = document.getElementById('subPunctuationToggle_normalizePeriodComma');
+        this.dom.subPunctuationToggle_formatColon = document.getElementById('subPunctuationToggle_formatColon');
+        this.dom.subPunctuationToggle_normalizeBrackets = document.getElementById('subPunctuationToggle_normalizeBrackets');    
+
         // Settings Modal Elements
         this.dom.settingsBtn = document.getElementById('settingsBtn');
         this.dom.settingsOverlay = document.getElementById('settingsOverlay');
@@ -110,10 +104,7 @@ const App = {
         this.dom.importRulesFileInput = document.getElementById('importRulesFileInput');
     },
 
-    /**
-     * Attaches all event listeners to DOM elements.
-     * Uses debouncing for input events to optimize performance.
-     */
+    //
     _bindEventListeners() {
         const debouncedSave = this._debounce(() => this._saveState(), 500);
         const debouncedUpdateAndSave = this._debounce(() => {
@@ -121,19 +112,16 @@ const App = {
             this._saveState();
         }, this.config.debounceDelay);
 
-        // Main action buttons
         this.dom.convertBtn.addEventListener('click', () => this.performConversion());
         this.dom.copyBtn.addEventListener('click', () => this._copyToClipboard());
         this.dom.clearBtn.addEventListener('click', () => this._clearAll());
         this.dom.exportBtn.addEventListener('click', () => this._handleExport());
         
-        // UPDATED: Event listener for export option select
         this.dom.exportOptionSelect.addEventListener('change', () => {
             this._updateFileNamePreview();
             debouncedSave();
         });
 
-        // Font size controls
         this.dom.decreaseFontBtn.addEventListener('click', () => this._adjustGlobalFontSize('decrease'));
         this.dom.increaseFontBtn.addEventListener('click', () => this._adjustGlobalFontSize('increase'));
         this.dom.currentFontSizeInput.addEventListener('change', () => this._handleFontSizeInputChange());
@@ -148,7 +136,6 @@ const App = {
             }
         });
 
-        // Input listeners
         this.dom.inputText.addEventListener('input', debouncedUpdateAndSave);
         this.dom.htmlHeaderInput.addEventListener('input', debouncedUpdateAndSave);
         this.dom.htmlFooterInput.addEventListener('input', debouncedUpdateAndSave);
@@ -157,11 +144,9 @@ const App = {
             this._updateTextareaStats();
         }, this.config.debounceDelay));
         
-        // Sync Scroll Listeners
         this.dom.inputText.addEventListener('scroll', () => this._syncScroll(this.dom.inputText, this.dom.outputText));
         this.dom.outputText.addEventListener('scroll', () => this._syncScroll(this.dom.outputText, this.dom.inputText));
 
-        // Filter rule management
         this.dom.addFilterRuleBtn.addEventListener('click', () => {
             this._addFilterRuleRow();
             this._saveState();
@@ -178,13 +163,19 @@ const App = {
         this.dom.toggleAllFiltersBtn.addEventListener('click', () => this._toggleAllFilterDetails());
         this.dom.filterRulesContainer.addEventListener('click', (e) => {
             this._handleFilterRuleActions(e);
-            // Save state on actions like delete, move, duplicate
             if (e.target.closest('.action-btn')) {
                 debouncedSave();
             }
         });
         this.dom.filterRulesContainer.addEventListener('input', debouncedUpdateAndSave);
-        this.dom.filterRulesContainer.addEventListener('change', () => {
+        this.dom.filterRulesContainer.addEventListener('change', (e) => {
+            if (e.target.classList.contains('rule-type-select')) {
+                const ruleItem = e.target.closest('.filter-rule-item');
+                const newType = e.target.value;
+                if (ruleItem) {
+                    this._switchRuleContentType(ruleItem, newType);
+                }
+            }
             this.updateAndPerformConversion();
             debouncedSave();
         });
@@ -200,7 +191,7 @@ const App = {
         this.dom.exportRulesToFileBtn.addEventListener('click', () => this._exportRulesToFile());
         this.dom.importRulesFromFileBtn.addEventListener('click', () => this.dom.importRulesFileInput.click());
         this.dom.importRulesFileInput.addEventListener('change', (e) => {
-            this._importRulesFromFile(e); // This will trigger load and save
+            this._importRulesFromFile(e);
         });
 
         // Settings Modal Listeners
@@ -210,7 +201,7 @@ const App = {
                 this.dom.settingsModal.classList.add('hidden');
                 this.dom.settingsOverlay.classList.add('hidden');
             } else {
-                this._loadState(); // Reload state from storage before showing
+                this._loadState();
                 this.dom.settingsModal.classList.remove('hidden');
                 this.dom.settingsOverlay.classList.remove('hidden');
             }
@@ -224,7 +215,7 @@ const App = {
         });
         
         this.dom.resetSettingsBtn.addEventListener('click', () => {
-             this._showConfirmationModal(
+            this._showConfirmationModal(
                 'Bạn có chắc muốn reset tất cả cài đặt về mặc định không?',
                 () => {
                     this._resetSettings();
@@ -232,7 +223,7 @@ const App = {
                 }
             );
         });
-        
+
         // Confirmation Modal
         this.dom.cancelBtn.addEventListener('click', () => this._hideConfirmationModal());
         this.dom.confirmationOverlay.addEventListener('click', () => this._hideConfirmationModal());
@@ -242,6 +233,12 @@ const App = {
             }
             this._hideConfirmationModal();
         });
+
+        this.dom.punctuationOptionsBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.dom.punctuationSubOptions.classList.toggle('hidden');
+            this._saveState();
+        }); 
 
         // Settings controls listeners
         const settingsToggles = [
@@ -261,16 +258,25 @@ const App = {
         window.addEventListener('resize', this._debounce(() => this._syncTextareaHeights(), 100));
         this.dom.inputText.addEventListener('keydown', (e) => this._handleHomeEndKeys(e, this.dom.inputText));
         this.dom.outputText.addEventListener('keydown', (e) => this._handleHomeEndKeys(e, this.dom.outputText));
+        this.dom.subPunctuationToggle_normalizePeriodComma.addEventListener('change', debouncedUpdateAndSave);
+        this.dom.subPunctuationToggle_formatColon.addEventListener('change', debouncedUpdateAndSave);
+        this.dom.subPunctuationToggle_normalizeBrackets.addEventListener('change', debouncedUpdateAndSave);
     },
-    
+
     // --- State Management ---
     _saveState() {
         const rules = Array.from(this.dom.filterRulesContainer.querySelectorAll('.filter-rule-item'))
                        .map(item => this._getRuleDataFromDOM(item));
 
         const state = {
+            isPunctuationOptionsOpen: !this.dom.punctuationSubOptions.classList.contains('hidden'),
             isXhtmlMode: this.dom.xhtmlConversionToggle.checked,
             autoProcessPunctuation: this.dom.autoProcessPunctuationToggle.checked,
+            subPunctuation: {
+                normalizePeriodComma: this.dom.subPunctuationToggle_normalizePeriodComma.checked,
+                formatColon: this.dom.subPunctuationToggle_formatColon.checked,
+                normalizeBrackets: this.dom.subPunctuationToggle_normalizeBrackets.checked,
+            },
             includeHeaderFooter: this.dom.includeHeaderFooterToggle.checked,
             useFilter: this.dom.filterSettingToggle.checked,
             useSyncScroll: this.dom.syncScrollSettingToggle.checked,
@@ -298,6 +304,12 @@ const App = {
         // Apply settings
         this.dom.xhtmlConversionToggle.checked = state.isXhtmlMode;
         this.dom.autoProcessPunctuationToggle.checked = state.autoProcessPunctuation;
+        if (state.subPunctuation) {
+            this.dom.subPunctuationToggle_normalizePeriodComma.checked = state.subPunctuation.normalizePeriodComma ?? true; // Default to true for old states
+            this.dom.subPunctuationToggle_formatColon.checked = state.subPunctuation.formatColon ?? true;
+            this.dom.subPunctuationToggle_normalizeBrackets.checked = state.subPunctuation.normalizeBrackets ?? true;
+        }
+
         this.dom.includeHeaderFooterToggle.checked = state.includeHeaderFooter;
         this.dom.filterSettingToggle.checked = state.useFilter;
         this.dom.syncScrollSettingToggle.checked = state.useSyncScroll;
@@ -307,6 +319,10 @@ const App = {
         this.dom.htmlHeaderInput.value = state.headerContent || this.config.defaultHeader;
         this.dom.htmlFooterInput.value = state.footerContent || this.config.defaultFooter;
 
+        if (state.isPunctuationOptionsOpen) {
+            this.dom.punctuationSubOptions.classList.remove('hidden');
+        }
+
         // Apply naming format
         const nameFormatRadio = document.querySelector(`input[name="nameFormat"][value="${state.nameFormat}"]`);
         if (nameFormatRadio) nameFormatRadio.checked = true;
@@ -314,9 +330,9 @@ const App = {
         this._handleNamingOptionChange();
 
         // Apply filter rules
-        this.dom.filterRulesContainer.innerHTML = ''; // Clear defaults
+        this.dom.filterRulesContainer.innerHTML = '';
         const rulesToLoad = state.filterRules && state.filterRules.length > 0 ? state.filterRules : this.config.defaultFilterRules;
-        rulesToLoad.forEach(rule => this._addFilterRuleRow(rule, null, true)); // Pass true to prevent saving during load
+        rulesToLoad.forEach(rule => this._addFilterRuleRow(rule, null, true));
 
         this.updateAndPerformConversion();
     },
@@ -326,7 +342,7 @@ const App = {
             isXhtmlMode: true,
             autoProcessPunctuation: true,
             includeHeaderFooter: true,
-            useFilter: false, // MODIFIED: Default filter is off
+            useFilter: false,
             useSyncScroll: false,
             nameFormat: 'chapter_prefix',
             customNameFormat: '[YYYY-MM-DD_HH-mm-ss]_[CHUONG]',
@@ -340,7 +356,7 @@ const App = {
 
     _resetSettings() {
         localStorage.removeItem(this.config.settingsKey);
-        this._loadState(); // Load and apply default settings
+        this._loadState();
         this._showNotification("Cài đặt đã được reset về mặc định.");
     },
 
@@ -359,7 +375,6 @@ const App = {
     },
 
     _loadInitialContent() {
-        // This function is now mostly handled by _loadState loading defaults
         this._applyFontSize(parseInt(this.dom.currentFontSizeInput.value, 10));
         this._syncTextareaHeights();
     },
@@ -441,9 +456,67 @@ const App = {
         if (!tempLine) return '';
 
         if (this.dom.autoProcessPunctuationToggle.checked) {
-            tempLine = tempLine.replace(/\s+([.,\"'”‘’“”])/g, '$1');
-            tempLine = tempLine.replace(/([.,])(?!\.)\s*(?![\"'”‘’“”])(?=\S)/g, '$1 ');
-            tempLine = tempLine.replace(/:\s*/g, ': ');
+            if (this.dom.subPunctuationToggle_normalizePeriodComma.checked) {
+                // Combines removing space before and ensuring one space after for period and comma.
+                tempLine = tempLine.replace(/\s*([.,])\s*/g, '$1 ');
+            }
+            if (this.dom.subPunctuationToggle_formatColon.checked) {
+                tempLine = tempLine.replace(/\s*:\s*/g, ': ');
+            }
+
+            if (this.dom.subPunctuationToggle_normalizeBrackets.checked) {
+                const openBrackets = /[\(\[{“‘]/g;
+                const closeBrackets = /[\)\]}”’]/g;
+                const allQuotes = /["']/g;
+                // This rule is more general and should be kept separate
+                tempLine = tempLine.replace(/\s+([\"'‘’“”])/g, '$1'); 
+                
+                tempLine = tempLine.replace(/([\(\[{“‘])\s+/g, '$1');
+                tempLine = tempLine.replace(/\s+([\)\]}”’])/g, '$1');
+                tempLine = tempLine.replace(/([^\s\(\[{“‘])([\({\[“‘])/g, '$1 $2');
+                tempLine = tempLine.replace(/([\)\]}”’])([^\s.,\)\]}”’])/g, '$1 $2');
+                tempLine = tempLine.split('\n').map(singleLine => {
+                    let inDoubleQuote = false;
+                    let inSingleQuote = false;
+                    let correctedLine = '';
+                    for (let i = 0; i < singleLine.length; i++) {
+                        const char = singleLine[i];
+                        const prevChar = i > 0 ? singleLine[i-1] : ' ';
+                        const nextChar = i < singleLine.length - 1 ? singleLine[i+1] : ' ';
+
+                        if (char === '"') {
+                            if (!inDoubleQuote) {
+                                if (prevChar !== ' ' && !prevChar.match(openBrackets)) correctedLine += ' ';
+                                correctedLine += char;
+                                if (nextChar === ' ') {
+                                    i++;
+                                }
+                            } else {
+                                if (prevChar === ' ') correctedLine = correctedLine.slice(0,-1);
+                                correctedLine += char;
+                                if (nextChar !== ' ' && !nextChar.match(closeBrackets) && nextChar !=='.' && nextChar !==',') correctedLine += ' ';
+                            }
+                            inDoubleQuote = !inDoubleQuote;
+                        } else if (char === "'") {
+                            if (!inSingleQuote) {
+                                if (prevChar !== ' ' && !prevChar.match(openBrackets)) correctedLine += ' ';
+                                correctedLine += char;
+                                if (nextChar === ' ') {
+                                    i++;
+                                }
+                            } else {
+                                if (prevChar === ' ') correctedLine = correctedLine.slice(0,-1);
+                                correctedLine += char;
+                                if (nextChar !== ' ' && !nextChar.match(closeBrackets) && nextChar !=='.' && nextChar !==',') correctedLine += ' ';
+                            }
+                            inSingleQuote = !inSingleQuote;
+                        } else {
+                            correctedLine += char;
+                        }
+                    }
+                    return correctedLine.replace(/\s\s+/g, ' ');
+                }).join('\n');
+            }
         }
         
         tempLine = tempLine.replace(/(:\s+)([^a-zA-ZÀ-ỹ]*)([a-zA-ZÀ-ỹ])/gu, (match, p1, p2, p3) => p1 + p2 + p3.toUpperCase());
@@ -712,7 +785,7 @@ const App = {
                 findInput.placeholder = 'Ví dụ: quảng cáo';
                 replaceInput.placeholder = 'Ví dụ: (Dòng này đã bị xóa)';
             }
-            else { // 'regular'
+            else {
                 findLabel.textContent = 'Tìm:';
                 findInput.placeholder = 'Ví dụ: Lỗi sai';
                 replaceInput.placeholder = 'Ví dụ: Lỗi đúng';
@@ -742,48 +815,45 @@ const App = {
     _updateFilterRulesCache() {
         this.state.cachedFilterRules = [];
         const ruleItems = this.dom.filterRulesContainer.querySelectorAll('.filter-rule-item');
+        const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
         ruleItems.forEach(item => {
             const data = this._getRuleDataFromDOM(item);
             if (!data.enabled) return;
 
             try {
                 let regex;
-                let flags = data.caseSensitive ? 'g' : 'gi';
-                
+                const flags = data.caseSensitive ? 'g' : 'gi';
+
                 if (data.type === 'range') {
                     if (!data.fromText.trim() || !data.toText.trim()) return;
-                    let escapedFrom = data.fromText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    let escapedTo = data.toText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    if (data.wholeWord) {
-                        escapedFrom = `\\b${escapedFrom}\\b`;
-                        escapedTo = `\\b${escapedTo}\\b`;
-                    }
-                    regex = new RegExp(`${escapedFrom}[\\s\\S]*?${escapedTo}`, flags);
+                    const fromPattern = escapeRegex(data.fromText);
+                    const toPattern = escapeRegex(data.toText);
+                    regex = new RegExp(`${fromPattern}[\\s\\S]*?${toPattern}`, flags);
                     this.state.cachedFilterRules.push({ ...data, regex, replace: data.replaceRange });
+
                 } else if (data.type === 'line') {
                     if (!data.find.trim()) return;
-                    let pattern;
+                    const lineFlags = flags + 'm';
+                    const pattern = escapeRegex(data.find);
                     if (data.lineMatchMode === 'exact') {
-                        pattern = data.find.trim()
-                            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                            .replace(/\\\(/g, '\\s*\\(\\s*') 
-                            .replace(/\\\)/g, '\\s*\\)\\s*')
-                            .replace(/\s+/g, '\\s+');
-                        pattern = pattern.replace(/(\\s\*)(\\s\+)/g, '$2').replace(/(\\s\+)(\\s\*)/g, '$1');
-                        regex = new RegExp(`^\\s*${pattern}\\s*$`, flags + 'm');
-                    } else { // 'contains'
-                        pattern = data.find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        regex = new RegExp(`^.*${pattern}.*$`, flags + 'm');
+                        regex = new RegExp(`^\\s*${pattern}\\s*$`, lineFlags);
+                    } else {
+                        regex = new RegExp(`^.*${pattern}.*$`, lineFlags);
                     }
                     this.state.cachedFilterRules.push({ ...data, regex });
-                }
-                else { // regular or regex
+
+                } else {
                     if (!data.find.trim()) return;
                     let pattern = data.find;
+
                     if (data.type === 'regular') {
-                        pattern = data.find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                        if (data.wholeWord) pattern = `\\b${pattern}\\b`;
+                        pattern = escapeRegex(pattern);
+                        if (data.wholeWord) {
+                            pattern = `\\b${pattern}\\b`;
+                        }
                     }
+                    
                     regex = new RegExp(pattern, flags);
                     this.state.cachedFilterRules.push({ ...data, regex });
                 }
@@ -809,7 +879,7 @@ const App = {
 
     _exportFilterRules() {
         const exportedRules = Array.from(this.dom.filterRulesContainer.querySelectorAll('.filter-rule-item')).map(item => this._getRuleDataFromDOM(item));
-        const exportedText = JSON.stringify(exportedRules, null, 2); // Pretty print JSON
+        const exportedText = JSON.stringify(exportedRules, null, 2);
         this.dom.exportImportTextarea.value = exportedText;
         this.dom.exportImportArea.classList.remove('hidden');
         this.dom.exportRulesToFileBtn.classList.remove('hidden');
@@ -840,7 +910,7 @@ const App = {
             if (!Array.isArray(rules)) {
                 throw new Error("Dữ liệu JSON không phải là một mảng.");
             }
-            this.dom.filterRulesContainer.innerHTML = ''; // Clear existing rules
+            this.dom.filterRulesContainer.innerHTML = '';
             rules.forEach(rule => {
                 if (typeof rule === 'object' && rule !== null) {
                     this._addFilterRuleRow(rule);
@@ -870,13 +940,13 @@ const App = {
         const reader = new FileReader();
         reader.onload = (e) => {
             this.dom.exportImportTextarea.value = e.target.result;
-            this._loadImportedRules(); // Automatically load after importing
+            this._loadImportedRules();
         };
         reader.onerror = () => {
             this._showNotification("Lỗi khi đọc file.", 5000);
         };
         reader.readAsText(file);
-        event.target.value = ''; // Reset input for next import
+        event.target.value = '';
     },
     
     // --- Rule Movement ---
@@ -1074,36 +1144,29 @@ const App = {
     
     _sanitizeFileName(text) {
         if (!text) return '';
-        // MODIFIED: Only remove invalid characters, keep spaces
         return text.toString().replace(/[\\/:"*?<>|]+/g, '');
     },
 
     _parseCustomFilename(format, data) {
          return format.replace(/\[([^\]]+)\]/g, (match, key) => {
             const upperKey = key.toUpperCase();
-            // Handle predefined, non-time-related keys first
             if (data.hasOwnProperty(upperKey)) {
                 return data[upperKey];
             }
 
-            // If not a predefined key, treat it as a custom time format string
             let timeFormat = key;
             let hasTimeToken = false;
 
-            // Special handling for 'hh' to append AM/PM suffix
             if (timeFormat.includes('hh')) {
                 hasTimeToken = true;
-                // Replace 'hh' with the 12-hour format number and the AM/PM suffix
-                timeFormat = timeFormat.replace(/hh/g, data.hh + data.AMPM);
+                timeFormat = timeFormat.replace(/hh/g, data.hh + data.ampm);
             }
 
-            // Define other time tokens to replace
             const otherTokens = {
                 'YYYY': data.YYYY, 'MM': data.MM, 'DD': data.DD,
                 'HH': data.HH, 'mm': data.mm, 'ss': data.ss
             };
 
-            // Replace the remaining time tokens
             for (const token in otherTokens) {
                 if (timeFormat.includes(token)) {
                     hasTimeToken = true;
@@ -1111,7 +1174,6 @@ const App = {
                 }
             }
 
-            // Return the formatted string if any token was replaced, otherwise return the original match
             return hasTimeToken ? timeFormat : match;
         });
     },
@@ -1126,7 +1188,7 @@ const App = {
             hh: String(now.getHours() % 12 || 12).padStart(2, '0'),
             mm: String(now.getMinutes()).padStart(2, '0'),
             ss: String(now.getSeconds()).padStart(2, '0'),
-            AMPM: now.getHours() >= 12 ? 'PM' : 'AM',
+            ampm: now.getHours() >= 12 ? 'pm' : 'am',
         };
         
         const titleMatch = this.dom.outputText.value.match(/<title>(.*?)<\/title>/i);
@@ -1172,7 +1234,6 @@ const App = {
         return finalName || data.THOIGIAN; 
     },
     
-    // UPDATED: Filename preview logic
     _updateFileNamePreview() {
         if (!this.dom.fileNamePreview) return;
         const filename = this._getFileName();
@@ -1195,8 +1256,8 @@ const App = {
             case 'both':
                 const mainFile = `${filename}${mainExt}`;
                 const originalFile = `${filename}_original.txt`;
-                fullFilename = mainFile; // Only show the primary file name
-                titleText = `Sẽ xuất 2 tệp: ${mainFile} và ${originalFile}`; // Explain in tooltip
+                fullFilename = mainFile;
+                titleText = `Sẽ xuất 2 tệp: ${mainFile} và ${originalFile}`;
                 break;
             default:
                 fullFilename = `${filename}${mainExt}`;

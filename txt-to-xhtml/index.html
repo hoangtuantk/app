@@ -5,21 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chuyển đổi văn bản sang XHTML</title>
     <link rel="icon" type="image/png" href="./img/logo.png" />
-
-    <!-- 1. Tải Tailwind CSS framework -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- 2. Tải Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- 3. Tải stylesheet tùy chỉnh của bạn sau cùng để có thể ghi đè nếu cần -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center justify-center p-4">
 
-    <!-- Toàn bộ nội dung phần thân của trang web -->
     <div class="w-full max-w-full mx-auto bg-gray-800 rounded-2xl shadow-xl px-6 md:px-10 py-6 md:py-8">
         
         <div class="flex justify-center items-center mb-8">
@@ -202,13 +195,37 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-                <div class="flex items-center justify-between">
-                    <label for="autoProcessPunctuationToggle" class="text-gray-300 font-medium">Tự động xử lý Khoảng trắng, Dấu câu</label>
-                    <label class="toggle-switch settings-toggle">
-                        <input type="checkbox" id="autoProcessPunctuationToggle" checked>
-                        <span class="slider"></span>
-                    </label>
+
+                <div class="setting-item-with-options border-b border-gray-700 pb-3">
+                    <div class="flex items-center justify-between pt-3">
+                        <div class="flex items-center">
+                            <label for="autoProcessPunctuationToggle" class="text-gray-300 font-medium">Tự động xử lý Khoảng trắng, Dấu câu</label>
+                            <button id="punctuationOptionsBtn" title="Mở tùy chọn chi tiết" class="ml-3 p-1 rounded-full hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            </button>
+                        </div>
+                        <label class="toggle-switch settings-toggle">
+                            <input type="checkbox" id="autoProcessPunctuationToggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="punctuationSubOptions" class="pl-8 pt-4 space-y-2 hidden">
+                        <div class="flex items-center">
+                            <input id="subPunctuationToggle_normalizePeriodComma" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                            <label for="subPunctuationToggle_normalizePeriodComma" class="ml-3 block text-sm text-gray-400">Chuẩn hóa khoảng trắng cho dấu chấm, dấu phẩy</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="subPunctuationToggle_formatColon" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                            <label for="subPunctuationToggle_formatColon" class="ml-3 block text-sm text-gray-400">Chuẩn hóa khoảng trắng sau dấu hai chấm</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="subPunctuationToggle_normalizeBrackets" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                            <label for="subPunctuationToggle_normalizeBrackets" class="ml-3 block text-sm text-gray-400">Chuẩn hóa khoảng trắng cho dấu ngoặc/nháy</label>
+                        </div>
+                    </div>
                 </div>
+
                 <div class="flex items-center justify-between">
                     <label for="includeHeaderFooterToggle" class="text-gray-300 font-medium">Chèn Header/Footer</label>
                     <label class="toggle-switch settings-toggle">
@@ -216,7 +233,6 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-                
                 <div class="flex items-center justify-between">
                     <label for="filterSettingToggle" class="text-gray-300 font-medium">Chế độ Lọc</label>
                     <label class="toggle-switch settings-toggle">
@@ -224,7 +240,6 @@
                         <span class="slider"></span>
                     </label>
                 </div>
-
                 <div class="flex items-center justify-between">
                     <label for="syncScrollSettingToggle" class="text-gray-300 font-medium">Đồng bộ cuộn</label>
                     <label class="toggle-switch settings-toggle">
@@ -260,7 +275,7 @@
                                 <div> 
                                     <p class="text-sm text-gray-200">Biến: [CHUONG], [TIEUDE], [THOIGIAN], [YYYY MM DD HH hh mm ss]</p>
                                     <p class="text-sm text-gray-200">- Biến phân biệt chữ Hoa, chữ thường</p>
-                                    <p class="text-sm text-gray-200">- HH là 24h, hh là 12h (tự động thêm AM/PM)</p>
+                                    <p class="text-sm text-gray-200">- HH là 24h, hh là 12h (tự động thêm am/pm)</p>
                                 </div>
                                 <div>
                                     <p><span class="font-semibold text-gray-200">Ví dụ 1:</span> <code class="text-sm text-blue-400">[TIEUDE]_[YYYY-MM-DD]</code></p>
@@ -302,8 +317,6 @@
     </div>
     
     <input type="file" id="importRulesFileInput" class="hidden" accept=".txt,.json">
-
-    <!-- Tải tệp script ở cuối body, và sử dụng type="module" -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
