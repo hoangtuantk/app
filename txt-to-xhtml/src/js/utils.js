@@ -16,8 +16,12 @@ export function _capitalizeFirstAlphabetic(text) {
 }
 
 export function _convertVietnameseNumberWordsToDigits(text) {
-    const parsedInt = parseInt(text, 10);
-    if (!isNaN(parsedInt) && String(parsedInt) === text.trim()) return text;
+    const trimmedText = text.trim();
+    // Kiểm tra xem chuỗi có phải hoàn toàn là số hay không (bao gồm cả số 0 đứng đầu)
+    if (/^\d+$/.test(trimmedText)) {
+        // Chuyển chuỗi thành số nguyên để loại bỏ các số 0 không cần thiết và trả về dưới dạng chuỗi
+        return String(parseInt(trimmedText, 10));
+    }
     const unitMap={'không':0,'một':1,'hai':2,'ba':3,'bốn':4,'năm':5,'sáu':6,'bảy':7,'tám':8,'chín':9},specialUnitMap={'mốt':1,'tư':4,'lăm':5},scaleWords={'nghìn':1e3,'ngàn':1e3,'triệu':1e6,'tỷ':1e9};
     let total=0,block=0,last=0;
     text.toLowerCase().split(/\s+/).filter(w=>w).forEach((word,i,words)=>{
@@ -29,7 +33,7 @@ export function _convertVietnameseNumberWordsToDigits(text) {
         else if(scaleWords[word]){const scale=scaleWords[word];0===block&&0===last&&(block=1);total+=block*scale;block=0;last=0}
         else if("lẻ"===word||"linh"===word)last=0
     });
-    return String(total+block);
+    return String(total+block); [cite_start]
 }
 
 export function _syncScroll(source, target) {
