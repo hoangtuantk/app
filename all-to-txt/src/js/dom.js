@@ -1,0 +1,9 @@
+export const dropZone = document.getElementById('drop-zone');
+export const fileInput = document.getElementById('file-input');
+export const browseButton = document.getElementById('browse-button');
+export const fileListElem = document.getElementById('file-list');
+export const placeholderText = document.getElementById('placeholder-text');
+export const mergeButton = document.getElementById('merge-button');
+export const clearButton = document.getElementById('clear-button');
+export const splitButton = document.getElementById('split-button');
+export const fileListHeader = document.querySelector('#file-list-container h2');
