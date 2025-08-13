@@ -6,11 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const placeholderText = document.getElementById('placeholder-text');
     const mergeButton = document.getElementById('merge-button');
     const clearButton = document.getElementById('clear-button');
+    const splitButton = document.getElementById('split-button');
     const fileListHeader = document.querySelector('#file-list-container h2');
 
     let processedFiles = [];
     
-    // Danh sách các phần mở rộng tệp sẽ bị bỏ qua (không phân biệt chữ hoa, chữ thường)
     const ignoredExtensions = [
         'png', 'jpg', 'jpeg', 'gif', 'bmp', 'svg', 'webp', 'ico',
         'pdf',
@@ -22,8 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return extension ? ignoredExtensions.includes(extension) : false;
     };
 
-
-    // --- Hàm xử lý chính ---
     const handleFiles = async (files) => {
         if (files.length === 0) return;
         mergeButton.disabled = true;
@@ -38,11 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         try {
             const newFilesArray = await Promise.all(filePromises);
-            // Lọc ra các tệp null (bị bỏ qua) và làm phẳng mảng
             const flattenedFiles = newFilesArray.flat().filter(file => file !== null);
             
             processedFiles.push(...flattenedFiles);
-            // Loại bỏ các tệp trùng lặp dựa trên đường dẫn
             const uniqueFiles = processedFiles.reduce((acc, current) => {
                 if (!acc.find(item => item.path === current.path)) {
                     acc.push(current);
@@ -62,10 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return new Promise((resolve, reject) => {
             const path = file.webkitRelativePath || file.name;
             
-            // Kiểm tra nếu tệp nên bị bỏ qua
             if (isIgnored(path)) {
                 console.log(`Bỏ qua tệp bị lọc: ${path}`);
-                resolve(null); // Trả về null để lọc ra sau này
+                resolve(null);
                 return;
             }
 
@@ -75,10 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
             };
             reader.onerror = (e) => {
                 console.error(`Lỗi khi đọc tệp ${file.name}:`, e);
-                // Vẫn resolve null để không làm hỏng toàn bộ quá trình
                 resolve(null); 
             };
-            // Cố gắng đọc dưới dạng văn bản
             reader.readAsText(file);
         });
     };
@@ -91,13 +84,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     .then(zip => {
                         const fileReadPromises = [];
                         zip.forEach((relativePath, zipEntry) => {
-                            // Chỉ xử lý tệp (không phải thư mục) và không nằm trong danh sách bỏ qua
                             if (!zipEntry.dir && !isIgnored(zipEntry.name)) {
                                 const filePromise = zipEntry.async('string').then(content => {
                                     return { path: zipEntry.name, content };
                                 }).catch(err => {
                                     console.log(`Không thể đọc tệp "${zipEntry.name}" trong ZIP dưới dạng văn bản, có thể đây là tệp nhị phân.`);
-                                    return null; // Bỏ qua tệp này nếu không đọc được
+                                    return null;
                                 });
                                 fileReadPromises.push(filePromise);
                             } else if (!zipEntry.dir) {
@@ -107,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         return Promise.all(fileReadPromises);
                     })
                     .then(filesData => {
-                        // Lọc ra các tệp null không đọc được
                         resolve(filesData.filter(file => file !== null));
                     })
                     .catch(err => {
@@ -171,15 +162,75 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUI();
     };
 
+    const handleSplitFile = (file) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const content = e.target.result;
+            try {
+                const extractedFiles = parseMergedContent(content);
+                if (extractedFiles.length === 0) {
+                    alert('Không tìm thấy tệp hợp lệ nào trong tệp đã gộp.');
+                    return;
+                }
+                
+                const zip = new JSZip();
+                extractedFiles.forEach(fileData => {
+                    zip.file(fileData.path, fileData.content);
+                });
 
-    // --- Gán các sự kiện ---
-    browseButton.addEventListener('click', () => {
-        fileInput.click();
-    });
+                const zipBlob = await zip.generateAsync({type:"blob"});
+                const url = URL.createObjectURL(zipBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'unmerged_files.zip';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
 
-    fileInput.addEventListener('change', (e) => {
-        handleFiles(e.target.files);
-    });
+            } catch (error) {
+                console.error("Lỗi khi tách tệp:", error);
+                alert("Định dạng tệp đã gộp không hợp lệ hoặc đã bị hỏng.");
+            }
+        };
+        reader.onerror = () => {
+            alert('Không thể đọc tệp đã chọn.');
+        };
+        reader.readAsText(file);
+    };
+    
+    const parseMergedContent = (content) => {
+        const files = [];
+        const separator = "\n\n\n/////-----(((PHÂN TÁCH GIỮA CÁC TỆP)))-----\\\\\\\n\n\n";
+        const fileBlocks = content.split(separator);
+
+        // ===== SỬA LỖI Ở ĐÂY =====
+        // Biểu thức chính quy đã được sửa để thoát các ký tự đặc biệt: '(', ')', '*'
+        const headerRegex = /^---\(\(\(---BẮT ĐẦU TỆP \d+---\)\)\)---\n\*{5}### TỆP (.+?) ###\*{5}\n\n/;
+        const footerRegex = /\n\n---\(\(\(---KẾT THÚC TỆP \d+---\)\)\)---$/;
+        // =========================
+
+        for (const block of fileBlocks) {
+            if (block.trim() === '') continue;
+
+            const headerMatch = block.match(headerRegex);
+            if (!headerMatch) {
+                console.warn("Khối không khớp với header:", block); // Thêm log để gỡ lỗi
+                continue;
+            }
+
+            const path = headerMatch[1].trim();
+            let fileContent = block.replace(headerRegex, '');
+            fileContent = fileContent.replace(footerRegex, '');
+            
+            files.push({ path, content: fileContent });
+        }
+        return files;
+    };
+
+    browseButton.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault(); 
@@ -205,6 +256,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     clearButton.addEventListener('click', clearAll);
+
+    splitButton.addEventListener('click', () => {
+        const splitFileInput = document.createElement('input');
+        splitFileInput.type = 'file';
+        splitFileInput.accept = '.txt';
+        splitFileInput.style.display = 'none';
+        splitFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleSplitFile(e.target.files[0]);
+            }
+        });
+        document.body.appendChild(splitFileInput);
+        splitFileInput.click();
+        document.body.removeChild(splitFileInput);
+    });
     
     updateUI();
 });

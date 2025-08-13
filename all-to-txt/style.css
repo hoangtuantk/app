@@ -201,6 +201,14 @@ button:active {
     background-color: #5af29a;
 }
 
+#split-button {
+    background-color: var(--accent-color);
+}
+
+#split-button:hover {
+    background-color: var(--accent-hover-color);
+}
+
 #clear-button {
     background-color: var(--danger-color);
 }
