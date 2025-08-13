@@ -3,7 +3,12 @@ import * as DOM from './dom.js';
 export const updateUI = (processedFiles) => {
   DOM.fileListHeader.textContent = `Các tệp đã được nhận diện (${processedFiles.length}):`;
 
-  if (processedFiles.length > 0) {
+  const hasFiles = processedFiles.length > 0;
+
+  DOM.mergeButton.disabled = !hasFiles;
+  DOM.splitButton.disabled = !hasFiles;
+
+  if (hasFiles) {
       DOM.placeholderText.style.display = 'none';
       DOM.fileListElem.innerHTML = '';
       processedFiles.forEach(file => {
@@ -11,11 +16,11 @@ export const updateUI = (processedFiles) => {
           li.textContent = file.path;
           DOM.fileListElem.appendChild(li);
       });
-      DOM.mergeButton.disabled = false;
   } else {
       DOM.fileListElem.innerHTML = '';
       DOM.placeholderText.style.display = 'block';
       DOM.mergeButton.disabled = true;
+      DOM.splitButton.disabled = true;
       DOM.fileListHeader.textContent = 'Các tệp đã được nhận diện:';
   }
 };

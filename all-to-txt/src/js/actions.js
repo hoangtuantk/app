@@ -84,32 +84,28 @@ export const handleFiles = async (files, processedFiles) => {
     }
 };
 
-export const handleSplitFile = (file) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const extractedFiles = parseMergedContent(e.target.result);
-            if (extractedFiles.length === 0) {
-                alert('Không tìm thấy tệp hợp lệ nào trong tệp đã gộp.');
-                return;
-            }
-            const zip = new JSZip();
-            extractedFiles.forEach(fileData => zip.file(fileData.path, fileData.content));
-            const zipBlob = await zip.generateAsync({type:"blob"});
-            const url = URL.createObjectURL(zipBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'unmerged_files.zip';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error("Lỗi khi tách tệp:", error);
-            alert("Định dạng tệp đã gộp không hợp lệ hoặc đã bị hỏng.");
+export const handleSplitFile = async (mergedContent) => {
+    try {
+        const extractedFiles = parseMergedContent(mergedContent);
+        if (extractedFiles.length === 0) {
+            alert('Không tìm thấy tệp hợp lệ nào trong tệp đã gộp. Định dạng có thể không đúng.');
+            return;
         }
-    };
-    reader.readAsText(file);
+        const zip = new JSZip();
+        extractedFiles.forEach(fileData => zip.file(fileData.path, fileData.content));
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'unmerged_files.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Lỗi khi tách tệp:", error);
+        alert("Định dạng tệp đã gộp không hợp lệ hoặc đã bị hỏng.");
+    }
 };
 
 export const clearAll = () => {

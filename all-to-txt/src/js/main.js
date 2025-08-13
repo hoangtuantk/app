@@ -45,18 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     DOM.splitButton.addEventListener('click', () => {
-        const splitFileInput = document.createElement('input');
-        splitFileInput.type = 'file';
-        splitFileInput.accept = '.txt';
-        splitFileInput.style.display = 'none';
-        splitFileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                Actions.handleSplitFile(e.target.files[0]);
-            }
-        });
-        document.body.appendChild(splitFileInput);
-        splitFileInput.click();
-        document.body.removeChild(splitFileInput);
+        if (processedFiles.length > 0) {
+            const contentToSplit = processedFiles[0].content;
+            Actions.handleSplitFile(contentToSplit);
+        } else {
+            alert("Vui lòng chọn hoặc kéo một tệp đã gộp vào để tách.");
+        }
     });
 
     updateUI(processedFiles);
