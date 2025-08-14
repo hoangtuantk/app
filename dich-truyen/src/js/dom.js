@@ -26,11 +26,7 @@ const DOMElements = {
     
     // Popup (Bảng Thêm Name)
     editModal: document.getElementById('edit-modal'),
-    originalWordEl: document.getElementById('original-word'),
-    hanvietOptionsContainer: document.getElementById('hanviet-options-container'),
-    meaningsContainer: document.getElementById('meanings-container'),
     customMeaningInput: document.getElementById('custom-meaning'),
-    cancelEditBtn: document.getElementById('cancel-edit-btn'),
     addToNameListBtn: document.getElementById('add-to-name-list-btn'),
     addTempBtn: document.getElementById('add-temp-btn'),
     expandLeftBtn: document.getElementById('expand-left-btn'),

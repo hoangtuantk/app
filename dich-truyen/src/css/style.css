@@ -85,7 +85,9 @@ input:disabled {
 #output-panel {
     resize: vertical;
     overflow: auto;
-    min-height: 24rem; /* 384px */
+    max-height: 46rem;
+    min-height: 30rem;
+
 }
 
 #output-panel .word {
@@ -131,7 +133,7 @@ input:disabled {
 
 .modal-content {
     width: 90%;
-    max-width: 700px;
+    max-width: 550px;
     min-width: 300px;
     max-height: 90vh; /* Giới hạn chiều cao tối đa là 80% chiều cao màn hình */
     overflow-y: auto; /* Nội dung cuộn khi vượt quá chiều cao tối đa */
@@ -306,6 +308,30 @@ textarea:-webkit-autofill:focus {
     width: 100%;
     text-align: left;
     transition: all 0.2s;
+}
+
+/* THÊM MỚI: Định dạng cho các ô input trong modal để không bị vỡ layout */
+#edit-modal input[type="text"] {
+    white-space: nowrap; /* Ngăn không cho chữ xuống dòng */
+    overflow: hidden; /* Ẩn phần chữ bị tràn */
+    text-overflow: ellipsis; /* Hiển thị dấu "..." khi chữ bị ẩn */
+}
+
+/* THÊM MỚI: Định dạng cho thẻ select (danh sách thả xuống) */
+#vietphrase-select {
+    background-color: var(--bg-input);
+    color: var(--text-highlight);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    width: 100%;
+    cursor: pointer;
+}
+
+#vietphrase-select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.3);
 }
 
 .meaning-option:hover {

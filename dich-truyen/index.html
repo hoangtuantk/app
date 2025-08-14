@@ -15,7 +15,7 @@
         <p id="loader-text" class="mt-4 text-lg font-semibold text-text-highlight">Đang khởi tạo...</p>
     </div>
 
-    <div class="max-w-screen-2xl mx-auto flex flex-col gap-6">
+    <div class="max-w-screen-xl mx-auto flex flex-col gap-6">
         <header class="text-center">
             <h1 class="text-3xl md:text-4xl font-bold text-text-highlight">Công Cụ Dịch Thuật Vietphrase</h1>
             <p class="text-md mt-2">Dựa trên kho dữ liệu cá nhân của bạn</p>
@@ -75,45 +75,47 @@
         </div>
     </div>
 
-<div id="edit-modal">
-    <div class="modal-content">
-        <h3 class="text-xl font-bold mb-4 text-text-highlight">Chỉnh sửa bản dịch</h3>
-        <div class="flex items-center justify-center mb-4 gap-4">
-            <button id="expand-left-btn" class="btn btn-secondary !p-2 !h-9 !w-auto">&lt; Mở rộng</button>
-            <div class="text-center">
-                <p class="text-sm">Từ gốc</p>
-                <strong id="original-word" class="text-accent-color text-2xl font-mono"></strong>
+    <div id="edit-modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center pb-3 mb-3 border-b border-border-color">
+                <h3 class="text-xl font-bold text-text-highlight">Thêm name/Chỉnh name</h3>
+                <div class="flex gap-2">
+                    <button id="expand-left-btn" class="btn btn-secondary !p-2 h-8 text-xs">&lt; Mở rộng</button>
+                    <button id="expand-right-btn" class="btn btn-secondary !p-2 h-8 text-xs">Mở rộng &gt;</button>
+                </div>
             </div>
-            <button id="expand-right-btn" class="btn btn-secondary !p-2 !h-9 !w-auto">Mở rộng &gt;</button>
-        </div>
-        
-        <div class="mb-4">
-            <label class="text-sm font-bold">Hán Việt:</label>
-            <div id="hanviet-options-container" class="hanviet-options-container"></div>
-        </div>
-        
-        <div class="meaning-section">
-             <label class="text-sm font-bold">Vietphrase:</label>
-             <div id="meanings-container" class="meanings-container"></div>
-        </div>
 
-        <div class="mb-4">
-            <label class="text-sm font-bold">Nhập nghĩa mới:</label>
-            <input type="text" id="custom-meaning" class="w-full mb-2" placeholder="Hoặc nhập nghĩa mới...">
-            <div class="flex flex-wrap gap-2">
-                <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap">Hoa Chữ Đầu</button>
-                <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap2">Hoa 2 Chữ Đầu</button>
-                <button class="case-btn btn btn-secondary text-xs p-2" data-case="lowerLast">Thường Chữ Cuối</button>
-                <button class="case-btn btn btn-secondary text-xs p-2" data-case="upper">Hoa Toàn Bộ</button>
+            <div class="mb-3">
+                <label class="text-sm font-bold">Tiếng Trung:</label>
+                <input type="text" id="original-word-input" class="w-full mt-1">
             </div>
-        </div>
-        <div class="modal-footer-buttons">
-            <button id="cancel-edit-btn" class="btn btn-secondary">Hủy</button>
-            <button id="add-temp-btn" class="btn btn-secondary">Thêm Tạm Thời</button>
-            <button id="add-to-name-list-btn" class="btn">Thêm vào Name</button>
+
+            <div class="mb-3">
+                <label class="text-sm font-bold">Hán Việt:</label>
+                <input type="text" id="hanviet-input" class="w-full mt-1" readonly> </div>
+
+            <div class="mb-3">
+                <label class="text-sm font-bold">Vietphrase (chọn để điền nhanh):</label>
+                <select id="vietphrase-select" class="w-full mt-1"></select>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-sm font-bold">Nghĩa tùy chỉnh:</label>
+                <input type="text" id="custom-meaning" class="w-full mb-2 mt-1" placeholder="Nhập nghĩa bạn muốn lưu...">
+                <div class="flex flex-wrap gap-2">
+                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap">Hoa Chữ Đầu</button>
+                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap2">Hoa 2 Chữ Đầu</button>
+                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="lowerLast">Thường Chữ Cuối</button>
+                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="upper">Hoa Toàn Bộ</button>
+                </div>
+            </div>
+
+            <div class="modal-footer-buttons">
+                <button id="add-temp-btn" class="btn btn-secondary">Thêm Tạm Thời</button>
+                <button id="add-to-name-list-btn" class="btn">Thêm vào Name</button>
+            </div>
         </div>
     </div>
-</div>
 
     <div id="quick-edit-panel" class="absolute z-40 p-3 rounded-lg shadow-2xl border border-border-color hidden w-[360px] max-w-[90vw]" style="background-color: var(--bg-panel);">
         <div class="grid grid-cols-2 gap-2 pb-2 mb-2 border-b border-border-color">

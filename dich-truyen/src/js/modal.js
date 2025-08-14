@@ -81,10 +81,29 @@ function showQuickEditPanel(selection, state) {
 
     populateQuickEditPanel(selectionState.originalText, state);
 
+    const panel = DOMElements.quickEditPanel;
     const rect = range.getBoundingClientRect();
-    DOMElements.quickEditPanel.style.left = `${window.scrollX + rect.left}px`;
-    DOMElements.quickEditPanel.style.top = `${window.scrollY + rect.bottom + 5}px`;
-    DOMElements.quickEditPanel.classList.remove('hidden');
+
+    panel.style.visibility = 'hidden';
+    panel.classList.remove('hidden');
+    const panelWidth = panel.offsetWidth;
+
+    const viewportWidth = window.innerWidth;
+
+    let leftPosition = window.scrollX + rect.left;
+
+    if (leftPosition + panelWidth > viewportWidth) {
+        leftPosition = window.scrollX + rect.right - panelWidth;
+    }
+
+    if (leftPosition < 0) {
+        leftPosition = 5;
+    }
+
+    panel.style.left = `${leftPosition}px`;
+    panel.style.top = `${window.scrollY + rect.bottom + 5}px`;
+
+    panel.style.visibility = 'visible';
     isPanelVisible = true;
 }
 
@@ -150,51 +169,53 @@ function expandQuickSelection(direction, state) {
 
 
 function populateOldModal(text, state) {
-    DOMElements.originalWordEl.textContent = text;
-    const hanVietContainer = DOMElements.hanvietOptionsContainer;
-    hanVietContainer.innerHTML = '';
+    // Lấy các DOM element mới
+    const originalWordInput = document.getElementById('original-word-input');
+    const hanvietInput = document.getElementById('hanviet-input');
+    const vietphraseSelect = document.getElementById('vietphrase-select');
+    const customMeaningInput = DOMElements.customMeaningInput;
+
+    // Điền dữ liệu vào các ô input
+    originalWordInput.value = text;
     const baseHanViet = getHanViet(text, state.dictionaries);
-    if (baseHanViet && !/^[0-9a-zA-Z\s.,;:!?()]+$/.test(baseHanViet)) {
-        const hanVietUpper = baseHanViet.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        const hanVietLower = baseHanViet.toLowerCase();
-        [hanVietUpper, hanVietLower].forEach(hv => {
-            const btn = document.createElement('button');
-            btn.className = 'meaning-option p-2 rounded cursor-pointer text-sm';
-            btn.textContent = hv;
-            btn.onclick = () => { DOMElements.customMeaningInput.value = hv; };
-            hanVietContainer.appendChild(btn);
-        });
-    } else {
-        hanVietContainer.innerHTML = `<p class="text-sm italic">Không tìm thấy Hán Việt.</p>`;
-    }
-    
+    hanvietInput.value = baseHanViet ? baseHanViet.toLowerCase() : 'Không tìm thấy Hán Việt.';
+
+    // Lấy tất cả các nghĩa Vietphrase
     const finalTranslation = translateWord(text, state.dictionaries, nameDictionary, temporaryNameDictionary);
-    let allMeanings = finalTranslation.found ? [...finalTranslation.all] : [];
+    let allMeanings = finalTranslation.found ? [...new Set(finalTranslation.all)] : []; // Dùng Set để loại bỏ nghĩa trùng lặp
     if (text.length > 1) {
         const synthesized = synthesizeCompoundTranslation(text, state);
         synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
     }
 
-    DOMElements.meaningsContainer.innerHTML = '';
+    // Đổ các nghĩa vào danh sách thả xuống (select)
+    vietphraseSelect.innerHTML = ''; // Xóa các lựa chọn cũ
     if (allMeanings.length > 0) {
         allMeanings.forEach(meaning => {
-            const div = document.createElement('div');
-            div.className = 'meaning-option p-2 rounded cursor-pointer';
-            div.textContent = meaning;
-            div.onclick = () => { DOMElements.customMeaningInput.value = meaning; };
-            DOMElements.meaningsContainer.appendChild(div);
+            const option = document.createElement('option');
+            option.value = meaning;
+            option.textContent = meaning;
+            vietphraseSelect.appendChild(option);
         });
-        DOMElements.customMeaningInput.value = allMeanings[0];
+        customMeaningInput.value = allMeanings[0]; // Mặc định điền nghĩa đầu tiên
     } else {
-        DOMElements.meaningsContainer.innerHTML = `<p class="text-sm italic text-center p-2">Không tìm thấy.</p>`;
-        DOMElements.customMeaningInput.value = text;
+        const option = document.createElement('option');
+        option.textContent = 'Không tìm thấy Vietphrase';
+        option.disabled = true;
+        vietphraseSelect.appendChild(option);
+        customMeaningInput.value = text;
     }
+
+    // Cập nhật ô nhập nghĩa tùy chỉnh khi người dùng chọn từ danh sách
+    vietphraseSelect.onchange = () => {
+        customMeaningInput.value = vietphraseSelect.value;
+    };
 }
 
 function openOldModal(state) {
     const text = selectionState.originalText;
-    DOMElements.originalWordEl.textContent = text;
-    
+    // Dòng code gây lỗi "DOMElements.originalWordEl.textContent = text;" đã được xóa ở đây.
+
     populateOldModal(text, state);
 
     hideQuickEditPanel();
@@ -293,7 +314,6 @@ export function initializeModal(state) {
         });
     });
 
-    DOMElements.cancelEditBtn.addEventListener('click', closeOldModal);
     DOMElements.editModal.addEventListener('click', (e) => {
         if (e.target === DOMElements.editModal) closeOldModal();
     });
@@ -301,16 +321,45 @@ export function initializeModal(state) {
     DOMElements.expandRightBtn.addEventListener('click', () => expandOldModalSelection('right', state));
 
     DOMElements.addToNameListBtn.addEventListener('click', () => {
-        const cn = DOMElements.originalWordEl.textContent;
+        const cn = document.getElementById('original-word-input').value.trim(); // THAY ĐỔI: Lấy text từ input
         const vn = DOMElements.customMeaningInput.value.trim();
         if (cn && vn) { nameDictionary.set(cn, vn); saveNameDictionaryToStorage(); renderNameList(); buildMasterKeySet(state); closeOldModal(); performTranslation(state); }
     });
     DOMElements.addTempBtn.addEventListener('click', () => {
-        const cn = DOMElements.originalWordEl.textContent;
+        const cn = document.getElementById('original-word-input').value.trim(); // THAY ĐỔI: Lấy text từ input
         const vn = DOMElements.customMeaningInput.value.trim();
         if (cn && vn) { temporaryNameDictionary.set(cn, vn); closeOldModal(); performTranslation(state); }
     });
     document.querySelectorAll('.case-btn').forEach(btn => {
+        // Giữ nguyên chức năng click chuột đơn
         btn.addEventListener('click', (e) => applyCase(e.target.dataset.case));
+
+        // THÊM MỚI: Chức năng double-click để lưu thẳng vào Name List
+        btn.addEventListener('dblclick', () => {
+            // Áp dụng kiểu chữ trước khi lưu
+            applyCase(btn.dataset.case); 
+
+            const cn = document.getElementById('original-word-input').value.trim();
+            const vn = DOMElements.customMeaningInput.value.trim();
+            if (cn && vn) {
+                nameDictionary.set(cn, vn);
+                saveNameDictionaryToStorage();
+                renderNameList();
+                buildMasterKeySet(state);
+                closeOldModal();
+                performTranslation(state);
+
+                // Hiển thị thông báo nhanh trên nút "Thêm vào Name"
+                const addButton = DOMElements.addToNameListBtn;
+                const originalText = addButton.textContent;
+                addButton.textContent = 'Đã lưu!';
+                addButton.disabled = true;
+                setTimeout(() => {
+                    addButton.textContent = originalText;
+                    addButton.disabled = false;
+                }, 1500);
+            }
+        });
     });
+
 }
