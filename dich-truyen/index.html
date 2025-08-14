@@ -45,13 +45,13 @@
             </div>
 
             <div class="panel p-6 flex flex-col">
-                <h2 class="text-xl font-semibold mb-4 text-text-highlight">Bảng Thuật Ngữ (Name List)</h2>
+                <h2 class="text-xl font-semibold mb-4 text-text-highlight">Name List</h2>
                 <textarea id="name-list-textarea" class="w-full flex-grow text-sm leading-relaxed" placeholder="[Tiếng Trung]=[Tiếng Việt]..."></textarea>
                 <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-2">
                     <button id="name-list-save" class="btn text-sm">Lưu</button>
-                    <button id="name-list-delete" class="btn btn-secondary text-sm">Xóa Hết</button>
-                    <button id="name-list-export" class="btn btn-secondary text-sm">Xuất File</button>
-                    <button id="name-list-import" class="btn btn-secondary text-sm">Nhập File</button>
+                    <button id="name-list-delete" class="btn btn-secondary text-sm">Xóa</button>
+                    <button id="name-list-export" class="btn btn-secondary text-sm">Xuất</button>
+                    <button id="name-list-import" class="btn btn-secondary text-sm">Nhập</button>
                     <input type="file" id="name-list-file-input" class="hidden" accept=".txt">
                 </div>
             </div>
@@ -63,7 +63,7 @@
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
                         <button id="decrease-font-btn" title="Giảm cỡ chữ" class="btn btn-secondary !p-2 w-8 h-8">-</button>
-                        <span id="font-size-label" class="text-sm w-12 text-center" title="Cỡ chữ hiện tại">100%</span>
+                        <span id="font-size-label" class="text-sm w-12 text-center" title="Cỡ chữ hiện tại">150%</span>
                         <button id="increase-font-btn" title="Tăng cỡ chữ" class="btn btn-secondary !p-2 w-8 h-8">+</button>
                     </div>
                     <button id="copy-btn" class="btn btn-secondary">Sao chép</button>
@@ -108,14 +108,14 @@
             </div>
         </div>
         <div class="modal-footer-buttons">
+            <button id="cancel-edit-btn" class="btn btn-secondary">Hủy</button>
             <button id="add-temp-btn" class="btn btn-secondary">Thêm Tạm Thời</button>
             <button id="add-to-name-list-btn" class="btn">Thêm vào Name</button>
-            <button id="cancel-edit-btn" class="btn btn-secondary">Hủy</button>
         </div>
     </div>
 </div>
 
-    <div id="quick-edit-panel" class="absolute z-40 p-3 rounded-lg shadow-2xl border border-border-color hidden w-[400px] max-w-[90vw]" style="background-color: var(--bg-panel);">
+    <div id="quick-edit-panel" class="absolute z-40 p-3 rounded-lg shadow-2xl border border-border-color hidden w-[360px] max-w-[90vw]" style="background-color: var(--bg-panel);">
         <div class="grid grid-cols-2 gap-2 pb-2 mb-2 border-b border-border-color">
             <button id="q-expand-left-btn" class="btn btn-secondary !p-1 h-8 w-full text-center text-xs">&lt; Mở rộng</button>
             <button id="q-expand-right-btn" class="btn btn-secondary !p-1 h-8 w-full text-center text-xs">Mở rộng &gt;</button>

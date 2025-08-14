@@ -2,6 +2,53 @@ import DOMElements from './dom.js';
 import { segmentText, translateWord } from './dictionary.js';
 import { nameDictionary, temporaryNameDictionary } from './nameList.js';
 
+const translationCache = new Map();
+
+export function synthesizeCompoundTranslation(text, state) {
+    if (translationCache.has(text)) {
+        return translationCache.get(text);
+    }
+    const segments = segmentText(text, state.masterKeySet);
+
+    // Nếu sau khi tách mà chỉ có 1 từ, không cần gợi ý.
+    if (segments.length <= 1) {
+        return [];
+    }
+    
+    // Giới hạn độ dài của cụm từ để tránh tính toán quá lâu
+    if (segments.length > 10) {
+        return [`${segments.join(' ')} - Quá dài để gợi ý`];
+    }
+    
+    // Lấy tất cả các nghĩa Vietphrase cho từng từ đã được tách ra.
+    const segmentMeanings = segments.map(seg => {
+        const translation = translateWord(seg, state.dictionaries, nameDictionary, temporaryNameDictionary);
+        return translation.all;
+    });
+
+    // Tạo ra tất cả các tổ hợp nghĩa có thể có.
+    const cartesian = (...a) => a.reduce((acc, val) => acc.flatMap(d => val.map(e => [d, e].flat())));
+    let combinations = [];
+    try {
+        combinations = cartesian(...segmentMeanings).map(combo => combo.join(' '));
+    } catch (e) {
+        // Xử lý lỗi nếu số lượng tổ hợp quá lớn
+        return [`${text} - Số lượng tổ hợp quá nhiều`];
+    }
+
+    // Lọc các nghĩa trùng lặp
+    const uniqueCombinations = [...new Set(combinations)];
+    
+    // Giới hạn số lượng gợi ý để tránh DOM quá tải khi hiển thị
+    const MAX_SUGGESTIONS = 50; 
+    const finalSuggestions = uniqueCombinations.slice(0, MAX_SUGGESTIONS);
+
+    // Lưu kết quả đã tính toán vào cache trước khi trả về
+    translationCache.set(text, finalSuggestions);
+
+    return finalSuggestions;
+}
+
 export function performTranslation(state) {
     const chineseText = DOMElements.inputText.value;
     if (!chineseText.trim()) {
@@ -43,28 +90,4 @@ export function performTranslation(state) {
     finalHtml = finalHtml.replace(/<\/span>\s+([.,!?;:])/g, '</span>$1');
 
     DOMElements.outputPanel.innerHTML = finalHtml;
-}
-
-export function synthesizeCompoundTranslation(text, state) {
-    // Sử dụng lại chính hàm TÁCH TỪ GỐC (segmentText) để phá vỡ cụm từ trong popup.
-    // Điều này đảm bảo logic là nhất quán 100% với cách dịch chính.
-    const segments = segmentText(text, state.masterKeySet);
-
-    // Nếu sau khi tách mà chỉ có 1 từ (tức là không thể phá vỡ thêm), thì không cần gợi ý.
-    if (segments.length <= 1) {
-        return [];
-    }
-
-    // Lấy tất cả các nghĩa Vietphrase cho từng từ đã được tách ra.
-    const segmentMeanings = segments.map(seg => {
-        const translation = translateWord(seg, state.dictionaries, nameDictionary, temporaryNameDictionary);
-        return translation.all;
-    });
-
-    // Tạo ra tất cả các tổ hợp nghĩa có thể có.
-    const cartesian = (...a) => a.reduce((acc, val) => acc.flatMap(d => val.map(e => [d, e].flat())));
-    const combinations = cartesian(...segmentMeanings).map(combo => combo.join(' '));
-
-    // Trả về danh sách gợi ý.
-    return [...new Set(combinations)];
 }

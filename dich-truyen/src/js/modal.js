@@ -125,17 +125,27 @@ function hideQuickEditPanel() {
 function expandQuickSelection(direction, state) {
     const { spans, startIndex, endIndex } = selectionState;
     let newStart = startIndex, newEnd = endIndex;
+    
+    // Logic xác định chỉ mục mới
     if (direction === 'left' && startIndex > 0) newStart--;
     else if (direction === 'right' && endIndex < spans.length - 1) newEnd++;
     else return;
 
+    // Cập nhật trạng thái lựa chọn
+    selectionState.startIndex = newStart;
+    selectionState.endIndex = newEnd;
+    selectionState.originalText = spans.slice(newStart, newEnd + 1).map(s => s.dataset.original).join('');
+    
+    // Cập nhật DOM của lựa chọn
     const newRange = document.createRange();
     newRange.setStartBefore(spans[newStart]);
     newRange.setEndAfter(spans[newEnd]);
     const selection = window.getSelection();
     selection.removeAllRanges();
     selection.addRange(newRange);
-    showQuickEditPanel(selection, state);
+    
+    // Chỉ cập nhật panel thay vì tạo lại toàn bộ
+    populateQuickEditPanel(selectionState.originalText, state);
 }
 
 
@@ -194,14 +204,18 @@ function openOldModal(state) {
 function expandOldModalSelection(direction, state) {
     const { spans, startIndex, endIndex } = selectionState;
     let newStartIdx = startIndex, newEndIdx = endIndex;
+    
+    // Logic xác định chỉ mục mới
     if (direction === 'left' && startIndex > 0) newStartIdx--;
     else if (direction === 'right' && endIndex < spans.length - 1) newEndIdx++;
     else return;
 
+    // Cập nhật trạng thái lựa chọn
     selectionState.startIndex = newStartIdx;
     selectionState.endIndex = newEndIdx;
     selectionState.originalText = selectionState.spans.slice(newStartIdx, newEndIdx + 1).map(s => s.dataset.original).join('');
     
+    // Chỉ cập nhật modal thay vì tạo lại toàn bộ
     populateOldModal(selectionState.originalText, state);
 }
 

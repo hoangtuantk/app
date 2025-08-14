@@ -128,9 +128,10 @@ input:disabled {
     z-index: 50;
 }
 
+
 .modal-content {
     width: 90%;
-    max-width: 700px;
+    max-width: 500px;
     min-width: 300px;
     padding: 1.5rem;
     margin: 1rem auto;
@@ -267,21 +268,7 @@ textarea:-webkit-autofill:focus {
     font-size: 18px;
 }
 
-/* Thêm vào cuối file style.css */
 
-/* Cải thiện modal edit */
-.modal-content {
-    width: 90%;
-    max-width: 700px;
-    min-width: 300px;
-}
-
-/* Cải thiện phần header modal */
-.modal-content h3 {
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color);
-    margin-bottom: 16px;
-}
 
 /* Cải thiện phần từ gốc */
 #original-word {
@@ -401,3 +388,36 @@ textarea:-webkit-autofill:focus {
     color: var(--bg-main);
     border-color: var(--accent-color);
 }
+
+
+
+/* LOG */
+#log-list li {
+    margin-bottom: 4px;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px; 
+}
+#log-list li.log-info {
+    color: var(--text-color);
+}
+#log-list li.log-success {
+    color: #34d399;
+}
+#log-list li.log-error {
+    color: #f87171;
+}
+#log-list li.log-loading {
+    color: #a9b1d6;
+    font-style: italic;
+}
+.spinner-icon {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+/* LOG End*/

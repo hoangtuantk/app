@@ -107,14 +107,13 @@ export async function initializeDictionaries() {
     }
 }
 
-export async function loadDictionariesFromServer(logCallback) {
-    logCallback('Đang tải từ điển từ server...');
+export async function loadDictionariesFromServer(logHandler) {
     const dictionaries = new Map();
     try {
         const db = await openDB();
-        
+
         for (const fileInfo of DICTIONARY_FILES) {
-            logCallback(`Đang tải file: ${fileInfo.name}`);
+            const loadingLi = logHandler.append(`Đang xử lý file: ${fileInfo.name}`, 'loading');
             const response = await fetch(`data/${fileInfo.name}`);
             if (response.ok) {
                 const content = await response.text();
@@ -122,12 +121,12 @@ export async function loadDictionariesFromServer(logCallback) {
                     priority: fileInfo.priority,
                     dict: parseDictionary(content)
                 });
-                logCallback(`Đã xử lý: ${fileInfo.name}`);
+                logHandler.update(loadingLi, `Đã xử lý xong: ${fileInfo.name}`, 'success'); 
             } else {
-                logCallback(`Lỗi: Không thể tải ${fileInfo.name}. Bỏ qua.`);
+                logHandler.update(loadingLi, `Lỗi: Không thể tải ${fileInfo.name}. Bỏ qua.`, 'error');
             }
         }
-        
+
         const storableDicts = Array.from(dictionaries.entries()).map(([name, data]) => {
             return [name, {
                 priority: data.priority,
@@ -135,21 +134,21 @@ export async function loadDictionariesFromServer(logCallback) {
             }];
         });
 
+        const savingLi = logHandler.append('Đang lưu từ điển vào IndexedDB...', 'loading');
         await saveDataToDB(db, { id: 'parsed-dictionaries', data: storableDicts });
-        logCallback('Đã lưu từ điển vào IndexedDB.');
-        
+        logHandler.update(savingLi, 'Đã lưu từ điển vào IndexedDB.', 'success'); 
+
         return dictionaries;
     } catch (error) {
         console.error(error);
-        logCallback(`Lỗi: ${error.message}`);
+        logHandler.append(`Lỗi: ${error.message}`, 'error');
         return null;
     } finally {
-        logCallback('Quá trình hoàn tất.');
+        logHandler.append('Quá trình hoàn tất.', 'info');
     }
 }
 
-export async function loadDictionariesFromFile(files, logCallback) {
-    logCallback('Bắt đầu nhập từ điển từ thiết bị...');
+export async function loadDictionariesFromFile(files, logHandler) {
     const dictionaries = new Map();
     const loadedFileNames = new Set();
     const fileReaderPromises = [];
@@ -158,14 +157,19 @@ export async function loadDictionariesFromFile(files, logCallback) {
         const file = Array.from(files).find(f => f.name.toLowerCase() === fileInfo.name.toLowerCase());
         if (file) {
             loadedFileNames.add(fileInfo.name);
+            const loadingLi = logHandler.append(`Đang đọc file: ${fileInfo.name}`, 'loading');
             const promise = new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    logCallback(`Đã đọc xong file: ${fileInfo.name}`);
                     dictionaries.set(fileInfo.name, {
                         priority: fileInfo.priority,
                         dict: parseDictionary(e.target.result)
                     });
+                    logHandler.update(loadingLi, `Đã đọc xong file: ${fileInfo.name}`, 'success'); 
+                    resolve();
+                };
+                reader.onerror = () => {
+                    logHandler.update(loadingLi, `Lỗi khi đọc file: ${fileInfo.name}`, 'error'); 
                     resolve();
                 };
                 reader.readAsText(file);
@@ -173,16 +177,17 @@ export async function loadDictionariesFromFile(files, logCallback) {
             fileReaderPromises.push(promise);
         }
     }
-    
+
     await Promise.all(fileReaderPromises);
 
     const missingFiles = REQUIRED_FILES.filter(f => !loadedFileNames.has(f));
     if (missingFiles.length > 0) {
-        logCallback(`<span class="text-red-500">Lỗi: Thiếu các file bắt buộc: ${missingFiles.join(', ')}</span>`);
+        logHandler.append(`Lỗi: Thiếu các file bắt buộc: ${missingFiles.join(', ')}`, 'error');
         return null;
     }
 
     const db = await openDB();
+    const savingLi = logHandler.append('Đang lưu từ điển vào IndexedDB...', 'loading');
     const storableDicts = Array.from(dictionaries.entries()).map(([name, data]) => {
         return [name, {
             priority: data.priority,
@@ -191,8 +196,8 @@ export async function loadDictionariesFromFile(files, logCallback) {
     });
 
     await saveDataToDB(db, { id: 'parsed-dictionaries', data: storableDicts });
-    logCallback('Đã lưu từ điển vào IndexedDB.');
-    logCallback('Quá trình hoàn tất.');
+    logHandler.update(savingLi, 'Đã lưu từ điển vào IndexedDB.', 'success');
+    logHandler.append('Quá trình hoàn tất.', 'info');
 
     return dictionaries;
 }

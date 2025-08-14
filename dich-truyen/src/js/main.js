@@ -4,6 +4,47 @@ import { initializeNameList, buildMasterKeySet } from './nameList.js';
 import { initializeModal } from './modal.js';
 import { performTranslation } from './translation.js';
 
+// Hàm này chỉ thêm một dòng log mới vào danh sách
+function appendLog(message, type) {
+    const li = document.createElement('li');
+    let icon = '';
+
+    if (type === 'loading') {
+        icon = '<div class="w-4 h-4 border-2 border-dashed rounded-full animate-spin border-accent-color spinner-icon"></div>';
+    } else if (type === 'success') {
+        icon = '<span>✅</span>';
+    } else if (type === 'error') {
+        icon = '<span>❌</span>';
+    } else {
+        icon = '<span>ℹ️</span>';
+    }
+
+    li.innerHTML = `${icon}<span>${message}</span>`;
+    li.classList.add(`log-${type}`);
+    DOMElements.logList.appendChild(li);
+
+    // Tự động cuộn xuống cuối danh sách
+    DOMElements.logList.scrollTop = DOMElements.logList.scrollHeight;
+    return li; // Trả về phần tử li để có thể cập nhật sau này
+}
+
+// Hàm mới để cập nhật một dòng log đã có
+function updateLog(li, message, type) {
+    let icon = '';
+    if (type === 'success') {
+        icon = '<span>✅</span>';
+    } else if (type === 'error') {
+        icon = '<span>❌</span>';
+    } else {
+        icon = '<span>ℹ️</span>';
+    }
+
+    li.innerHTML = `${icon}<span>${message}</span>`;
+    li.classList.remove('log-loading');
+    li.classList.add(`log-${type}`);
+}
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     const state = {
         dictionaries: null,
@@ -32,22 +73,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Kết nối các nút mới
     DOMElements.importLocalBtn.addEventListener('click', () => {
         DOMElements.logModal.classList.remove('hidden');
+        DOMElements.logList.innerHTML = '';
         DOMElements.fileImporter.click();
     });
     
     DOMElements.fileImporter.addEventListener('change', async (e) => {
         const files = e.target.files;
         if (files.length > 0) {
-            const newDicts = await loadDictionariesFromFile(files, (log) => DOMElements.logList.innerHTML += `<li>${log}</li>`);
+            const logHandler = { append: appendLog, update: updateLog };
+            const newDicts = await loadDictionariesFromFile(files, logHandler);
             updateState(newDicts);
         }
-        e.target.value = null; // Reset input file
+        e.target.value = null;
     });
 
     DOMElements.importServerBtn.addEventListener('click', async () => {
         DOMElements.logModal.classList.remove('hidden');
-        DOMElements.logList.innerHTML = ''; // Clear previous logs
-        const newDicts = await loadDictionariesFromServer((log) => DOMElements.logList.innerHTML += `<li>${log}</li>`);
+        DOMElements.logList.innerHTML = '';
+        const logHandler = { append: appendLog, update: updateLog };
+        const newDicts = await loadDictionariesFromServer(logHandler);
         updateState(newDicts);
     });
 
