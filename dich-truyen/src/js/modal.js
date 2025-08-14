@@ -125,8 +125,11 @@ function populateQuickEditPanel(text, state) {
         synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
     }
     
-    DOMElements.qInputVp.value = groupSimilarMeanings(allMeanings, state);
-    DOMElements.qInputTc.value = '';
+    if (allMeanings.length > 0) {
+            DOMElements.qInputVp.value = `(${allMeanings.join('/')})`;
+        } else {
+            DOMElements.qInputVp.value = '';
+        }
 }
 
 
@@ -169,47 +172,9 @@ function expandQuickSelection(direction, state) {
 
 
 function populateOldModal(text, state) {
-    // Lấy các DOM element mới
     const originalWordInput = document.getElementById('original-word-input');
-    const hanvietInput = document.getElementById('hanviet-input');
-    const vietphraseSelect = document.getElementById('vietphrase-select');
-    const customMeaningInput = DOMElements.customMeaningInput;
-
-    // Điền dữ liệu vào các ô input
     originalWordInput.value = text;
-    const baseHanViet = getHanViet(text, state.dictionaries);
-    hanvietInput.value = baseHanViet ? baseHanViet.toLowerCase() : 'Không tìm thấy Hán Việt.';
-
-    // Lấy tất cả các nghĩa Vietphrase
-    const finalTranslation = translateWord(text, state.dictionaries, nameDictionary, temporaryNameDictionary);
-    let allMeanings = finalTranslation.found ? [...new Set(finalTranslation.all)] : []; // Dùng Set để loại bỏ nghĩa trùng lặp
-    if (text.length > 1) {
-        const synthesized = synthesizeCompoundTranslation(text, state);
-        synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
-    }
-
-    // Đổ các nghĩa vào danh sách thả xuống (select)
-    vietphraseSelect.innerHTML = ''; // Xóa các lựa chọn cũ
-    if (allMeanings.length > 0) {
-        allMeanings.forEach(meaning => {
-            const option = document.createElement('option');
-            option.value = meaning;
-            option.textContent = meaning;
-            vietphraseSelect.appendChild(option);
-        });
-        customMeaningInput.value = allMeanings[0]; // Mặc định điền nghĩa đầu tiên
-    } else {
-        const option = document.createElement('option');
-        option.textContent = 'Không tìm thấy Vietphrase';
-        option.disabled = true;
-        vietphraseSelect.appendChild(option);
-        customMeaningInput.value = text;
-    }
-
-    // Cập nhật ô nhập nghĩa tùy chỉnh khi người dùng chọn từ danh sách
-    vietphraseSelect.onchange = () => {
-        customMeaningInput.value = vietphraseSelect.value;
-    };
+    updateOldModalFields(text, state);
 }
 
 function openOldModal(state) {
@@ -276,6 +241,12 @@ export function initializeModal(state) {
     DOMElements.qExpandLeftBtn.addEventListener('click', () => expandQuickSelection('left', state));
     DOMElements.qExpandRightBtn.addEventListener('click', () => expandQuickSelection('right', state));
     DOMElements.qAddNameBtn.addEventListener('click', () => openOldModal(state));
+
+    const originalWordInput = document.getElementById('original-word-input');
+    originalWordInput.addEventListener('input', () => {
+        const newText = originalWordInput.value;
+        updateOldModalFields(newText, state);
+    });
 
     DOMElements.qSearchBtn.addEventListener('click', () => {
         const text = DOMElements.qInputZw.value.trim();
@@ -362,4 +333,54 @@ export function initializeModal(state) {
         });
     });
 
+}
+
+function updateOldModalFields(text, state) {
+    // Lấy các DOM element
+    const hanvietInput = document.getElementById('hanviet-input');
+    const vietphraseSelect = document.getElementById('vietphrase-select');
+    const customMeaningInput = DOMElements.customMeaningInput;
+
+    // Nếu không có text, xóa trống các ô và dừng lại
+    if (!text) {
+        hanvietInput.value = '';
+        vietphraseSelect.innerHTML = '<option>Nhập Tiếng Trung để xem gợi ý</option>';
+        customMeaningInput.value = '';
+        return;
+    }
+    
+    // Điền dữ liệu vào các ô input
+    const baseHanViet = getHanViet(text, state.dictionaries);
+    hanvietInput.value = baseHanViet ? baseHanViet.toLowerCase() : 'Không tìm thấy Hán Việt.';
+
+    // Lấy tất cả các nghĩa Vietphrase
+    const finalTranslation = translateWord(text, state.dictionaries, nameDictionary, temporaryNameDictionary);
+    let allMeanings = finalTranslation.found ? [...new Set(finalTranslation.all)] : []; // Dùng Set để loại bỏ nghĩa trùng lặp
+    if (text.length > 1) {
+        const synthesized = synthesizeCompoundTranslation(text, state);
+        synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
+    }
+
+    // Đổ các nghĩa vào danh sách thả xuống (select)
+    vietphraseSelect.innerHTML = '';
+    if (allMeanings.length > 0) {
+        allMeanings.forEach(meaning => {
+            const option = document.createElement('option');
+            option.value = meaning;
+            option.textContent = meaning;
+            vietphraseSelect.appendChild(option);
+        });
+        customMeaningInput.value = allMeanings[0]; // Mặc định điền nghĩa đầu tiên
+    } else {
+        const option = document.createElement('option');
+        option.textContent = 'Không tìm thấy Vietphrase';
+        option.disabled = true;
+        vietphraseSelect.appendChild(option);
+        customMeaningInput.value = text;
+    }
+
+    // Cập nhật ô nhập nghĩa tùy chỉnh khi người dùng chọn từ danh sách
+    vietphraseSelect.onchange = () => {
+        customMeaningInput.value = vietphraseSelect.value;
+    };
 }

@@ -1,0 +1,1831 @@
+---(((---BẮT ĐẦU TỆP 1---)))---
+*****### TỆP index.html ###*****
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình Dịch Thuật Chuyên Nghiệp</title>
+    <link rel="icon" type="image/png" href="/img/logo.png" />
+    <script src="lib/tailwindcss.js"></script>
+    <link rel="stylesheet" href="src/css/style.css">
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+
+    <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center">
+        <div class="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-accent-color"></div>
+        <p id="loader-text" class="mt-4 text-lg font-semibold text-text-highlight">Đang khởi tạo...</p>
+    </div>
+
+    <div class="max-w-screen-xl mx-auto flex flex-col gap-6">
+        <header class="text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-text-highlight">Công Cụ Dịch Thuật Vietphrase</h1>
+            <p class="text-md mt-2">Dựa trên kho dữ liệu cá nhân của bạn</p>
+
+            <div class="flex items-center justify-center gap-4 mt-4 flex-wrap">
+                <button id="import-local-btn" class="btn">Nhập từ file</button>
+                <button id="import-server-btn" class="btn">Nhập từ Server</button>
+                <button id="clear-db-btn" class="btn btn-secondary">Xóa dữ liệu</button>
+            </div>
+
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 panel p-6 flex flex-col">
+                <h2 class="text-xl font-semibold text-text-highlight mb-4">Văn bản gốc (Tiếng Trung)</h2>
+                <textarea id="input-text" class="w-full flex-grow text-lg leading-relaxed" placeholder="Dán văn bản tiếng Trung vào đây..."></textarea>
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <button id="translate-btn" class="btn">Dịch</button>
+                        <button id="clear-btn" class="btn btn-secondary">Xóa</button>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" id="mode-toggle" class="h-4 w-4 rounded">
+                        <label for="mode-toggle" class="cursor-pointer">Vietphrase nhiều nghĩa</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel p-6 flex flex-col">
+                <h2 class="text-xl font-semibold mb-4 text-text-highlight">Name List</h2>
+                <textarea id="name-list-textarea" class="w-full flex-grow text-sm leading-relaxed" placeholder="[Tiếng Trung]=[Tiếng Việt]..."></textarea>
+                <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-2">
+                    <button id="name-list-save" class="btn text-sm">Lưu</button>
+                    <button id="name-list-delete" class="btn btn-secondary text-sm">Xóa</button>
+                    <button id="name-list-export" class="btn btn-secondary text-sm">Xuất</button>
+                    <button id="name-list-import" class="btn btn-secondary text-sm">Nhập</button>
+                    <input type="file" id="name-list-file-input" class="hidden" accept=".txt">
+                </div>
+            </div>
+        </div>
+
+        <div class="panel p-6">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+                <h2 class="text-xl font-semibold text-text-highlight">Kết quả dịch (Tiếng Việt)</h2>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <button id="decrease-font-btn" title="Giảm cỡ chữ" class="btn btn-secondary !p-2 w-8 h-8">-</button>
+                        <span id="font-size-label" class="text-sm w-12 text-center" title="Cỡ chữ hiện tại">150%</span>
+                        <button id="increase-font-btn" title="Tăng cỡ chữ" class="btn btn-secondary !p-2 w-8 h-8">+</button>
+                    </div>
+                    <button id="copy-btn" class="btn btn-secondary">Sao chép</button>
+                </div>
+            </div>
+            <div id="output-panel" class="w-full p-4 bg-bg-input rounded-lg border border-border-color text-lg leading-relaxed whitespace-pre-wrap">
+                Kết quả sẽ hiện ở đây...
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center pb-3 mb-3 border-b border-border-color">
+                <h3 class="text-xl font-bold text-text-highlight">Thêm name/Chỉnh name</h3>
+                <div class="flex gap-2">
+                    <button id="expand-left-btn" class="btn btn-secondary !p-2 h-8 text-xs">&lt; Mở rộng</button>
+                    <button id="expand-right-btn" class="btn btn-secondary !p-2 h-8 text-xs">Mở rộng &gt;</button>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="text-sm font-bold">Tiếng Trung:</label>
+                <input type="text" id="original-word-input" class="w-full mt-1">
+            </div>
+
+            <div class="mb-3">
+                <label class="text-sm font-bold">Hán Việt:</label>
+                <input type="text" id="hanviet-input" class="w-full mt-1" readonly> </div>
+
+            <div class="mb-3">
+                <label class="text-sm font-bold">Vietphrase (chọn để điền nhanh):</label>
+                <select id="vietphrase-select" class="w-full mt-1"></select>
+            </div>
+
+            <div class="mb-4">
+                <label class="text-sm font-bold">Nghĩa tùy chỉnh:</label>
+                <input type="text" id="custom-meaning" class="w-full mb-2 mt-1" placeholder="Nhập nghĩa bạn muốn lưu...">
+                <div class="flex flex-wrap gap-2">
+                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap">Hoa Chữ Đầu</button>
+                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap2">Hoa 2 Chữ Đầu</button>
+                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="lowerLast">Thường Chữ Cuối</button>
+                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="upper">Hoa Toàn Bộ</button>
+                </div>
+            </div>
+
+            <div class="modal-footer-buttons">
+                <button id="add-temp-btn" class="btn btn-secondary">Thêm Tạm Thời</button>
+                <button id="add-to-name-list-btn" class="btn">Thêm vào Name</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quick-edit-panel" class="absolute z-40 p-3 rounded-lg shadow-2xl border border-border-color hidden w-[360px] max-w-[90vw]" style="background-color: var(--bg-panel);">
+        <div class="grid grid-cols-2 gap-2 pb-2 mb-2 border-b border-border-color">
+            <button id="q-expand-left-btn" class="btn btn-secondary !p-1 h-8 w-full text-center text-xs">&lt; Mở rộng</button>
+            <button id="q-expand-right-btn" class="btn btn-secondary !p-1 h-8 w-full text-center text-xs">Mở rộng &gt;</button>
+        </div>
+
+        <div class="space-y-1">
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-zw" class="font-bold text-sm text-accent-color">zw</label>
+                <input type="text" id="q-input-zw" class="w-full text-sm">
+                <div class="flex gap-2">
+                    <button id="q-search-btn" title="Tìm kiếm trên Google" class="!p-0">🔍</button>
+                    <button id="q-copy-btn" title="Sao chép chữ Hán" class="!p-0">📋</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-hv" class="font-bold text-sm text-accent-color">hv</label>
+                <input type="text" id="q-input-hv" class="w-full text-sm">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-hv" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-hv" title="Thêm vào Name">💾</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-HV" class="font-bold text-sm text-accent-color">HV</label>
+                <input type="text" id="q-input-HV" class="w-full text-sm">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-HV" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-HV" title="Thêm vào Name">💾</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-Vp" class="font-bold text-sm text-accent-color">Vp</label>
+                <input type="text" id="q-input-Vp" class="w-full text-sm">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-Vp" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-Vp" title="Thêm vào Name">💾</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-tc" class="font-bold text-sm text-accent-color">tc</label>
+                <input type="text" id="q-input-tc" class="w-full text-sm" placeholder="Nhập bản dịch của bạn...">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-tc" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-tc" title="Thêm vào Name">💾</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-2 mt-2 border-t border-border-color">
+            <button id="q-add-name-btn" class="btn text-sm">Thêm Name...</button>
+        </div>
+    </div>
+
+    <div id="log-modal" class="fixed inset-0 flex items-center justify-center hidden" style="background-color: rgba(0,0,0,0.7); z-index: 9999;">
+        <div class="bg-bg-panel p-6 rounded-lg border border-border-color shadow-2xl w-[90%] max-w-[600px]">
+            <h3 class="text-xl font-bold mb-4 text-text-highlight">Tiến trình</h3>
+            <ul id="log-list" class="bg-bg-input p-4 rounded-md h-[300px] overflow-y-auto text-sm leading-relaxed">
+                </ul>
+            <div class="mt-4 flex justify-end">
+                <button id="close-log-modal-btn" class="btn btn-secondary">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-importer" multiple class="hidden" accept=".txt">
+
+    <script type="module" src="src/js/main.js"></script>
+</body>
+</html>
+
+---(((---KẾT THÚC TỆP 1---)))---
+
+
+/////-----(((PHÂN TÁCH GIỮA CÁC TỆP)))-----\\\
+
+
+---(((---BẮT ĐẦU TỆP 2---)))---
+*****### TỆP src/css/style.css ###*****
+
+:root {
+    --bg-main: #1a1b26;
+    --bg-panel: #24283b;
+    --bg-input: #2a2f41;
+    --text-color: #a9b1d6;
+    --text-highlight: #c0caf5;
+    --accent-color: #7aa2f7;
+    --border-color: #414868;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 17px; /* TĂNG CỠ CHỮ MẶC ĐỊNH */
+}
+
+.panel {
+    background-color: var(--bg-panel);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+textarea, input {
+    background-color: var(--bg-input);
+    color: var(--text-highlight);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+textarea {
+    min-height: 15rem;
+    resize: vertical;
+}
+
+textarea:focus, input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.3);
+}
+
+input:disabled {
+    background-color: #31364a;
+    cursor: not-allowed;
+}
+
+.btn {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(122, 162, 247, 0.4);
+}
+
+.btn:disabled {
+    background-color: #414868;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    color: var(--text-color);
+}
+
+.btn-secondary {
+    background-color: #414868;
+    color: var(--text-highlight);
+}
+
+.btn-secondary:hover:not(:disabled) {
+     box-shadow: 0 4px 8px rgba(65, 72, 104, 0.4);
+}
+
+#output-panel {
+    resize: vertical;
+    overflow: auto;
+    max-height: 46rem;
+    min-height: 30rem;
+
+}
+
+#output-panel .word {
+    padding: 0;
+    margin: 0;
+    border-radius: 3px;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+    display: inline;
+    cursor: text;
+}
+
+#output-panel .word:hover {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+    cursor: pointer;
+}
+
+#output-panel .untranslatable {
+    color: #7a88a9;
+}
+#output-panel .untranslatable:hover {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+}
+#output-panel .vietphrase-word {
+    color: #ff9e64;
+    font-style: italic;
+}
+
+#edit-modal {
+    background-color: rgba(0,0,0,0.7);
+    display: none; /* Ẩn mặc định */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+}
+
+
+.modal-content {
+    width: 90%;
+    max-width: 550px;
+    min-width: 300px;
+    max-height: 90vh; /* Giới hạn chiều cao tối đa là 80% chiều cao màn hình */
+    overflow-y: auto; /* Nội dung cuộn khi vượt quá chiều cao tối đa */
+    padding: 1.5rem;
+    margin: 1rem auto;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.25rem;
+    color: var(--text-highlight);
+}
+
+.modal-content .btn {
+    margin: 0.25rem;
+    flex-grow: 1;
+    min-width: 120px;
+}
+.meaning-option {
+    background-color: transparent;
+    border: 1px solid transparent;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    border-bottom: 1px solid var(--border-color);
+}
+.meaning-option:hover {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+    border-color: var(--accent-color);
+}
+
+#meanings-container > div {
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 0;
+}
+#meanings-container > div:last-child {
+    border-bottom: none; 
+}
+
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-main); }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-color); }
+
+#loader { background-color: rgba(26, 27, 38, 0.9); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input::placeholder {
+    color: #7a88a9;
+}
+
+input:disabled {
+    background-color: #31364a;
+    cursor: not-allowed;
+}
+
+input::-ms-clear { display: none; }
+input::-ms-reveal { display: none; }
+
+input::selection {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+}
+textarea::selection {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-highlight) !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+}
+
+#quick-edit-panel {
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+#quick-edit-panel input {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-input);
+    color: var(--text-highlight);
+}
+#quick-edit-panel .grid {
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+#quick-edit-panel .grid:last-of-type {
+    border-bottom: none;
+}
+.q-temp-add-btn, .q-perm-add-btn, #q-search-btn, #q-copy-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+    color: var(--text-color);
+}
+.q-temp-add-btn:hover, .q-perm-add-btn:hover, #q-search-btn:hover, #q-copy-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+    color: var(--accent-color);
+}
+#quick-edit-panel label {
+    font-size: 0.9rem;
+}
+#quick-edit-panel button {
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+}
+#quick-edit-panel > div:first-child button {
+    padding: 4px 8px;
+    font-size: 18px;
+}
+
+
+
+/* Cải thiện phần từ gốc */
+#original-word {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: var(--bg-input);
+    border-radius: 6px;
+    margin: 8px 0;
+    font-size: 1.125rem; /* Giảm cỡ chữ từ 2xl xuống khoảng 1.5xl hoặc tùy chọn */
+    max-width: 70%; /* Giới hạn chiều rộng tối đa */
+    white-space: nowrap; /* Ngăn ngắt dòng */
+    overflow: hidden; /* Ẩn phần văn bản vượt quá */
+    text-overflow: ellipsis; /* Hiển thị dấu ba chấm nếu văn bản quá dài */
+}
+
+/* Cải thiện container các nghĩa */
+#meanings-container {
+    max-height: 160px;
+    overflow-y: auto;
+    padding: 8px;
+    margin: 12px 0;
+    background-color: var(--bg-input);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+/* Cải thiện các option nghĩa */
+.meaning-option {
+    padding: 10px 12px;
+    margin: 4px 0;
+    border-radius: 6px;
+    display: block;
+    width: 100%;
+    text-align: left;
+    transition: all 0.2s;
+}
+
+/* THÊM MỚI: Định dạng cho các ô input trong modal để không bị vỡ layout */
+#edit-modal input[type="text"] {
+    white-space: nowrap; /* Ngăn không cho chữ xuống dòng */
+    overflow: hidden; /* Ẩn phần chữ bị tràn */
+    text-overflow: ellipsis; /* Hiển thị dấu "..." khi chữ bị ẩn */
+}
+
+/* THÊM MỚI: Định dạng cho thẻ select (danh sách thả xuống) */
+#vietphrase-select {
+    background-color: var(--bg-input);
+    color: var(--text-highlight);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    width: 100%;
+    cursor: pointer;
+}
+
+#vietphrase-select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.3);
+}
+
+.meaning-option:hover {
+    transform: translateX(4px);
+}
+
+/* Cải thiện input custom meaning */
+#custom-meaning {
+    width: 100%;
+    padding: 0.75rem;
+    margin: 0.5rem 0 1rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+#custom-meaning:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.3);
+    outline: none;
+}
+
+/* Cải thiện nút chuyển đổi kiểu chữ */
+.case-btn {
+    padding: 6px 10px !important;
+    font-size: 0.8rem !important;
+    margin-right: 4px;
+}
+
+/* Cải thiện footer buttons */
+.modal-content > div:last-child {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 16px;
+}
+
+/* Chỉnh font size cho các nút trong modal */
+.modal-content .btn, .modal-content .btn-secondary {
+    font-size: 0.875rem; /* Ví dụ: 14px. Bạn có thể thay đổi giá trị này */
+    font-weight: 500;
+}
+
+/* Responsive cho modal */
+@media (max-width: 640px) {
+    .modal-content {
+      max-width: 95%;
+      max-height: 90vh;
+    }
+    
+    .modal-content .btn {
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+    
+    #hanviet-options-container {
+        flex-direction: column;
+    }
+}
+
+/* Cải thiện scrollbar cho meanings container */
+#meanings-container::-webkit-scrollbar {
+    width: 6px;
+}
+#meanings-container::-webkit-scrollbar-thumb {
+    background-color: var(--accent-color);
+    border-radius: 3px;
+}
+
+/* Cải thiện phần Hán Việt options */
+#hanviet-options-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+#hanviet-options-container button {
+    padding: 6px 10px;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+#hanviet-options-container button:hover {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+    border-color: var(--accent-color);
+}
+
+
+
+/* LOG */
+#log-list li {
+    margin-bottom: 4px;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px; 
+}
+#log-list li.log-info {
+    color: var(--text-color);
+}
+#log-list li.log-success {
+    color: #34d399;
+}
+#log-list li.log-error {
+    color: #f87171;
+}
+#log-list li.log-loading {
+    color: #a9b1d6;
+    font-style: italic;
+}
+.spinner-icon {
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+/* LOG End*/
+
+---(((---KẾT THÚC TỆP 2---)))---
+
+
+/////-----(((PHÂN TÁCH GIỮA CÁC TỆP)))-----\\\
+
+
+---(((---BẮT ĐẦU TỆP 3---)))---
+*****### TỆP src/js/dictionary.js ###*****
+
+const HAN_VIET_DICT_NAME = 'ChinesePhienAmWords.txt';
+const NAMES_FILES = [
+    'Names9.txt', 'Names8.txt', 'Names7.txt', 'Names6.txt',
+    'Names5.txt', 'Names4.txt', 'Names3.txt', 'Names2.txt', 'Names.txt'
+];
+
+const DICTIONARY_FILES = [
+    ...NAMES_FILES.map(name => ({ name, priority: 1 })),
+    { name: 'Vietphrase.txt', priority: 3 },
+    { name: 'Babylon.txt', priority: 4 },
+    { name: 'ChinesePhienAmEnglishWords.txt', priority: 4 },
+    { name: HAN_VIET_DICT_NAME, priority: 4 },
+    { name: 'IgnoredChinesePhrases.txt', priority: 4 },
+    { name: 'LacViet.txt', priority: 4 },
+    { name: 'LuatNhan.txt', priority: 4 },
+    { name: 'Pronouns.txt', priority: 4 },
+    { name: 'ThieuChuu.txt', priority: 4 },
+];
+
+const REQUIRED_FILES = [
+    'Vietphrase.txt',
+    'Babylon.txt',
+    'ChinesePhienAmEnglishWords.txt',
+    HAN_VIET_DICT_NAME,
+    'IgnoredChinesePhrases.txt',
+    'LacViet.txt',
+    'LuatNhan.txt',
+    'Pronouns.txt',
+    'ThieuChuu.txt',
+];
+
+// --- CÁC HÀM HỖ TRỢ LÀM VIỆC VỚI INDEXEDDB ---
+const DB_NAME = 'VietphraseDB';
+const STORE_NAME = 'dictionaryStore';
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME);
+        request.onerror = () => reject("Lỗi khi mở IndexedDB.");
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+    });
+}
+
+async function saveDataToDB(db, data) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.put(data);
+        request.onerror = () => reject("Không thể lưu dữ liệu vào DB.");
+        request.onsuccess = () => resolve();
+    });
+}
+
+async function getDataFromDB(db, id) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.get(id);
+        request.onerror = () => reject("Không thể đọc dữ liệu từ DB.");
+        request.onsuccess = () => resolve(request.result);
+    });
+}
+
+export async function clearAllDictionaries() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const db = await openDB();
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.clear();
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject('Không thể xóa dữ liệu.');
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+// --- KẾT THÚC CÁC HÀM HỖ TRỢ ---
+
+
+export async function initializeDictionaries() {
+    try {
+        const db = await openDB();
+        const cachedData = await getDataFromDB(db, 'parsed-dictionaries');
+        if (cachedData) {
+            const dictionaries = new Map();
+            cachedData.data.forEach(([name, data]) => {
+                dictionaries.set(name, {
+                    priority: data.priority,
+                    dict: new Map(data.dict)
+                });
+            });
+            console.log('Tải từ điển từ IndexedDB thành công.');
+            return dictionaries;
+        }
+        console.log('Không tìm thấy từ điển đã lưu.');
+        return null;
+    } catch (error) {
+        console.error("Lỗi khởi tạo từ điển:", error);
+        return null;
+    }
+}
+
+export async function loadDictionariesFromServer(logHandler) {
+    const dictionaries = new Map();
+    try {
+        const db = await openDB();
+
+        for (const fileInfo of DICTIONARY_FILES) {
+            const loadingLi = logHandler.append(`Đang xử lý file: ${fileInfo.name}`, 'loading');
+            const response = await fetch(`data/${fileInfo.name}`);
+            if (response.ok) {
+                const content = await response.text();
+                dictionaries.set(fileInfo.name, {
+                    priority: fileInfo.priority,
+                    dict: parseDictionary(content)
+                });
+                logHandler.update(loadingLi, `Đã xử lý xong: ${fileInfo.name}`, 'success'); 
+            } else {
+                logHandler.update(loadingLi, `Lỗi: Không thể tải ${fileInfo.name}. Bỏ qua.`, 'error');
+            }
+        }
+
+        const storableDicts = Array.from(dictionaries.entries()).map(([name, data]) => {
+            return [name, {
+                priority: data.priority,
+                dict: Array.from(data.dict.entries())
+            }];
+        });
+
+        const savingLi = logHandler.append('Đang lưu từ điển vào IndexedDB...', 'loading');
+        await saveDataToDB(db, { id: 'parsed-dictionaries', data: storableDicts });
+        logHandler.update(savingLi, 'Đã lưu từ điển vào IndexedDB.', 'success'); 
+
+        return dictionaries;
+    } catch (error) {
+        console.error(error);
+        logHandler.append(`Lỗi: ${error.message}`, 'error');
+        return null;
+    } finally {
+        logHandler.append('Quá trình hoàn tất.', 'info');
+    }
+}
+
+export async function loadDictionariesFromFile(files, logHandler) {
+    const dictionaries = new Map();
+    const loadedFileNames = new Set();
+    const fileReaderPromises = [];
+
+    for (const fileInfo of DICTIONARY_FILES) {
+        const file = Array.from(files).find(f => f.name.toLowerCase() === fileInfo.name.toLowerCase());
+        if (file) {
+            loadedFileNames.add(fileInfo.name);
+            const loadingLi = logHandler.append(`Đang đọc file: ${fileInfo.name}`, 'loading');
+            const promise = new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    dictionaries.set(fileInfo.name, {
+                        priority: fileInfo.priority,
+                        dict: parseDictionary(e.target.result)
+                    });
+                    logHandler.update(loadingLi, `Đã đọc xong file: ${fileInfo.name}`, 'success'); 
+                    resolve();
+                };
+                reader.onerror = () => {
+                    logHandler.update(loadingLi, `Lỗi khi đọc file: ${fileInfo.name}`, 'error'); 
+                    resolve();
+                };
+                reader.readAsText(file);
+            });
+            fileReaderPromises.push(promise);
+        }
+    }
+
+    await Promise.all(fileReaderPromises);
+
+    const missingFiles = REQUIRED_FILES.filter(f => !loadedFileNames.has(f));
+    if (missingFiles.length > 0) {
+        logHandler.append(`Lỗi: Thiếu các file bắt buộc: ${missingFiles.join(', ')}`, 'error');
+        return null;
+    }
+
+    const db = await openDB();
+    const savingLi = logHandler.append('Đang lưu từ điển vào IndexedDB...', 'loading');
+    const storableDicts = Array.from(dictionaries.entries()).map(([name, data]) => {
+        return [name, {
+            priority: data.priority,
+            dict: Array.from(data.dict.entries())
+        }];
+    });
+
+    await saveDataToDB(db, { id: 'parsed-dictionaries', data: storableDicts });
+    logHandler.update(savingLi, 'Đã lưu từ điển vào IndexedDB.', 'success');
+    logHandler.append('Quá trình hoàn tất.', 'info');
+
+    return dictionaries;
+}
+
+function parseDictionary(text) {
+    const dictionary = new Map();
+    const lines = text.split(/\r?\n/);
+    lines.forEach(line => {
+        if (line.startsWith('#') || line.trim() === '') return;
+        const parts = line.split('=');
+        if (parts.length === 2) {
+            const key = parts[0].trim();
+            const value = parts[1].trim();
+            if (key) dictionary.set(key, value);
+        }
+    });
+    return dictionary;
+}
+
+export function getTranslationFromPrioritizedDicts(word, dictionaries) {
+    if (!dictionaries) return null;
+    const sortedDicts = [...dictionaries.values()].sort((a, b) => a.priority - b.priority);
+    for (const dictInfo of sortedDicts) {
+        if (dictInfo.dict.has(word)) return dictInfo.dict.get(word);
+    }
+    return null;
+}
+
+export function getHanViet(word, dictionaries) {
+    if (!dictionaries) return null;
+    const hanVietDict = dictionaries.get(HAN_VIET_DICT_NAME)?.dict;
+    if (!word || !hanVietDict) {
+        return null;
+    }
+    const getSingleCharHanViet = (char) => {
+        if (hanVietDict.has(char)) {
+            return hanVietDict.get(char).split('/')[0].split(';')[0].trim();
+        }
+        return char;
+    };
+    const tokens = word.match(/[\u4e00-\u9fa5]+|[^\u4e00-\u9fa5]+/g) || [];
+    const translatedTokens = tokens.map(token => {
+        if (/[\u4e00-\u9fa5]/.test(token)) {
+            return [...token].map(getSingleCharHanViet).join(' ');
+        } else {
+            return token;
+        }
+    });
+    return translatedTokens.join(' ');
+}
+
+export function segmentText(text, masterKeySet) {
+    if (!masterKeySet) return [text];
+    const segments = [];
+    let currentIndex = 0;
+    const textLength = text.length;
+    const maxLen = 10;
+
+    while (currentIndex < textLength) {
+        if (!/[\u4e00-\u9fa5]/.test(text[currentIndex])) {
+            let nonChineseBlock = '';
+            let i = currentIndex;
+            while (i < textLength && !/[\u4e00-\u9fa5]/.test(text[i])) {
+                nonChineseBlock += text[i];
+                i++;
+            }
+            segments.push(nonChineseBlock);
+            currentIndex += nonChineseBlock.length;
+            continue;
+        }
+
+        let foundWord = null;
+        for (let len = Math.min(maxLen, textLength - currentIndex); len > 0; len--) {
+            const potentialWord = text.substr(currentIndex, len);
+            if (masterKeySet.has(potentialWord)) {
+                foundWord = potentialWord;
+                break;
+            }
+        }
+        
+        if (foundWord) {
+            segments.push(foundWord);
+            currentIndex += foundWord.length;
+        } else {
+            segments.push(text[currentIndex]);
+            currentIndex++;
+        }
+    }
+    return segments;
+}
+
+export function translateWord(word, dictionaries, nameDict, tempDict) {
+    let meaningsStr = tempDict.get(word) || nameDict.get(word) || getTranslationFromPrioritizedDicts(word, dictionaries) || word;
+    if (meaningsStr === word && !getTranslationFromPrioritizedDicts(word, dictionaries)) {
+         return { best: word, all: [word], found: false };
+    }
+    const allMeaningsFlat = meaningsStr.split(';').flatMap(m => m.split('/')).map(m => m.trim()).filter(Boolean);
+    const bestMeaning = allMeaningsFlat[0] || word;
+    return { best: bestMeaning, all: allMeaningsFlat, found: true };
+}
+
+---(((---KẾT THÚC TỆP 3---)))---
+
+
+/////-----(((PHÂN TÁCH GIỮA CÁC TỆP)))-----\\\
+
+
+---(((---BẮT ĐẦU TỆP 4---)))---
+*****### TỆP src/js/dom.js ###*****
+
+const DOMElements = {
+    importLocalBtn: document.getElementById('import-local-btn'),
+    importServerBtn: document.getElementById('import-server-btn'),
+    clearDbBtn: document.getElementById('clear-db-btn'),
+    logModal: document.getElementById('log-modal'),
+    logList: document.getElementById('log-list'),
+    closeLogModalBtn: document.getElementById('close-log-modal-btn'),
+    fileImporter: document.getElementById('file-importer'),
+    inputText: document.getElementById('input-text'),
+    translateBtn: document.getElementById('translate-btn'),
+    clearBtn: document.getElementById('clear-btn'),
+    copyBtn: document.getElementById('copy-btn'),
+    outputPanel: document.getElementById('output-panel'),
+    nameListTextarea: document.getElementById('name-list-textarea'),
+    nameListSaveBtn: document.getElementById('name-list-save'),
+    nameListDeleteBtn: document.getElementById('name-list-delete'),
+    nameListExportBtn: document.getElementById('name-list-export'),
+    nameListImportBtn: document.getElementById('name-list-import'),
+    nameListFileInput: document.getElementById('name-list-file-input'),
+    loader: document.getElementById('loader'),
+    loaderText: document.getElementById('loader-text'),
+    modeToggle: document.getElementById('mode-toggle'),
+    increaseFontBtn: document.getElementById('increase-font-btn'),
+    decreaseFontBtn: document.getElementById('decrease-font-btn'),
+    fontSizeLabel: document.getElementById('font-size-label'),
+    
+    // Popup (Bảng Thêm Name)
+    editModal: document.getElementById('edit-modal'),
+    customMeaningInput: document.getElementById('custom-meaning'),
+    addToNameListBtn: document.getElementById('add-to-name-list-btn'),
+    addTempBtn: document.getElementById('add-temp-btn'),
+    expandLeftBtn: document.getElementById('expand-left-btn'),
+    expandRightBtn: document.getElementById('expand-right-btn'),
+
+    // Bảng chọn chữ nhanh
+    quickEditPanel: document.getElementById('quick-edit-panel'),
+    qExpandLeftBtn: document.getElementById('q-expand-left-btn'),
+    qExpandRightBtn: document.getElementById('q-expand-right-btn'),
+    qAddNameBtn: document.getElementById('q-add-name-btn'),
+    qInputZw: document.getElementById('q-input-zw'),
+    qInputHv: document.getElementById('q-input-hv'),
+    qInputHV: document.getElementById('q-input-HV'),
+    qInputVp: document.getElementById('q-input-Vp'),
+    qInputTc: document.getElementById('q-input-tc'),
+    qSearchBtn: document.getElementById('q-search-btn'),
+    qCopyBtn: document.getElementById('q-copy-btn'),
+};
+
+export default DOMElements;
+
+---(((---KẾT THÚC TỆP 4---)))---
+
+
+/////-----(((PHÂN TÁCH GIỮA CÁC TỆP)))-----\\\
+
+
+---(((---BẮT ĐẦU TỆP 5---)))---
+*****### TỆP src/js/main.js ###*****
+
+import DOMElements from './dom.js';
+import { initializeDictionaries, clearAllDictionaries, loadDictionariesFromFile, loadDictionariesFromServer } from './dictionary.js';
+import { initializeNameList, buildMasterKeySet } from './nameList.js';
+import { initializeModal } from './modal.js';
+import { performTranslation } from './translation.js';
+
+// Hàm này chỉ thêm một dòng log mới vào danh sách
+function appendLog(message, type) {
+    const li = document.createElement('li');
+    let icon = '';
+
+    if (type === 'loading') {
+        icon = '<div class="w-4 h-4 border-2 border-dashed rounded-full animate-spin border-accent-color spinner-icon"></div>';
+    } else if (type === 'success') {
+        icon = '<span>✅</span>';
+    } else if (type === 'error') {
+        icon = '<span>❌</span>';
+    } else {
+        icon = '<span>ℹ️</span>';
+    }
+
+    li.innerHTML = `${icon}<span>${message}</span>`;
+    li.classList.add(`log-${type}`);
+    DOMElements.logList.appendChild(li);
+
+    // Tự động cuộn xuống cuối danh sách
+    DOMElements.logList.scrollTop = DOMElements.logList.scrollHeight;
+    return li; // Trả về phần tử li để có thể cập nhật sau này
+}
+
+// Hàm mới để cập nhật một dòng log đã có
+function updateLog(li, message, type) {
+    let icon = '';
+    if (type === 'success') {
+        icon = '<span>✅</span>';
+    } else if (type === 'error') {
+        icon = '<span>❌</span>';
+    } else {
+        icon = '<span>ℹ️</span>';
+    }
+
+    li.innerHTML = `${icon}<span>${message}</span>`;
+    li.classList.remove('log-loading');
+    li.classList.add(`log-${type}`);
+}
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const state = {
+        dictionaries: null,
+        masterKeySet: new Set(),
+    };
+
+    // Vô hiệu hóa loader ban đầu
+    DOMElements.loader.style.display = 'none';
+
+    // Cập nhật state sau khi có từ điển mới
+    const updateState = (newDicts) => {
+        state.dictionaries = newDicts;
+        initializeNameList(state);
+        initializeModal(state);
+        // Bật các nút chức năng sau khi có từ điển
+        DOMElements.translateBtn.disabled = false;
+        DOMElements.modeToggle.disabled = false;
+    };
+
+    // Load từ điển đã có sẵn trong IndexedDB (nếu có)
+    const db = await initializeDictionaries();
+    if (db) {
+        updateState(db);
+    }
+
+    // Kết nối các nút mới
+    DOMElements.importLocalBtn.addEventListener('click', () => {
+        DOMElements.logModal.classList.remove('hidden');
+        DOMElements.logList.innerHTML = '';
+        DOMElements.fileImporter.click();
+    });
+    
+    DOMElements.fileImporter.addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+            const logHandler = { append: appendLog, update: updateLog };
+            const newDicts = await loadDictionariesFromFile(files, logHandler);
+            updateState(newDicts);
+        }
+        e.target.value = null;
+    });
+
+    DOMElements.importServerBtn.addEventListener('click', async () => {
+        DOMElements.logModal.classList.remove('hidden');
+        DOMElements.logList.innerHTML = '';
+        const logHandler = { append: appendLog, update: updateLog };
+        const newDicts = await loadDictionariesFromServer(logHandler);
+        updateState(newDicts);
+    });
+
+    DOMElements.clearDbBtn.addEventListener('click', async () => {
+        if (confirm('Bạn có chắc muốn xóa toàn bộ từ điển đã lưu? Hành động này không thể hoàn tác.')) {
+            await clearAllDictionaries();
+            alert('Đã xóa dữ liệu từ điển. Vui lòng nhập lại từ điển.');
+            // Reset trạng thái
+            state.dictionaries = null;
+            state.masterKeySet = new Set();
+            DOMElements.outputPanel.textContent = 'Kết quả sẽ hiện ở đây...';
+            // Vô hiệu hóa các nút chức năng
+            DOMElements.translateBtn.disabled = true;
+            DOMElements.modeToggle.disabled = true;
+        }
+    });
+
+    DOMElements.closeLogModalBtn.addEventListener('click', () => {
+        DOMElements.logModal.classList.add('hidden');
+        DOMElements.logList.innerHTML = '';
+    });
+
+    // Kích hoạt nút dịch để bắt đầu quá trình dịch
+    DOMElements.translateBtn.addEventListener('click', () => performTranslation(state));
+    
+    DOMElements.clearBtn.addEventListener('click', () => {
+        DOMElements.inputText.value = '';
+        DOMElements.outputPanel.textContent = 'Kết quả sẽ hiện ở đây...';
+    });
+
+
+
+
+    // Trong phần xử lý sự kiện click của nút copyBtn
+    DOMElements.copyBtn.addEventListener('click', () => {
+        const outputPanel = DOMElements.outputPanel;
+        if (outputPanel.textContent.trim().length === 0 || outputPanel.textContent.trim() === 'Kết quả sẽ hiện ở đây...') {
+            return;
+        }
+
+        // Tạo một phạm vi chọn mới
+        const range = document.createRange();
+        range.selectNodeContents(outputPanel);
+        
+        // Xóa các lựa chọn hiện có
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        
+        // Thêm phạm vi mới
+        selection.addRange(range);
+
+        try {
+            // Thực hiện sao chép
+            document.execCommand('copy');
+            
+            // Thông báo sao chép thành công
+            const originalText = DOMElements.copyBtn.textContent;
+            DOMElements.copyBtn.textContent = 'Đã sao chép!';
+            DOMElements.copyBtn.disabled = true;
+            
+            setTimeout(() => {
+                DOMElements.copyBtn.textContent = originalText;
+                DOMElements.copyBtn.disabled = false;
+            }, 300);
+        } catch (err) {
+            console.error('Không thể sao chép tự động:', err);
+            outputPanel.focus();
+            document.execCommand('selectAll');
+        }
+
+    });
+    
+    DOMElements.modeToggle.addEventListener('change', () => performTranslation(state));
+
+    let currentFontSize = parseInt(localStorage.getItem('translatorFontSize') || '18');
+    const baseFontSize = 18;
+
+    const updateFontSize = () => {
+        DOMElements.outputPanel.style.fontSize = `${currentFontSize}px`;
+        const percent = Math.round((currentFontSize / baseFontSize) * 100);
+        DOMElements.fontSizeLabel.textContent = `${percent}%`;
+        localStorage.setItem('translatorFontSize', currentFontSize);
+    };
+
+    DOMElements.increaseFontBtn.addEventListener('click', () => {
+        currentFontSize += 1;
+        updateFontSize();
+    });
+
+    DOMElements.decreaseFontBtn.addEventListener('click', () => {
+        if (currentFontSize > 8) {
+            currentFontSize -= 1;
+            updateFontSize();
+        }
+    });
+
+    updateFontSize();
+});
+
+---(((---KẾT THÚC TỆP 5---)))---
+
+
+/////-----(((PHÂN TÁCH GIỮA CÁC TỆP)))-----\\\
+
+
+---(((---BẮT ĐẦU TỆP 6---)))---
+*****### TỆP src/js/modal.js ###*****
+
+import DOMElements from './dom.js';
+import { getHanViet, translateWord, segmentText } from './dictionary.js';
+import { nameDictionary, temporaryNameDictionary, saveNameDictionaryToStorage, renderNameList, buildMasterKeySet } from './nameList.js';
+import { synthesizeCompoundTranslation, performTranslation } from './translation.js';
+
+let selectionState = {
+    spans: [],
+    startIndex: -1,
+    endIndex: -1,
+    originalText: '',
+};
+let isPanelVisible = false;
+
+function applyCase(caseType) {
+    const input = DOMElements.customMeaningInput;
+    let text = input.value;
+    if (!text) return;
+    switch (caseType) {
+        case 'cap': text = text.charAt(0).toUpperCase() + text.slice(1).toLowerCase(); break;
+        case 'upper': text = text.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '); break;
+        case 'cap2':
+            const words2 = text.split(' ');
+            text = words2.slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') + (words2.length > 2 ? ' ' + words2.slice(2).join(' ') : '');
+            break;
+        case 'lowerLast':
+            const words = text.split(' ');
+            if (words.length > 1) {
+                text = words.slice(0, -1).join(' ') + ' ' + words[words.length - 1].toLowerCase();
+            }
+            break;
+        case 'hanviet-upper':
+            text = text.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            break;
+        case 'hanviet-lower':
+            text = text.toLowerCase();
+            break;
+    }
+    input.value = text;
+}
+
+function groupSimilarMeanings(meanings, state) {
+    if (meanings.length <= 1) return meanings.join(' / ');
+
+    const segments = segmentText(meanings.join(''), state.masterKeySet);
+    const vpParts = segments.map(segment => {
+        if (!/[\u4e00-\u9fa5]/.test(segment)) {
+            return segment;
+        }
+        const translation = translateWord(segment, state.dictionaries, nameDictionary, temporaryNameDictionary);
+        const meanings = translation.all;
+        if (meanings.length > 1) {
+            return `(${meanings.join('/')})`;
+        } else if (meanings.length === 1) {
+            return meanings[0];
+        } else {
+            return segment;
+        }
+    });
+    return vpParts.join(' ');
+}
+
+
+function closeOldModal() {
+    DOMElements.editModal.style.display = 'none';
+}
+
+function showQuickEditPanel(selection, state) {
+    const range = selection.getRangeAt(0);
+    const allSpans = Array.from(DOMElements.outputPanel.querySelectorAll('.word'));
+    const selectedSpans = allSpans.filter(span => selection.containsNode(span, true) && span.textContent.trim() !== '');
+    
+    if (selectedSpans.length === 0) {
+        if (isPanelVisible) hideQuickEditPanel();
+        return;
+    }
+
+    selectionState.startIndex = allSpans.indexOf(selectedSpans[0]);
+    selectionState.endIndex = allSpans.indexOf(selectedSpans[selectedSpans.length - 1]);
+    selectionState.spans = allSpans;
+    selectionState.originalText = selectedSpans.map(s => s.dataset.original).join('');
+
+    populateQuickEditPanel(selectionState.originalText, state);
+
+    const panel = DOMElements.quickEditPanel;
+    const rect = range.getBoundingClientRect();
+
+    panel.style.visibility = 'hidden';
+    panel.classList.remove('hidden');
+    const panelWidth = panel.offsetWidth;
+
+    const viewportWidth = window.innerWidth;
+
+    let leftPosition = window.scrollX + rect.left;
+
+    if (leftPosition + panelWidth > viewportWidth) {
+        leftPosition = window.scrollX + rect.right - panelWidth;
+    }
+
+    if (leftPosition < 0) {
+        leftPosition = 5;
+    }
+
+    panel.style.left = `${leftPosition}px`;
+    panel.style.top = `${window.scrollY + rect.bottom + 5}px`;
+
+    panel.style.visibility = 'visible';
+    isPanelVisible = true;
+}
+
+function populateQuickEditPanel(text, state) {
+    DOMElements.qInputZw.value = text;
+    const hanViet = getHanViet(text, state.dictionaries);
+    if (hanViet && !/^[0-9a-zA-Z\s.,;:!?()]+$/.test(hanViet)) {
+        DOMElements.qInputHv.value = hanViet.toLowerCase();
+        DOMElements.qInputHV.value = hanViet.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    } else {
+        DOMElements.qInputHv.value = '';
+        DOMElements.qInputHV.value = '';
+    }
+    
+    const translation = translateWord(text, state.dictionaries, nameDictionary, temporaryNameDictionary);
+    let allMeanings = translation.found ? [...translation.all] : [];
+    if (text.length > 1) {
+        const synthesized = synthesizeCompoundTranslation(text, state);
+        synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
+    }
+    
+    DOMElements.qInputVp.value = groupSimilarMeanings(allMeanings, state);
+    DOMElements.qInputTc.value = '';
+}
+
+
+function hideQuickEditPanel() {
+    if (isPanelVisible) {
+        DOMElements.quickEditPanel.classList.add('hidden');
+        isPanelVisible = false;
+        if (window.getSelection) {
+            window.getSelection().removeAllRanges();
+        }
+    }
+}
+
+
+function expandQuickSelection(direction, state) {
+    const { spans, startIndex, endIndex } = selectionState;
+    let newStart = startIndex, newEnd = endIndex;
+    
+    // Logic xác định chỉ mục mới
+    if (direction === 'left' && startIndex > 0) newStart--;
+    else if (direction === 'right' && endIndex < spans.length - 1) newEnd++;
+    else return;
+
+    // Cập nhật trạng thái lựa chọn
+    selectionState.startIndex = newStart;
+    selectionState.endIndex = newEnd;
+    selectionState.originalText = spans.slice(newStart, newEnd + 1).map(s => s.dataset.original).join('');
+    
+    // Cập nhật DOM của lựa chọn
+    const newRange = document.createRange();
+    newRange.setStartBefore(spans[newStart]);
+    newRange.setEndAfter(spans[newEnd]);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+    
+    // Chỉ cập nhật panel thay vì tạo lại toàn bộ
+    populateQuickEditPanel(selectionState.originalText, state);
+}
+
+
+function populateOldModal(text, state) {
+    // Lấy các DOM element mới
+    const originalWordInput = document.getElementById('original-word-input');
+    const hanvietInput = document.getElementById('hanviet-input');
+    const vietphraseSelect = document.getElementById('vietphrase-select');
+    const customMeaningInput = DOMElements.customMeaningInput;
+
+    // Điền dữ liệu vào các ô input
+    originalWordInput.value = text;
+    const baseHanViet = getHanViet(text, state.dictionaries);
+    hanvietInput.value = baseHanViet ? baseHanViet.toLowerCase() : 'Không tìm thấy Hán Việt.';
+
+    // Lấy tất cả các nghĩa Vietphrase
+    const finalTranslation = translateWord(text, state.dictionaries, nameDictionary, temporaryNameDictionary);
+    let allMeanings = finalTranslation.found ? [...new Set(finalTranslation.all)] : []; // Dùng Set để loại bỏ nghĩa trùng lặp
+    if (text.length > 1) {
+        const synthesized = synthesizeCompoundTranslation(text, state);
+        synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
+    }
+
+    // Đổ các nghĩa vào danh sách thả xuống (select)
+    vietphraseSelect.innerHTML = ''; // Xóa các lựa chọn cũ
+    if (allMeanings.length > 0) {
+        allMeanings.forEach(meaning => {
+            const option = document.createElement('option');
+            option.value = meaning;
+            option.textContent = meaning;
+            vietphraseSelect.appendChild(option);
+        });
+        customMeaningInput.value = allMeanings[0]; // Mặc định điền nghĩa đầu tiên
+    } else {
+        const option = document.createElement('option');
+        option.textContent = 'Không tìm thấy Vietphrase';
+        option.disabled = true;
+        vietphraseSelect.appendChild(option);
+        customMeaningInput.value = text;
+    }
+
+    // Cập nhật ô nhập nghĩa tùy chỉnh khi người dùng chọn từ danh sách
+    vietphraseSelect.onchange = () => {
+        customMeaningInput.value = vietphraseSelect.value;
+    };
+}
+
+function openOldModal(state) {
+    const text = selectionState.originalText;
+    // Dòng code gây lỗi "DOMElements.originalWordEl.textContent = text;" đã được xóa ở đây.
+
+    populateOldModal(text, state);
+
+    hideQuickEditPanel();
+    DOMElements.editModal.style.display = 'flex';
+}
+
+function expandOldModalSelection(direction, state) {
+    const { spans, startIndex, endIndex } = selectionState;
+    let newStartIdx = startIndex, newEndIdx = endIndex;
+    
+    // Logic xác định chỉ mục mới
+    if (direction === 'left' && startIndex > 0) newStartIdx--;
+    else if (direction === 'right' && endIndex < spans.length - 1) newEndIdx++;
+    else return;
+
+    // Cập nhật trạng thái lựa chọn
+    selectionState.startIndex = newStartIdx;
+    selectionState.endIndex = newEndIdx;
+    selectionState.originalText = selectionState.spans.slice(newStartIdx, newEndIdx + 1).map(s => s.dataset.original).join('');
+    
+    // Chỉ cập nhật modal thay vì tạo lại toàn bộ
+    populateOldModal(selectionState.originalText, state);
+}
+
+export function initializeModal(state) {
+    document.addEventListener('pointerup', (e) => {
+        const outputPanel = DOMElements.outputPanel;
+        const quickEditPanel = DOMElements.quickEditPanel;
+
+        if (!outputPanel.contains(e.target) || quickEditPanel.contains(e.target)) {
+            return;
+        }
+
+        setTimeout(() => {
+            const selection = window.getSelection();
+            const targetSpan = e.target.closest('.word');
+
+            // Logic mới: Chỉ hiển thị panel nếu nhấp vào một từ và không có lựa chọn nào.
+            if (targetSpan && selection.isCollapsed) {
+                // Tạo một lựa chọn mới chỉ chứa từ được nhấp vào
+                const range = document.createRange();
+                range.selectNode(targetSpan);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                showQuickEditPanel(selection, state);
+                return;
+            }
+
+            // Ẩn panel nếu có lựa chọn nhưng không phải do nhấp chuột đơn
+            // Hoặc nhấp chuột ra ngoài panel
+            if (isPanelVisible) {
+                hideQuickEditPanel();
+            }
+
+        }, 50);  
+    });
+
+    DOMElements.qExpandLeftBtn.addEventListener('click', () => expandQuickSelection('left', state));
+    DOMElements.qExpandRightBtn.addEventListener('click', () => expandQuickSelection('right', state));
+    DOMElements.qAddNameBtn.addEventListener('click', () => openOldModal(state));
+
+    DOMElements.qSearchBtn.addEventListener('click', () => {
+        const text = DOMElements.qInputZw.value.trim();
+        if(text) window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, '_blank');
+    });
+    DOMElements.qCopyBtn.addEventListener('click', () => {
+        const text = DOMElements.qInputZw.value.trim();
+        if(text) navigator.clipboard.writeText(text);
+    });
+
+    document.querySelectorAll('.q-temp-add-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetInputId = e.target.dataset.target;
+            const text = document.getElementById(targetInputId).value;
+            if (text && selectionState.originalText) {
+                temporaryNameDictionary.set(selectionState.originalText, text);
+                performTranslation(state);
+                hideQuickEditPanel();
+            }
+        });
+    });
+
+    document.querySelectorAll('.q-perm-add-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const zwText = DOMElements.qInputZw.value.trim();
+            const targetInputId = e.target.dataset.target;
+            const vnText = document.getElementById(targetInputId).value.trim();
+            if (zwText && vnText) {
+                nameDictionary.set(zwText, vnText);
+                saveNameDictionaryToStorage();
+                renderNameList();
+                buildMasterKeySet(state);
+                performTranslation(state);
+                hideQuickEditPanel();
+            }
+        });
+    });
+
+    DOMElements.editModal.addEventListener('click', (e) => {
+        if (e.target === DOMElements.editModal) closeOldModal();
+    });
+    DOMElements.expandLeftBtn.addEventListener('click', () => expandOldModalSelection('left', state));
+    DOMElements.expandRightBtn.addEventListener('click', () => expandOldModalSelection('right', state));
+
+    DOMElements.addToNameListBtn.addEventListener('click', () => {
+        const cn = document.getElementById('original-word-input').value.trim(); // THAY ĐỔI: Lấy text từ input
+        const vn = DOMElements.customMeaningInput.value.trim();
+        if (cn && vn) { nameDictionary.set(cn, vn); saveNameDictionaryToStorage(); renderNameList(); buildMasterKeySet(state); closeOldModal(); performTranslation(state); }
+    });
+    DOMElements.addTempBtn.addEventListener('click', () => {
+        const cn = document.getElementById('original-word-input').value.trim(); // THAY ĐỔI: Lấy text từ input
+        const vn = DOMElements.customMeaningInput.value.trim();
+        if (cn && vn) { temporaryNameDictionary.set(cn, vn); closeOldModal(); performTranslation(state); }
+    });
+    document.querySelectorAll('.case-btn').forEach(btn => {
+        // Giữ nguyên chức năng click chuột đơn
+        btn.addEventListener('click', (e) => applyCase(e.target.dataset.case));
+
+        // THÊM MỚI: Chức năng double-click để lưu thẳng vào Name List
+        btn.addEventListener('dblclick', () => {
+            // Áp dụng kiểu chữ trước khi lưu
+            applyCase(btn.dataset.case); 
+
+            const cn = document.getElementById('original-word-input').value.trim();
+            const vn = DOMElements.customMeaningInput.value.trim();
+            if (cn && vn) {
+                nameDictionary.set(cn, vn);
+                saveNameDictionaryToStorage();
+                renderNameList();
+                buildMasterKeySet(state);
+                closeOldModal();
+                performTranslation(state);
+
+                // Hiển thị thông báo nhanh trên nút "Thêm vào Name"
+                const addButton = DOMElements.addToNameListBtn;
+                const originalText = addButton.textContent;
+                addButton.textContent = 'Đã lưu!';
+                addButton.disabled = true;
+                setTimeout(() => {
+                    addButton.textContent = originalText;
+                    addButton.disabled = false;
+                }, 1500);
+            }
+        });
+    });
+
+}
+
+---(((---KẾT THÚC TỆP 6---)))---
+
+
+/////-----(((PHÂN TÁCH GIỮA CÁC TỆP)))-----\\\
+
+
+---(((---BẮT ĐẦU TỆP 7---)))---
+*****### TỆP src/js/nameList.js ###*****
+
+import DOMElements from './dom.js';
+
+export let nameDictionary = new Map();
+export let temporaryNameDictionary = new Map();
+
+export function initializeNameList(state) {
+    loadNameDictionaryFromStorage();
+    renderNameList();
+    buildMasterKeySet(state);
+
+    DOMElements.nameListSaveBtn.addEventListener('click', () => {
+        const text = DOMElements.nameListTextarea.value;
+        nameDictionary = parseDictionary(text);
+        saveNameDictionaryToStorage();
+        buildMasterKeySet(state);
+
+        const originalText = DOMElements.nameListSaveBtn.textContent;
+        DOMElements.nameListSaveBtn.textContent = 'Đã lưu!';
+        DOMElements.nameListSaveBtn.disabled = true;
+        setTimeout(() => {
+            DOMElements.nameListSaveBtn.textContent = originalText;
+            DOMElements.nameListSaveBtn.disabled = false;
+        }, 1500);
+
+        if (DOMElements.inputText.value.trim()) {
+            document.getElementById('translate-btn').click();
+        }
+    });
+
+    DOMElements.nameListDeleteBtn.addEventListener('click', () => {
+        if (confirm('Bạn có chắc muốn xóa toàn bộ Bảng Thuật Ngữ? Hành động này không thể hoàn tác.')) {
+            nameDictionary.clear();
+            saveNameDictionaryToStorage();
+            renderNameList();
+            buildMasterKeySet(state);
+            if (DOMElements.inputText.value.trim()) {
+                document.getElementById('translate-btn').click();
+            }
+        }
+    });
+
+    DOMElements.nameListExportBtn.addEventListener('click', () => {
+        const text = DOMElements.nameListTextarea.value;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'NameList.txt';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    });
+
+    DOMElements.nameListImportBtn.addEventListener('click', () => DOMElements.nameListFileInput.click());
+    DOMElements.nameListFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                DOMElements.nameListTextarea.value = event.target.result;
+                DOMElements.nameListSaveBtn.click();
+            };
+            reader.readAsText(file);
+        }
+    });
+}
+
+function parseDictionary(text) {
+    const dictionary = new Map();
+    const lines = text.split(/\r?\n/);
+    lines.forEach(line => {
+        if (line.startsWith('#') || line.trim() === '') return;
+        const parts = line.split('=');
+        if (parts.length === 2) {
+            const key = parts[0].trim();
+            const value = parts[1].trim();
+            if (key) dictionary.set(key, value);
+        }
+    });
+    return dictionary;
+}
+
+export function renderNameList() {
+    if (nameDictionary.size === 0) {
+        DOMElements.nameListTextarea.value = '';
+        return;
+    }
+    const sortedNames = [...nameDictionary.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    const text = sortedNames.map(([cn, vn]) => `${cn}=${vn}`).join('\n');
+    DOMElements.nameListTextarea.value = text;
+}
+
+export function saveNameDictionaryToStorage() {
+    localStorage.setItem('nameDictionary', JSON.stringify(Array.from(nameDictionary.entries())));
+}
+
+function loadNameDictionaryFromStorage() {
+    const stored = localStorage.getItem('nameDictionary');
+    if (stored) nameDictionary = new Map(JSON.parse(stored));
+}
+
+export function buildMasterKeySet(state) {
+    state.masterKeySet = new Set([...nameDictionary.keys()]);
+    state.dictionaries.forEach(d => {
+        d.dict.forEach((_, key) => state.masterKeySet.add(key));
+    });
+    console.log(`Master key set rebuilt with ${state.masterKeySet.size} unique keys.`);
+}
+
+---(((---KẾT THÚC TỆP 7---)))---
+
+
+/////-----(((PHÂN TÁCH GIỮA CÁC TỆP)))-----\\\
+
+
+---(((---BẮT ĐẦU TỆP 8---)))---
+*****### TỆP src/js/translation.js ###*****
+
+import DOMElements from './dom.js';
+import { segmentText, translateWord } from './dictionary.js';
+import { nameDictionary, temporaryNameDictionary } from './nameList.js';
+
+const translationCache = new Map();
+
+export function synthesizeCompoundTranslation(text, state) {
+    if (translationCache.has(text)) {
+        return translationCache.get(text);
+    }
+    const segments = segmentText(text, state.masterKeySet);
+
+    // Nếu sau khi tách mà chỉ có 1 từ, không cần gợi ý.
+    if (segments.length <= 1) {
+        return [];
+    }
+    
+    // Giới hạn độ dài của cụm từ để tránh tính toán quá lâu
+    if (segments.length > 10) {
+        return [`${segments.join(' ')} - Quá dài để gợi ý`];
+    }
+    
+    // Lấy tất cả các nghĩa Vietphrase cho từng từ đã được tách ra.
+    const segmentMeanings = segments.map(seg => {
+        const translation = translateWord(seg, state.dictionaries, nameDictionary, temporaryNameDictionary);
+        return translation.all;
+    });
+
+    // Tạo ra tất cả các tổ hợp nghĩa có thể có.
+    const cartesian = (...a) => a.reduce((acc, val) => acc.flatMap(d => val.map(e => [d, e].flat())));
+    let combinations = [];
+    try {
+        combinations = cartesian(...segmentMeanings).map(combo => combo.join(' '));
+    } catch (e) {
+        // Xử lý lỗi nếu số lượng tổ hợp quá lớn
+        return [`${text} - Số lượng tổ hợp quá nhiều`];
+    }
+
+    // Lọc các nghĩa trùng lặp
+    const uniqueCombinations = [...new Set(combinations)];
+    
+    // Giới hạn số lượng gợi ý để tránh DOM quá tải khi hiển thị
+    const MAX_SUGGESTIONS = 50; 
+    const finalSuggestions = uniqueCombinations.slice(0, MAX_SUGGESTIONS);
+
+    // Lưu kết quả đã tính toán vào cache trước khi trả về
+    translationCache.set(text, finalSuggestions);
+
+    return finalSuggestions;
+}
+
+export function performTranslation(state) {
+    const chineseText = DOMElements.inputText.value;
+    if (!chineseText.trim()) {
+        DOMElements.outputPanel.textContent = 'Vui lòng nhập văn bản.';
+        return;
+    }
+    const isVietphraseMode = DOMElements.modeToggle.checked;
+    const lines = chineseText.split('\n');
+    const translatedLineHtmls = lines.map(line => {
+        if (line.trim() === '') return null;
+
+        const segments = segmentText(line, state.masterKeySet);
+        const rawLineHtml = segments.map((segment) => {
+            const translation = translateWord(segment, state.dictionaries, nameDictionary, temporaryNameDictionary);
+            const span = document.createElement('span');
+            span.className = 'word';
+            
+            if (!translation.found) {
+                span.classList.add('untranslatable');
+                span.textContent = segment;
+            } else if (isVietphraseMode) {
+                span.textContent = `(${translation.all.join('/')})`;
+                span.classList.add('vietphrase-word');
+            } else {
+                span.textContent = translation.best;
+            }
+            span.dataset.original = segment;
+            return span.outerHTML;
+        }).join('');
+
+        let processedHtml = rawLineHtml.replace(/<\/span><span/g, '</span> <span');
+        processedHtml = processedHtml.replace(/\s+(<span[^>]*>[.,!?;:()\[\]{}'"]<\/span>)/g, '$1');
+        return processedHtml;
+    }).filter(Boolean);
+
+    let finalHtml = translatedLineHtmls.join('<br><br>');
+    const replacements = { '。': '.', '：': ':', '；': ';', '，': ',', '！': '!', '？': '?', '……': '...', '～': '~' };
+    finalHtml = finalHtml.replace(/。|：|；|，|！|？|……|～/g, match => replacements[match]);
+    finalHtml = finalHtml.replace(/<\/span>\s+([.,!?;:])/g, '</span>$1');
+
+    DOMElements.outputPanel.innerHTML = finalHtml;
+}
+
+---(((---KẾT THÚC TỆP 8---)))---
