@@ -31,12 +31,11 @@ const REQUIRED_FILES = [
 
 // --- CÁC HÀM HỖ TRỢ LÀM VIỆC VỚI INDEXEDDB ---
 const DB_NAME = 'VietphraseDB';
-const DB_VERSION = 2;
 const STORE_NAME = 'dictionaryStore';
 
 function openDB() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        const request = indexedDB.open(DB_NAME);
         request.onerror = () => reject("Lỗi khi mở IndexedDB.");
         request.onsuccess = () => resolve(request.result);
         request.onupgradeneeded = (event) => {
