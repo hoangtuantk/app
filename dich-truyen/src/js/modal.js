@@ -118,18 +118,25 @@ function populateQuickEditPanel(text, state) {
         DOMElements.qInputHV.value = '';
     }
     
-    const translation = translateWord(text, state.dictionaries, nameDictionary, temporaryNameDictionary);
-    let allMeanings = translation.found ? [...translation.all] : [];
-    if (text.length > 1) {
-        const synthesized = synthesizeCompoundTranslation(text, state);
-        synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
-    }
-    
-    if (allMeanings.length > 0) {
-            DOMElements.qInputVp.value = `(${allMeanings.join('/')})`;
-        } else {
-            DOMElements.qInputVp.value = '';
+    const segments = segmentText(text, state.masterKeySet);
+    const vietphraseParts = segments.map(segment => {
+        if (!/[\u4e00-\u9fa5]/.test(segment)) {
+            return segment;
         }
+
+        const translation = translateWord(segment, state.dictionaries, nameDictionary, temporaryNameDictionary);
+
+        if (translation.found && translation.all.length > 1) {
+            return `(${translation.all.join('/')})`;
+        } else if (translation.found) {
+            return translation.best;
+        } else {
+            return segment;
+        }
+    });
+
+    DOMElements.qInputVp.value = vietphraseParts.join(' ');
+
 }
 
 
