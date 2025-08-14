@@ -1,4 +1,5 @@
 import DOMElements from './dom.js';
+import { customConfirm } from './dialog.js';
 
 export let nameDictionary = new Map();
 export let temporaryNameDictionary = new Map();
@@ -27,8 +28,8 @@ export function initializeNameList(state) {
         }
     });
 
-    DOMElements.nameListDeleteBtn.addEventListener('click', () => {
-        if (confirm('Bạn có chắc muốn xóa toàn bộ Bảng Thuật Ngữ? Hành động này không thể hoàn tác.')) {
+    DOMElements.nameListDeleteBtn.addEventListener('click', async () => {
+        if (await customConfirm('Bạn có chắc muốn xóa toàn bộ Bảng Thuật Ngữ? Hành động này không thể hoàn tác.')) {
             nameDictionary.clear();
             saveNameDictionaryToStorage();
             renderNameList();

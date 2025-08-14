@@ -63,7 +63,7 @@
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-2">
                         <button id="decrease-font-btn" title="Giảm cỡ chữ" class="btn btn-secondary !p-2 w-8 h-8">-</button>
-                        <span id="font-size-label" class="text-sm w-12 text-center" title="Cỡ chữ hiện tại">150%</span>
+                        <span id="font-size-label" class="text-sm w-12 text-center" title="Cỡ chữ hiện tại"></span>
                         <button id="increase-font-btn" title="Tăng cỡ chữ" class="btn btn-secondary !p-2 w-8 h-8">+</button>
                     </div>
                     <button id="copy-btn" class="btn btn-secondary">Sao chép</button>
@@ -183,7 +183,16 @@
     </div>
 
     <input type="file" id="file-importer" multiple class="hidden" accept=".txt">
-
     <script type="module" src="src/js/main.js"></script>
+    <div id="custom-dialog-modal" class="fixed inset-0 flex items-center justify-center hidden" style="background-color: rgba(0,0,0,0.7); z-index: 10000;">
+        <div id="custom-dialog-content" class="bg-bg-panel p-6 rounded-lg border border-border-color shadow-2xl w-[90%] max-w-[450px]">
+            <h3 id="custom-dialog-title" class="text-xl font-bold mb-4 text-text-highlight">Thông báo</h3>
+            <p id="custom-dialog-message" class="text-text-color mb-6">Nội dung thông báo sẽ ở đây.</p>
+            <div id="custom-dialog-buttons" class="mt-4 flex justify-end gap-3">
+                <button id="custom-dialog-cancel-btn" class="btn btn-secondary">Hủy</button>
+                <button id="custom-dialog-ok-btn" class="btn">OK</button>
+            </div>
+        </div>
+    </div>    
 </body>
 </html>
