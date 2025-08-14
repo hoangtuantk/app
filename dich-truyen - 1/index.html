@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình Dịch Thuật Chuyên Nghiệp</title>
+
+    <script src="lib/tailwindcss.js"></script>
+    <link rel="stylesheet" href="src/css/style.css">
+</head>
+<body class="p-4 md:p-6 lg:p-8">
+
+    <div id="loader" class="fixed inset-0 flex flex-col items-center justify-center">
+        <div class="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-accent-color"></div>
+        <p id="loader-text" class="mt-4 text-lg font-semibold text-text-highlight">Đang khởi tạo...</p>
+    </div>
+
+    <div class="max-w-screen-2xl mx-auto flex flex-col gap-6">
+        <header class="text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-text-highlight">Công Cụ Dịch Thuật Vietphrase</h1>
+            <p class="text-md mt-2">Dựa trên kho dữ liệu cá nhân của bạn</p>
+
+            <div class="flex items-center justify-center gap-4 mt-4 flex-wrap">
+                <button id="import-local-btn" class="btn">Nhập từ file</button>
+                <button id="import-server-btn" class="btn">Nhập từ Server</button>
+                <button id="clear-db-btn" class="btn btn-secondary">Xóa dữ liệu</button>
+            </div>
+
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 panel p-6 flex flex-col">
+                <h2 class="text-xl font-semibold text-text-highlight mb-4">Văn bản gốc (Tiếng Trung)</h2>
+                <textarea id="input-text" class="w-full flex-grow text-lg leading-relaxed" placeholder="Dán văn bản tiếng Trung vào đây..."></textarea>
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <button id="translate-btn" class="btn">Dịch</button>
+                        <button id="clear-btn" class="btn btn-secondary">Xóa</button>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" id="mode-toggle" class="h-4 w-4 rounded">
+                        <label for="mode-toggle" class="cursor-pointer">Vietphrase nhiều nghĩa</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel p-6 flex flex-col">
+                <h2 class="text-xl font-semibold mb-4 text-text-highlight">Bảng Thuật Ngữ (Name List)</h2>
+                <textarea id="name-list-textarea" class="w-full flex-grow text-sm leading-relaxed" placeholder="[Tiếng Trung]=[Tiếng Việt]..."></textarea>
+                <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-2">
+                    <button id="name-list-save" class="btn text-sm">Lưu</button>
+                    <button id="name-list-delete" class="btn btn-secondary text-sm">Xóa Hết</button>
+                    <button id="name-list-export" class="btn btn-secondary text-sm">Xuất File</button>
+                    <button id="name-list-import" class="btn btn-secondary text-sm">Nhập File</button>
+                    <input type="file" id="name-list-file-input" class="hidden" accept=".txt">
+                </div>
+            </div>
+        </div>
+
+        <div class="panel p-6">
+            <div class="flex justify-between items-center mb-4 flex-wrap gap-4">
+                <h2 class="text-xl font-semibold text-text-highlight">Kết quả dịch (Tiếng Việt)</h2>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <button id="decrease-font-btn" title="Giảm cỡ chữ" class="btn btn-secondary !p-2 w-8 h-8">-</button>
+                        <span id="font-size-label" class="text-sm w-12 text-center" title="Cỡ chữ hiện tại">100%</span>
+                        <button id="increase-font-btn" title="Tăng cỡ chữ" class="btn btn-secondary !p-2 w-8 h-8">+</button>
+                    </div>
+                    <button id="copy-btn" class="btn btn-secondary">Sao chép</button>
+                </div>
+            </div>
+            <div id="output-panel" class="w-full p-4 bg-bg-input rounded-lg border border-border-color text-lg leading-relaxed whitespace-pre-wrap">
+                Kết quả sẽ hiện ở đây...
+            </div>
+        </div>
+    </div>
+
+<div id="edit-modal">
+    <div class="modal-content">
+        <h3 class="text-xl font-bold mb-4 text-text-highlight">Chỉnh sửa bản dịch</h3>
+        <div class="flex items-center justify-center mb-4 gap-4">
+            <button id="expand-left-btn" class="btn btn-secondary !p-2 !h-9 !w-auto">&lt; Mở rộng</button>
+            <div class="text-center">
+                <p class="text-sm">Từ gốc</p>
+                <strong id="original-word" class="text-accent-color text-2xl font-mono"></strong>
+            </div>
+            <button id="expand-right-btn" class="btn btn-secondary !p-2 !h-9 !w-auto">Mở rộng &gt;</button>
+        </div>
+        
+        <div class="mb-4">
+            <label class="text-sm font-bold">Hán Việt:</label>
+            <div id="hanviet-options-container" class="hanviet-options-container"></div>
+        </div>
+        
+        <div class="meaning-section">
+             <label class="text-sm font-bold">Vietphrase:</label>
+             <div id="meanings-container" class="meanings-container"></div>
+        </div>
+
+        <div class="mb-4">
+            <label class="text-sm font-bold">Nhập nghĩa mới:</label>
+            <input type="text" id="custom-meaning" class="w-full mb-2" placeholder="Hoặc nhập nghĩa mới...">
+            <div class="flex flex-wrap gap-2">
+                <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap">Hoa Chữ Đầu</button>
+                <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap2">Hoa 2 Chữ Đầu</button>
+                <button class="case-btn btn btn-secondary text-xs p-2" data-case="lowerLast">Thường Chữ Cuối</button>
+                <button class="case-btn btn btn-secondary text-xs p-2" data-case="upper">Hoa Toàn Bộ</button>
+            </div>
+        </div>
+        <div class="modal-footer-buttons">
+            <button id="add-temp-btn" class="btn btn-secondary">Thêm Tạm Thời</button>
+            <button id="add-to-name-list-btn" class="btn">Thêm vào Name</button>
+            <button id="cancel-edit-btn" class="btn btn-secondary">Hủy</button>
+        </div>
+    </div>
+</div>
+
+    <div id="quick-edit-panel" class="absolute z-40 p-3 rounded-lg shadow-2xl border border-border-color hidden w-[400px] max-w-[90vw]" style="background-color: var(--bg-panel);">
+        <div class="grid grid-cols-2 gap-2 pb-2 mb-2 border-b border-border-color">
+            <button id="q-expand-left-btn" class="btn btn-secondary !p-1 h-8 w-full text-center text-xs">&lt; Mở rộng</button>
+            <button id="q-expand-right-btn" class="btn btn-secondary !p-1 h-8 w-full text-center text-xs">Mở rộng &gt;</button>
+        </div>
+
+        <div class="space-y-1">
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-zw" class="font-bold text-sm text-accent-color">zw</label>
+                <input type="text" id="q-input-zw" class="w-full text-sm">
+                <div class="flex gap-2">
+                    <button id="q-search-btn" title="Tìm kiếm trên Google" class="!p-0">🔍</button>
+                    <button id="q-copy-btn" title="Sao chép chữ Hán" class="!p-0">📋</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-hv" class="font-bold text-sm text-accent-color">hv</label>
+                <input type="text" id="q-input-hv" class="w-full text-sm">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-hv" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-hv" title="Thêm vào Name">💾</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-HV" class="font-bold text-sm text-accent-color">HV</label>
+                <input type="text" id="q-input-HV" class="w-full text-sm">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-HV" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-HV" title="Thêm vào Name">💾</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-Vp" class="font-bold text-sm text-accent-color">Vp</label>
+                <input type="text" id="q-input-Vp" class="w-full text-sm">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-Vp" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-Vp" title="Thêm vào Name">💾</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[10px,auto,24px,24px] items-center gap-4">
+                <label for="q-input-tc" class="font-bold text-sm text-accent-color">tc</label>
+                <input type="text" id="q-input-tc" class="w-full text-sm" placeholder="Nhập bản dịch của bạn...">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-tc" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-tc" title="Thêm vào Name">💾</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end pt-2 mt-2 border-t border-border-color">
+            <button id="q-add-name-btn" class="btn text-sm">Thêm Name...</button>
+        </div>
+    </div>
+
+    <div id="log-modal" class="fixed inset-0 flex items-center justify-center hidden" style="background-color: rgba(0,0,0,0.7); z-index: 9999;">
+        <div class="bg-bg-panel p-6 rounded-lg border border-border-color shadow-2xl w-[90%] max-w-[600px]">
+            <h3 class="text-xl font-bold mb-4 text-text-highlight">Tiến trình</h3>
+            <ul id="log-list" class="bg-bg-input p-4 rounded-md h-[300px] overflow-y-auto text-sm leading-relaxed">
+                </ul>
+            <div class="mt-4 flex justify-end">
+                <button id="close-log-modal-btn" class="btn btn-secondary">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-importer" multiple class="hidden" accept=".txt">
+
+    <script src="lib/jszip.min.js"></script>
+    <script type="module" src="src/js/main.js"></script>
+</body>
+</html>

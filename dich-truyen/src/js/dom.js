@@ -1,4 +1,11 @@
 const DOMElements = {
+    importLocalBtn: document.getElementById('import-local-btn'),
+    importServerBtn: document.getElementById('import-server-btn'),
+    clearDbBtn: document.getElementById('clear-db-btn'),
+    logModal: document.getElementById('log-modal'),
+    logList: document.getElementById('log-list'),
+    closeLogModalBtn: document.getElementById('close-log-modal-btn'),
+    fileImporter: document.getElementById('file-importer'),
     inputText: document.getElementById('input-text'),
     translateBtn: document.getElementById('translate-btn'),
     clearBtn: document.getElementById('clear-btn'),

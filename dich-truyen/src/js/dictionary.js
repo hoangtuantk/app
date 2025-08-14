@@ -1,8 +1,37 @@
 const HAN_VIET_DICT_NAME = 'ChinesePhienAmWords.txt';
+const NAMES_FILES = [
+    'Names9.txt', 'Names8.txt', 'Names7.txt', 'Names6.txt',
+    'Names5.txt', 'Names4.txt', 'Names3.txt', 'Names2.txt', 'Names.txt'
+];
+
+const DICTIONARY_FILES = [
+    ...NAMES_FILES.map(name => ({ name, priority: 1 })),
+    { name: 'Vietphrase.txt', priority: 3 },
+    { name: 'Babylon.txt', priority: 4 },
+    { name: 'ChinesePhienAmEnglishWords.txt', priority: 4 },
+    { name: HAN_VIET_DICT_NAME, priority: 4 },
+    { name: 'IgnoredChinesePhrases.txt', priority: 4 },
+    { name: 'LacViet.txt', priority: 4 },
+    { name: 'LuatNhan.txt', priority: 4 },
+    { name: 'Pronouns.txt', priority: 4 },
+    { name: 'ThieuChuu.txt', priority: 4 },
+];
+
+const REQUIRED_FILES = [
+    'Vietphrase.txt',
+    'Babylon.txt',
+    'ChinesePhienAmEnglishWords.txt',
+    HAN_VIET_DICT_NAME,
+    'IgnoredChinesePhrases.txt',
+    'LacViet.txt',
+    'LuatNhan.txt',
+    'Pronouns.txt',
+    'ThieuChuu.txt',
+];
 
 // --- CÁC HÀM HỖ TRỢ LÀM VIỆC VỚI INDEXEDDB ---
 const DB_NAME = 'VietphraseDB';
-const DB_VERSION = 2; // Giữ phiên bản 2 để đảm bảo nâng cấp đúng
+const DB_VERSION = 2;
 const STORE_NAME = 'dictionaryStore';
 
 function openDB() {
@@ -39,46 +68,122 @@ async function getDataFromDB(db, id) {
     });
 }
 
-async function fullFetchAndProcess(loaderElement, serverVersion) {
-    const dictionaryFiles = [
-        { name: 'Names.txt', priority: 2 }, { name: 'Vietphrase.txt', priority: 3 },
-        { name: 'Babylon.txt', priority: 4 }, { name: 'ChinesePhienAmEnglishWords.txt', priority: 4 },
-        { name: HAN_VIET_DICT_NAME, priority: 4 }, { name: 'IgnoredChinesePhrases.txt', priority: 4 },
-        { name: 'LacViet.txt', priority: 4 }, { name: 'LuatNhan.txt', priority: 4 },
-        { name: 'Pronouns.txt', priority: 4 }, { name: 'ThieuChuu.txt', priority: 4 },
-    ];
-    for (let i = 9; i >= 2; i--) {
-        dictionaryFiles.unshift({ name: `Names${i}.txt`, priority: 1 });
-    }
-
-    loaderElement.textContent = 'Đang tải file từ điển...';
-    const response = await fetch('Data.zip');
-    if (!response.ok) throw new Error('Không thể tải file Data.zip từ server.');
-    const zipBlob = await response.blob();
-
-    loaderElement.textContent = 'Đang giải nén...';
-    const zip = await JSZip.loadAsync(zipBlob);
-
-    loaderElement.textContent = 'Đang phân tích từ điển...';
-    const readPromises = dictionaryFiles.map(fileInfo =>
-        zip.file(fileInfo.name)
-        ? zip.file(fileInfo.name).async('string').then(content => ({ ...fileInfo, content, loaded: true }))
-        : Promise.resolve({ ...fileInfo, loaded: false })
-    );
-
-    const results = await Promise.all(readPromises);
-    const dictionaries = new Map();
-    results.forEach(result => {
-        if (result.loaded) {
-            dictionaries.set(result.name, {
-                priority: result.priority,
-                dict: parseDictionary(result.content)
-            });
+export async function clearAllDictionaries() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const db = await openDB();
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.clear();
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject('Không thể xóa dữ liệu.');
+        } catch (error) {
+            reject(error);
         }
     });
+}
+// --- KẾT THÚC CÁC HÀM HỖ TRỢ ---
+
+
+export async function initializeDictionaries() {
+    try {
+        const db = await openDB();
+        const cachedData = await getDataFromDB(db, 'parsed-dictionaries');
+        if (cachedData) {
+            const dictionaries = new Map();
+            cachedData.data.forEach(([name, data]) => {
+                dictionaries.set(name, {
+                    priority: data.priority,
+                    dict: new Map(data.dict)
+                });
+            });
+            console.log('Tải từ điển từ IndexedDB thành công.');
+            return dictionaries;
+        }
+        console.log('Không tìm thấy từ điển đã lưu.');
+        return null;
+    } catch (error) {
+        console.error("Lỗi khởi tạo từ điển:", error);
+        return null;
+    }
+}
+
+export async function loadDictionariesFromServer(logCallback) {
+    logCallback('Đang tải từ điển từ server...');
+    const dictionaries = new Map();
+    try {
+        const db = await openDB();
+        
+        for (const fileInfo of DICTIONARY_FILES) {
+            logCallback(`Đang tải file: ${fileInfo.name}`);
+            const response = await fetch(`data/${fileInfo.name}`);
+            if (response.ok) {
+                const content = await response.text();
+                dictionaries.set(fileInfo.name, {
+                    priority: fileInfo.priority,
+                    dict: parseDictionary(content)
+                });
+                logCallback(`Đã xử lý: ${fileInfo.name}`);
+            } else {
+                logCallback(`Lỗi: Không thể tải ${fileInfo.name}. Bỏ qua.`);
+            }
+        }
+        
+        const storableDicts = Array.from(dictionaries.entries()).map(([name, data]) => {
+            return [name, {
+                priority: data.priority,
+                dict: Array.from(data.dict.entries())
+            }];
+        });
+
+        await saveDataToDB(db, { id: 'parsed-dictionaries', data: storableDicts });
+        logCallback('Đã lưu từ điển vào IndexedDB.');
+        
+        return dictionaries;
+    } catch (error) {
+        console.error(error);
+        logCallback(`Lỗi: ${error.message}`);
+        return null;
+    } finally {
+        logCallback('Quá trình hoàn tất.');
+    }
+}
+
+export async function loadDictionariesFromFile(files, logCallback) {
+    logCallback('Bắt đầu nhập từ điển từ thiết bị...');
+    const dictionaries = new Map();
+    const loadedFileNames = new Set();
+    const fileReaderPromises = [];
+
+    for (const fileInfo of DICTIONARY_FILES) {
+        const file = Array.from(files).find(f => f.name.toLowerCase() === fileInfo.name.toLowerCase());
+        if (file) {
+            loadedFileNames.add(fileInfo.name);
+            const promise = new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    logCallback(`Đã đọc xong file: ${fileInfo.name}`);
+                    dictionaries.set(fileInfo.name, {
+                        priority: fileInfo.priority,
+                        dict: parseDictionary(e.target.result)
+                    });
+                    resolve();
+                };
+                reader.readAsText(file);
+            });
+            fileReaderPromises.push(promise);
+        }
+    }
     
+    await Promise.all(fileReaderPromises);
+
+    const missingFiles = REQUIRED_FILES.filter(f => !loadedFileNames.has(f));
+    if (missingFiles.length > 0) {
+        logCallback(`<span class="text-red-500">Lỗi: Thiếu các file bắt buộc: ${missingFiles.join(', ')}</span>`);
+        return null;
+    }
+
     const db = await openDB();
-    loaderElement.textContent = 'Đang lưu cache đã xử lý...';
     const storableDicts = Array.from(dictionaries.entries()).map(([name, data]) => {
         return [name, {
             priority: data.priority,
@@ -87,65 +192,10 @@ async function fullFetchAndProcess(loaderElement, serverVersion) {
     });
 
     await saveDataToDB(db, { id: 'parsed-dictionaries', data: storableDicts });
-    await saveDataToDB(db, { id: 'dictionary-version', value: serverVersion });
+    logCallback('Đã lưu từ điển vào IndexedDB.');
+    logCallback('Quá trình hoàn tất.');
 
     return dictionaries;
-}
-
-// --- KẾT THÚC CÁC HÀM HỖ TRỢ ---
-
-
-export async function initializeDictionaries(loaderElement) {
-    try {
-        const db = await openDB();
-        let serverVersion = null;
-        let isOnline = navigator.onLine;
-
-        if (isOnline) {
-            try {
-                loaderElement.textContent = 'Đang kiểm tra phiên bản...';
-                const headResponse = await fetch('Data.zip', { method: 'HEAD', cache: 'no-store' });
-                if(headResponse.ok) {
-                    serverVersion = headResponse.headers.get('Last-Modified');
-                }
-            } catch (e) {
-                console.warn('Kiểm tra phiên bản thất bại, có thể do lỗi mạng hoặc CORS.');
-                isOnline = false;
-            }
-        }
-        
-        const cachedVersionData = await getDataFromDB(db, 'dictionary-version');
-        const cachedVersion = cachedVersionData ? cachedVersionData.value : null;
-
-        if (cachedVersion && (!isOnline || cachedVersion === serverVersion)) {
-            loaderElement.textContent = isOnline ? 'Từ điển đã được cập nhật.' : 'Không có mạng. Đang dùng bản offline...';
-            
-            const cachedData = await getDataFromDB(db, 'parsed-dictionaries');
-            if (cachedData) {
-                const dictionaries = new Map();
-                cachedData.data.forEach(([name, data]) => {
-                    dictionaries.set(name, {
-                        priority: data.priority,
-                        dict: new Map(data.dict)
-                    });
-                });
-                loaderElement.textContent = 'Hoàn tất!';
-                return dictionaries;
-            }
-        }
-        
-        if (isOnline) {
-            return await fullFetchAndProcess(loaderElement, serverVersion);
-        }
-
-        throw new Error("Không có kết nối mạng và không tìm thấy dữ liệu offline.");
-
-    } catch (error) {
-        console.error("Lỗi khởi tạo từ điển:", error);
-        loaderElement.textContent = `Lỗi: ${error.message}`;
-        DOMElements.loader.style.backgroundColor = 'rgba(200, 0, 0, 0.8)';
-        return new Map();
-    }
 }
 
 function parseDictionary(text) {
@@ -164,6 +214,7 @@ function parseDictionary(text) {
 }
 
 export function getTranslationFromPrioritizedDicts(word, dictionaries) {
+    if (!dictionaries) return null;
     const sortedDicts = [...dictionaries.values()].sort((a, b) => a.priority - b.priority);
     for (const dictInfo of sortedDicts) {
         if (dictInfo.dict.has(word)) return dictInfo.dict.get(word);
@@ -172,6 +223,7 @@ export function getTranslationFromPrioritizedDicts(word, dictionaries) {
 }
 
 export function getHanViet(word, dictionaries) {
+    if (!dictionaries) return null;
     const hanVietDict = dictionaries.get(HAN_VIET_DICT_NAME)?.dict;
     if (!word || !hanVietDict) {
         return null;
@@ -194,6 +246,7 @@ export function getHanViet(word, dictionaries) {
 }
 
 export function segmentText(text, masterKeySet) {
+    if (!masterKeySet) return [text];
     const segments = [];
     let currentIndex = 0;
     const textLength = text.length;
