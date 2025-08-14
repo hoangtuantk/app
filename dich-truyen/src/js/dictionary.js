@@ -57,9 +57,14 @@ async function loadLocalAndSave(loaderElement) {
         { name: 'Pronouns.txt', priority: 4 },
         { name: 'ThieuChuu.txt', priority: 4 },
     ];
-    for (let i = 9; i >= 2; i--) {
+    
+/*  
+    for (let i = 2; i >= 2; i--) {
         dictionaryFiles.unshift({ name: `Names${i}.txt`, priority: 1 });
-    }
+   }
+*/
+    dictionaryFiles.unshift({ name: 'Names2.txt', priority: 1 });
+
 
     loaderElement.textContent = 'Đang tải các file từ điển cục bộ...';
     const dictionaries = new Map();
