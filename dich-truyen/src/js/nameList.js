@@ -1,5 +1,6 @@
 import DOMElements from './dom.js';
 import { customConfirm } from './dialog.js';
+import { performTranslation } from './translation.js';
 
 export let nameDictionary = new Map();
 export let temporaryNameDictionary = new Map();
@@ -22,10 +23,7 @@ export function initializeNameList(state) {
             DOMElements.nameListSaveBtn.textContent = originalText;
             DOMElements.nameListSaveBtn.disabled = false;
         }, 1500);
-
-        if (DOMElements.inputText.value.trim()) {
-            document.getElementById('translate-btn').click();
-        }
+        performTranslation(state); 
     });
 
     DOMElements.nameListDeleteBtn.addEventListener('click', async () => {
@@ -34,9 +32,7 @@ export function initializeNameList(state) {
             saveNameDictionaryToStorage();
             renderNameList();
             buildMasterKeySet(state);
-            if (DOMElements.inputText.value.trim()) {
-                document.getElementById('translate-btn').click();
-            }
+            performTranslation(state);
         }
     });
 
