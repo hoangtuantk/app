@@ -131,8 +131,10 @@ input:disabled {
 
 .modal-content {
     width: 90%;
-    max-width: 500px;
+    max-width: 700px;
     min-width: 300px;
+    max-height: 90vh; /* Giới hạn chiều cao tối đa là 80% chiều cao màn hình */
+    overflow-y: auto; /* Nội dung cuộn khi vượt quá chiều cao tối đa */
     padding: 1.5rem;
     margin: 1rem auto;
     background-color: var(--bg-panel);
@@ -277,11 +279,16 @@ textarea:-webkit-autofill:focus {
     background-color: var(--bg-input);
     border-radius: 6px;
     margin: 8px 0;
+    font-size: 1.125rem; /* Giảm cỡ chữ từ 2xl xuống khoảng 1.5xl hoặc tùy chọn */
+    max-width: 70%; /* Giới hạn chiều rộng tối đa */
+    white-space: nowrap; /* Ngăn ngắt dòng */
+    overflow: hidden; /* Ẩn phần văn bản vượt quá */
+    text-overflow: ellipsis; /* Hiển thị dấu ba chấm nếu văn bản quá dài */
 }
 
 /* Cải thiện container các nghĩa */
 #meanings-container {
-    max-height: 300px;
+    max-height: 160px;
     overflow-y: auto;
     padding: 8px;
     margin: 12px 0;
@@ -339,11 +346,17 @@ textarea:-webkit-autofill:focus {
     margin-top: 16px;
 }
 
+/* Chỉnh font size cho các nút trong modal */
+.modal-content .btn, .modal-content .btn-secondary {
+    font-size: 0.875rem; /* Ví dụ: 14px. Bạn có thể thay đổi giá trị này */
+    font-weight: 500;
+}
+
 /* Responsive cho modal */
 @media (max-width: 640px) {
     .modal-content {
-        width: 95%;
-        padding: 1rem;
+      max-width: 95%;
+      max-height: 90vh;
     }
     
     .modal-content .btn {
