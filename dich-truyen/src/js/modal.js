@@ -264,6 +264,14 @@ export function initializeModal(state) {
         if(text) navigator.clipboard.writeText(text);
     });
 
+    const hanvietInput = document.getElementById('hanviet-input');
+    hanvietInput.addEventListener('click', () => {
+        const hanvietValue = hanvietInput.value;
+        if (hanvietValue && hanvietValue !== 'Không tìm thấy Hán Việt.') {
+            DOMElements.customMeaningInput.value = hanvietValue;
+        }
+    });
+    
     document.querySelectorAll('.q-temp-add-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetInputId = e.target.dataset.target;
