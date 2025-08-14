@@ -5,6 +5,7 @@ const DB_NAME = 'VietphraseDB';
 const DB_VERSION = 2;
 const STORE_NAME = 'dictionaryStore';
 const HAN_VIET_DICT_NAME = 'ChinesePhienAmWords.txt';
+const DICTIONARY_DATA_VERSION = 1;
 
 let db;
 
@@ -57,7 +58,7 @@ async function loadLocalAndSave(loaderElement) {
         { name: 'Pronouns.txt', priority: 4 },
         { name: 'ThieuChuu.txt', priority: 4 },
     ];
-    
+
 /*  
     for (let i = 2; i >= 2; i--) {
         dictionaryFiles.unshift({ name: `Names${i}.txt`, priority: 1 });
@@ -84,8 +85,12 @@ async function loadLocalAndSave(loaderElement) {
         }
     }
 
-    // Lưu từ điển đã được tải vào IndexedDB
-    await saveDataToDB(db, { id: 'dictionaries', data: Object.fromEntries(dictionaries) });
+    // Lưu từ điển đã được tải VÀ phiên bản vào IndexedDB
+    await saveDataToDB(db, {
+        id: 'dictionaries',
+        version: DICTIONARY_DATA_VERSION,
+        data: Object.fromEntries(dictionaries)
+    });
 
     return dictionaries;
 }
@@ -97,15 +102,16 @@ export async function initializeDictionaries(loaderElement) {
         loaderElement.textContent = 'Kiểm tra bộ nhớ cache...';
 
         const cachedData = await getDataFromDB(db, 'dictionaries');
-        if (cachedData && cachedData.data) {
+
+        if (cachedData && cachedData.data && cachedData.version === DICTIONARY_DATA_VERSION) {
             loaderElement.textContent = 'Đang tải từ điển từ bộ nhớ cache...';
             const dictionariesMap = new Map(Object.entries(cachedData.data));
             return dictionariesMap;
         }
 
-        // Nếu không có trong cache, tải từ file cục bộ và lưu vào DB
-        const dictionaries = await loadLocalAndSave(loaderElement);
-        return dictionaries;
+        // Nếu không có trong cache, hoặc phiên bản cũ, tải từ file cục bộ và lưu vào DB
+        return await loadLocalAndSave(loaderElement);
+
     } catch (error) {
         console.error("Lỗi khởi tạo từ điển:", error);
         loaderElement.textContent = `Lỗi: ${error.message}`;
