@@ -1,0 +1,387 @@
+/* ==========================================================================
+   * BIẾN CSS & CÀI ĐẶT CHUNG
+   * ========================================================================== */
+:root {
+    --bg-main: #1a1b26;
+    --bg-panel: #24283b;
+    --bg-input: #2a2f41;
+    --text-color: #a9b1d6;
+    --text-highlight: #c0caf5;
+    --accent-color: #7aa2f7;
+    --border-color: #414868;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-color);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 20px;
+}
+
+/* ==========================================================================
+   * CÁC THÀNH PHẦN CHÍNH (PANELS, BUTTONS, INPUTS)
+   * ========================================================================== */
+.panel {
+    background-color: var(--bg-panel);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+textarea, input:not(#mode-toggle) {
+    background-color: var(--bg-input);
+    color: var(--text-highlight);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+textarea {
+    min-height: 130px;
+    resize: vertical;
+}
+
+textarea:focus, input:focus:not(#mode-toggle) {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(122, 162, 247, 0.3);
+}
+
+input:disabled {
+    background-color: #31364a;
+    cursor: not-allowed;
+    /* Gộp định nghĩa input:disabled */
+}
+
+/* Các thuộc tính chung cho nút */
+.btn {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(122, 162, 247, 0.4);
+}
+
+.btn:disabled {
+    background-color: #414868;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    color: var(--text-color);
+}
+
+.btn-secondary {
+    background-color: #414868;
+    color: var(--text-highlight);
+}
+
+.btn-secondary:hover:not(:disabled) {
+     box-shadow: 0 4px 8px rgba(65, 72, 104, 0.4);
+}
+
+/* ==========================================================================
+   * KẾT QUẢ DỊCH VÀ PHÂN TÍCH TỪ
+   * ========================================================================== */
+#output-panel {
+    resize: vertical;
+    overflow: auto;
+    max-height: 800px;
+    min-height: 500px;
+    padding: 1rem;
+}
+
+#output-panel .word {
+    padding: 0;
+    margin: 0;
+    border-radius: 3px;
+    transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+    display: inline;
+    cursor: text;
+}
+
+#output-panel .word:hover {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+    cursor: pointer;
+}
+
+#output-panel .untranslatable {
+    color: #7a88a9;
+}
+
+#output-panel .untranslatable:hover {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+}
+
+#output-panel .vietphrase-word {
+    color: #ff9e64;
+    font-style: italic;
+}
+
+/* ==========================================================================
+   * MODAL CHỈNH SỬA
+   * ========================================================================== */
+#edit-modal {
+    background-color: rgba(0,0,0,0.7);
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 700px;
+    min-width: 300px;
+    padding: 1.5rem;
+    margin: 1rem auto;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h3 {
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.25rem;
+    color: var(--text-highlight);
+}
+
+.meaning-option,
+#hanviet-options-container button {
+    padding: 10px 12px;
+    margin: 4px 0;
+    border-radius: 6px;
+    display: block;
+    width: 100%;
+    text-align: left;
+    transition: all 0.2s;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.meaning-option:hover,
+#hanviet-options-container button:hover {
+    transform: translateX(4px);
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+    border-color: var(--accent-color);
+}
+/* Xóa style trùng lặp */
+.meaning-option { border-bottom: none; }
+
+#meanings-container > div {
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 0;
+}
+#meanings-container > div:last-child {
+    border-bottom: none; 
+}
+#hanviet-options-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+/* Cải thiện input custom meaning */
+#custom-meaning {
+    width: 100%;
+    padding: 0.75rem;
+    margin: 0.5rem 0 1rem;
+    border-radius: 0.5rem;
+}
+
+/* Cải thiện footer buttons */
+.modal-footer-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 16px;
+}
+
+/* Responsive cho modal */
+@media (max-width: 640px) {
+    .modal-content {
+        width: 95%;
+        padding: 1rem;
+    }
+    
+    .modal-content .btn {
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+    
+    #hanviet-options-container {
+        flex-direction: column;
+    }
+}
+
+
+/* ==========================================================================
+   * POPUP CHỈNH SỬA NHANH
+   * ========================================================================== */
+#quick-edit-panel {
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+    max-width: 90vw;
+    width: 400px; 
+    box-sizing: border-box; 
+    z-index: 1000;
+}
+
+#quick-edit-panel input {
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 1.3rem;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+#quick-edit-panel label {
+    font-size: 1rem;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+#quick-edit-panel button {
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 1.1rem;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* Các nút điều hướng trong quick-edit-panel */
+#quick-edit-panel .grid:first-child button {
+    padding: 4px 8px;
+    font-size: 1.1rem; 
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* Các nút icon trong quick-edit-panel */
+.q-temp-add-btn, .q-perm-add-btn, #q-search-btn, #q-copy-btn {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+    color: var(--text-color);
+}
+.q-temp-add-btn:hover, .q-perm-add-btn:hover, #q-search-btn:hover, #q-copy-btn:hover {
+    opacity: 1;
+    transform: scale(1.2);
+    color: var(--accent-color);
+}
+
+/* ==========================================================================
+   * CÁC THÀNH PHẦN KHÁC
+   * ========================================================================== */
+#loader {
+    background-color: rgba(26, 27, 38, 0.9);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Ẩn các nút tăng/giảm số trong input number */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* Placeholder */
+input::placeholder {
+    color: #7a88a9;
+}
+
+/* Style cho text được chọn */
+input::selection, textarea::selection {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+}
+
+/* Style cho các trường tự động điền */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-highlight) !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+}
+
+/* Scrollbar toàn cục */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color);
+}
+
+/* Scrollbar riêng cho meanings container */
+#meanings-container {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 8px;
+    margin: 12px 0;
+    background-color: var(--bg-input);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+#meanings-container::-webkit-scrollbar {
+    width: 6px;
+}
+#meanings-container::-webkit-scrollbar-thumb {
+    background-color: var(--accent-color);
+    border-radius: 3px;
+}

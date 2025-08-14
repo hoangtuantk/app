@@ -1,0 +1,243 @@
+const HAN_VIET_DICT_NAME = 'ChinesePhienAmWords.txt';
+
+// --- CÁC HÀM HỖ TRỢ LÀM VIỆC VỚI INDEXEDDB ---
+const DB_NAME = 'VietphraseDB';
+const DB_VERSION = 2; // Giữ phiên bản 2 để đảm bảo nâng cấp đúng
+const STORE_NAME = 'dictionaryStore';
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject("Lỗi khi mở IndexedDB.");
+        request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+        };
+    });
+}
+
+async function saveDataToDB(db, data) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.put(data);
+        request.onerror = () => reject("Không thể lưu dữ liệu vào DB.");
+        request.onsuccess = () => resolve();
+    });
+}
+
+async function getDataFromDB(db, id) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.get(id);
+        request.onerror = () => reject("Không thể đọc dữ liệu từ DB.");
+        request.onsuccess = () => resolve(request.result);
+    });
+}
+
+async function fullFetchAndProcess(loaderElement, serverVersion) {
+    const dictionaryFiles = [
+        { name: 'Names.txt', priority: 2 }, { name: 'Vietphrase.txt', priority: 3 },
+        { name: 'Babylon.txt', priority: 4 }, { name: 'ChinesePhienAmEnglishWords.txt', priority: 4 },
+        { name: HAN_VIET_DICT_NAME, priority: 4 }, { name: 'IgnoredChinesePhrases.txt', priority: 4 },
+        { name: 'LacViet.txt', priority: 4 }, { name: 'LuatNhan.txt', priority: 4 },
+        { name: 'Pronouns.txt', priority: 4 }, { name: 'ThieuChuu.txt', priority: 4 },
+    ];
+    for (let i = 9; i >= 2; i--) {
+        dictionaryFiles.unshift({ name: `Names${i}.txt`, priority: 1 });
+    }
+
+    loaderElement.textContent = 'Đang tải file từ điển...';
+    const response = await fetch('Data.zip');
+    if (!response.ok) throw new Error('Không thể tải file Data.zip từ server.');
+    const zipBlob = await response.blob();
+
+    loaderElement.textContent = 'Đang giải nén...';
+    const zip = await JSZip.loadAsync(zipBlob);
+
+    loaderElement.textContent = 'Đang phân tích từ điển...';
+    const readPromises = dictionaryFiles.map(fileInfo =>
+        zip.file(fileInfo.name)
+        ? zip.file(fileInfo.name).async('string').then(content => ({ ...fileInfo, content, loaded: true }))
+        : Promise.resolve({ ...fileInfo, loaded: false })
+    );
+
+    const results = await Promise.all(readPromises);
+    const dictionaries = new Map();
+    results.forEach(result => {
+        if (result.loaded) {
+            dictionaries.set(result.name, {
+                priority: result.priority,
+                dict: parseDictionary(result.content)
+            });
+        }
+    });
+    
+    const db = await openDB();
+    loaderElement.textContent = 'Đang lưu cache đã xử lý...';
+    const storableDicts = Array.from(dictionaries.entries()).map(([name, data]) => {
+        return [name, {
+            priority: data.priority,
+            dict: Array.from(data.dict.entries())
+        }];
+    });
+
+    await saveDataToDB(db, { id: 'parsed-dictionaries', data: storableDicts });
+    await saveDataToDB(db, { id: 'dictionary-version', value: serverVersion });
+
+    return dictionaries;
+}
+
+// --- KẾT THÚC CÁC HÀM HỖ TRỢ ---
+
+
+export async function initializeDictionaries(loaderElement) {
+    try {
+        const db = await openDB();
+        let serverVersion = null;
+        let isOnline = navigator.onLine;
+
+        if (isOnline) {
+            try {
+                loaderElement.textContent = 'Đang kiểm tra phiên bản...';
+                const headResponse = await fetch('Data.zip', { method: 'HEAD', cache: 'no-store' });
+                if(headResponse.ok) {
+                    serverVersion = headResponse.headers.get('Last-Modified');
+                }
+            } catch (e) {
+                console.warn('Kiểm tra phiên bản thất bại, có thể do lỗi mạng hoặc CORS.');
+                isOnline = false;
+            }
+        }
+        
+        const cachedVersionData = await getDataFromDB(db, 'dictionary-version');
+        const cachedVersion = cachedVersionData ? cachedVersionData.value : null;
+
+        if (cachedVersion && (!isOnline || cachedVersion === serverVersion)) {
+            loaderElement.textContent = isOnline ? 'Từ điển đã được cập nhật.' : 'Không có mạng. Đang dùng bản offline...';
+            
+            const cachedData = await getDataFromDB(db, 'parsed-dictionaries');
+            if (cachedData) {
+                const dictionaries = new Map();
+                cachedData.data.forEach(([name, data]) => {
+                    dictionaries.set(name, {
+                        priority: data.priority,
+                        dict: new Map(data.dict)
+                    });
+                });
+                loaderElement.textContent = 'Hoàn tất!';
+                return dictionaries;
+            }
+        }
+        
+        if (isOnline) {
+            return await fullFetchAndProcess(loaderElement, serverVersion);
+        }
+
+        throw new Error("Không có kết nối mạng và không tìm thấy dữ liệu offline.");
+
+    } catch (error) {
+        console.error("Lỗi khởi tạo từ điển:", error);
+        loaderElement.textContent = `Lỗi: ${error.message}`;
+        DOMElements.loader.style.backgroundColor = 'rgba(200, 0, 0, 0.8)';
+        return new Map();
+    }
+}
+
+function parseDictionary(text) {
+    const dictionary = new Map();
+    const lines = text.split(/\r?\n/);
+    lines.forEach(line => {
+        if (line.startsWith('#') || line.trim() === '') return;
+        const parts = line.split('=');
+        if (parts.length === 2) {
+            const key = parts[0].trim();
+            const value = parts[1].trim();
+            if (key) dictionary.set(key, value);
+        }
+    });
+    return dictionary;
+}
+
+export function getTranslationFromPrioritizedDicts(word, dictionaries) {
+    const sortedDicts = [...dictionaries.values()].sort((a, b) => a.priority - b.priority);
+    for (const dictInfo of sortedDicts) {
+        if (dictInfo.dict.has(word)) return dictInfo.dict.get(word);
+    }
+    return null;
+}
+
+export function getHanViet(word, dictionaries) {
+    const hanVietDict = dictionaries.get(HAN_VIET_DICT_NAME)?.dict;
+    if (!word || !hanVietDict) {
+        return null;
+    }
+    const getSingleCharHanViet = (char) => {
+        if (hanVietDict.has(char)) {
+            return hanVietDict.get(char).split('/')[0].split(';')[0].trim();
+        }
+        return char;
+    };
+    const tokens = word.match(/[\u4e00-\u9fa5]+|[^\u4e00-\u9fa5]+/g) || [];
+    const translatedTokens = tokens.map(token => {
+        if (/[\u4e00-\u9fa5]/.test(token)) {
+            return [...token].map(getSingleCharHanViet).join(' ');
+        } else {
+            return token;
+        }
+    });
+    return translatedTokens.join(' ');
+}
+
+export function segmentText(text, masterKeySet) {
+    const segments = [];
+    let currentIndex = 0;
+    const textLength = text.length;
+    const maxLen = 10;
+
+    while (currentIndex < textLength) {
+        if (!/[\u4e00-\u9fa5]/.test(text[currentIndex])) {
+            let nonChineseBlock = '';
+            let i = currentIndex;
+            while (i < textLength && !/[\u4e00-\u9fa5]/.test(text[i])) {
+                nonChineseBlock += text[i];
+                i++;
+            }
+            segments.push(nonChineseBlock);
+            currentIndex += nonChineseBlock.length;
+            continue;
+        }
+
+        let foundWord = null;
+        for (let len = Math.min(maxLen, textLength - currentIndex); len > 0; len--) {
+            const potentialWord = text.substr(currentIndex, len);
+            if (masterKeySet.has(potentialWord)) {
+                foundWord = potentialWord;
+                break;
+            }
+        }
+        
+        if (foundWord) {
+            segments.push(foundWord);
+            currentIndex += foundWord.length;
+        } else {
+            segments.push(text[currentIndex]);
+            currentIndex++;
+        }
+    }
+    return segments;
+}
+
+export function translateWord(word, dictionaries, nameDict, tempDict) {
+    let meaningsStr = tempDict.get(word) || nameDict.get(word) || getTranslationFromPrioritizedDicts(word, dictionaries) || word;
+    if (meaningsStr === word && !getTranslationFromPrioritizedDicts(word, dictionaries)) {
+         return { best: word, all: [word], found: false };
+    }
+    const allMeaningsFlat = meaningsStr.split(';').flatMap(m => m.split('/')).map(m => m.trim()).filter(Boolean);
+    const bestMeaning = allMeaningsFlat[0] || word;
+    return { best: bestMeaning, all: allMeaningsFlat, found: true };
+}

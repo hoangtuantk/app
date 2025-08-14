@@ -1,0 +1,46 @@
+const DOMElements = {
+    inputText: document.getElementById('input-text'),
+    translateBtn: document.getElementById('translate-btn'),
+    clearBtn: document.getElementById('clear-btn'),
+    copyBtn: document.getElementById('copy-btn'),
+    outputPanel: document.getElementById('output-panel'),
+    nameListTextarea: document.getElementById('name-list-textarea'),
+    nameListSaveBtn: document.getElementById('name-list-save'),
+    nameListDeleteBtn: document.getElementById('name-list-delete'),
+    nameListExportBtn: document.getElementById('name-list-export'),
+    nameListImportBtn: document.getElementById('name-list-import'),
+    nameListFileInput: document.getElementById('name-list-file-input'),
+    loader: document.getElementById('loader'),
+    loaderText: document.getElementById('loader-text'),
+    modeToggle: document.getElementById('mode-toggle'),
+    increaseFontBtn: document.getElementById('increase-font-btn'),
+    decreaseFontBtn: document.getElementById('decrease-font-btn'),
+    fontSizeLabel: document.getElementById('font-size-label'),
+    
+    // Popup (Bảng Thêm Name)
+    editModal: document.getElementById('edit-modal'),
+    originalWordEl: document.getElementById('original-word'),
+    hanvietOptionsContainer: document.getElementById('hanviet-options-container'),
+    meaningsContainer: document.getElementById('meanings-container'),
+    customMeaningInput: document.getElementById('custom-meaning'),
+    cancelEditBtn: document.getElementById('cancel-edit-btn'),
+    addToNameListBtn: document.getElementById('add-to-name-list-btn'),
+    addTempBtn: document.getElementById('add-temp-btn'),
+    expandLeftBtn: document.getElementById('expand-left-btn'),
+    expandRightBtn: document.getElementById('expand-right-btn'),
+
+    // Bảng chọn chữ nhanh
+    quickEditPanel: document.getElementById('quick-edit-panel'),
+    qExpandLeftBtn: document.getElementById('q-expand-left-btn'),
+    qExpandRightBtn: document.getElementById('q-expand-right-btn'),
+    qAddNameBtn: document.getElementById('q-add-name-btn'),
+    qInputZw: document.getElementById('q-input-zw'),
+    qInputHv: document.getElementById('q-input-hv'),
+    qInputHV: document.getElementById('q-input-HV'),
+    qInputVp: document.getElementById('q-input-Vp'),
+    qInputTc: document.getElementById('q-input-tc'),
+    qSearchBtn: document.getElementById('q-search-btn'),
+    qCopyBtn: document.getElementById('q-copy-btn'),
+};
+
+export default DOMElements;
