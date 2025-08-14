@@ -1,7 +1,7 @@
 import DOMElements from './dom.js';
 import { getHanViet, translateWord, segmentText } from './dictionary.js';
 import { nameDictionary, temporaryNameDictionary, saveNameDictionaryToStorage, renderNameList, buildMasterKeySet } from './nameList.js';
-import { synthesizeCompoundTranslation, performTranslation, formatVietphraseMeanings } from './translation.js';
+import { synthesizeCompoundTranslation, performTranslation } from './translation.js';
 
 let selectionState = {
     spans: [],
@@ -39,18 +39,24 @@ function applyCase(caseType) {
 }
 
 function groupSimilarMeanings(meanings, state) {
-    // Nếu mảng rỗng, trả về chuỗi rỗng.
-    if (meanings.length === 0) {
-        return '';
-    }
+    if (meanings.length <= 1) return meanings.join(' / ');
 
-    // Nếu chỉ có một nghĩa, trả về nghĩa đó trực tiếp.
-    if (meanings.length === 1) {
-        return meanings[0];
-    }
-    
-    // Nếu có nhiều hơn một nghĩa, nối chúng bằng dấu '/' và bao quanh bằng ngoặc đơn.
-    return `(${meanings.join('/')})`;
+    const segments = segmentText(meanings.join(''), state.masterKeySet);
+    const vpParts = segments.map(segment => {
+        if (!/[\u4e00-\u9fa5]/.test(segment)) {
+            return segment;
+        }
+        const translation = translateWord(segment, state.dictionaries, nameDictionary, temporaryNameDictionary);
+        const meanings = translation.all;
+        if (meanings.length > 1) {
+            return `(${meanings.join('/')})`;
+        } else if (meanings.length === 1) {
+            return meanings[0];
+        } else {
+            return segment;
+        }
+    });
+    return vpParts.join(' ');
 }
 
 
@@ -62,7 +68,7 @@ function showQuickEditPanel(selection, state) {
     const range = selection.getRangeAt(0);
     const allSpans = Array.from(DOMElements.outputPanel.querySelectorAll('.word'));
     const selectedSpans = allSpans.filter(span => selection.containsNode(span, true) && span.textContent.trim() !== '');
-
+    
     if (selectedSpans.length === 0) {
         if (isPanelVisible) hideQuickEditPanel();
         return;
@@ -76,38 +82,9 @@ function showQuickEditPanel(selection, state) {
     populateQuickEditPanel(selectionState.originalText, state);
 
     const rect = range.getBoundingClientRect();
-    const panel = DOMElements.quickEditPanel;
-
-    // Hiển thị panel trước để có kích thước chính xác
-    panel.classList.remove('hidden');
-    
-    const panelWidth = panel.offsetWidth;
-    const panelHeight = panel.offsetHeight;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    let left = window.scrollX + rect.left;
-    let top = window.scrollY + rect.bottom + 5;
-
-    // Điều chỉnh vị trí ngang
-    if (left + panelWidth > window.scrollX + viewportWidth) {
-        left = window.scrollX + viewportWidth - panelWidth - 10; // Giữ 10px lề
-    }
-    if (left < window.scrollX) {
-        left = window.scrollX + 10; // Giữ 10px lề
-    }
-    
-    // Điều chỉnh vị trí dọc
-    if (top + panelHeight > window.scrollY + viewportHeight) {
-        // Nếu không đủ chỗ ở dưới, hiển thị ở trên
-        top = window.scrollY + rect.top - panelHeight - 5;
-    }
-    if (top < window.scrollY) {
-         top = window.scrollY + 10; // Đẩy xuống nếu nó vẫn ở quá cao
-    }
-
-    panel.style.left = `${left}px`;
-    panel.style.top = `${top}px`;
+    DOMElements.quickEditPanel.style.left = `${window.scrollX + rect.left}px`;
+    DOMElements.quickEditPanel.style.top = `${window.scrollY + rect.bottom + 5}px`;
+    DOMElements.quickEditPanel.classList.remove('hidden');
     isPanelVisible = true;
 }
 
@@ -124,20 +101,12 @@ function populateQuickEditPanel(text, state) {
     
     const translation = translateWord(text, state.dictionaries, nameDictionary, temporaryNameDictionary);
     let allMeanings = translation.found ? [...translation.all] : [];
-    
     if (text.length > 1) {
         const synthesized = synthesizeCompoundTranslation(text, state);
-        if (synthesized.length > 0) {
-            // Khi có từ ghép, chúng ta sẽ định dạng từng từ riêng lẻ rồi nối lại.
-            const formattedMeanings = synthesized.map(meanings => formatVietphraseMeanings(meanings));
-            DOMElements.qInputVp.value = formattedMeanings.join(' ');
-            DOMElements.qInputTc.value = ''; // Xóa giá trị cũ
-            return;
-        }
+        synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
     }
     
-    // Nếu không có từ ghép, hoặc từ chỉ có một nghĩa, sử dụng logic ban đầu.
-    DOMElements.qInputVp.value = formatVietphraseMeanings(allMeanings);
+    DOMElements.qInputVp.value = groupSimilarMeanings(allMeanings, state);
     DOMElements.qInputTc.value = '';
 }
 

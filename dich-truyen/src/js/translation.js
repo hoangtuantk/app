@@ -2,13 +2,6 @@ import DOMElements from './dom.js';
 import { segmentText, translateWord } from './dictionary.js';
 import { nameDictionary, temporaryNameDictionary } from './nameList.js';
 
-export function formatVietphraseMeanings(meanings) {
-    if (meanings.length <= 1) {
-        return meanings.join('/');
-    }
-    return `(${meanings.join('/')})`;
-}
-
 export function performTranslation(state) {
     const chineseText = DOMElements.inputText.value;
     if (!chineseText.trim()) {
@@ -30,7 +23,7 @@ export function performTranslation(state) {
                 span.classList.add('untranslatable');
                 span.textContent = segment;
             } else if (isVietphraseMode) {
-                span.textContent = formatVietphraseMeanings(translation.all);
+                span.textContent = `(${translation.all.join('/')})`;
                 span.classList.add('vietphrase-word');
             } else {
                 span.textContent = translation.best;
@@ -53,18 +46,25 @@ export function performTranslation(state) {
 }
 
 export function synthesizeCompoundTranslation(text, state) {
+    // Sử dụng lại chính hàm TÁCH TỪ GỐC (segmentText) để phá vỡ cụm từ trong popup.
+    // Điều này đảm bảo logic là nhất quán 100% với cách dịch chính.
     const segments = segmentText(text, state.masterKeySet);
 
+    // Nếu sau khi tách mà chỉ có 1 từ (tức là không thể phá vỡ thêm), thì không cần gợi ý.
     if (segments.length <= 1) {
         return [];
     }
-    
+
     // Lấy tất cả các nghĩa Vietphrase cho từng từ đã được tách ra.
     const segmentMeanings = segments.map(seg => {
         const translation = translateWord(seg, state.dictionaries, nameDictionary, temporaryNameDictionary);
         return translation.all;
     });
 
-    // Chỉ trả về mảng các mảng nghĩa, không tạo ra tổ hợp nghĩa.
-    return segmentMeanings;
+    // Tạo ra tất cả các tổ hợp nghĩa có thể có.
+    const cartesian = (...a) => a.reduce((acc, val) => acc.flatMap(d => val.map(e => [d, e].flat())));
+    const combinations = cartesian(...segmentMeanings).map(combo => combo.join(' '));
+
+    // Trả về danh sách gợi ý.
+    return [...new Set(combinations)];
 }

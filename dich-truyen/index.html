@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trình Dịch Thuật Chuyên Nghiệp</title>
-    <link rel="icon" type="image/png" href="/img/logo.png" />
+
     <script src="lib/tailwindcss.js"></script>
     <link rel="stylesheet" href="src/css/style.css">
 </head>
@@ -115,35 +115,45 @@
         </div>
 
         <div class="space-y-1">
-            <div class="grid grid-cols-[24px,auto,24px,24px] items-center gap-2">
-                <label for="q-input-HV" class="font-bold text-sm text-accent-color">HV</label>
-                <input type="text" id="q-input-HV" class="w-full text-sm">
-                <button class="q-temp-add-btn" data-target="q-input-HV" title="Thêm tạm thời">✔️</button>
-                <button class="q-perm-add-btn" data-target="q-input-HV" title="Thêm vĩnh viễn">💾</button>
-            </div>
-            <div class="grid grid-cols-[24px,auto,24px,24px] items-center gap-2">
-                <label for="q-input-hv" class="font-bold text-sm text-accent-color">hv</label>
-                <input type="text" id="q-input-hv" class="w-full text-sm">
-                <button class="q-temp-add-btn" data-target="q-input-hv" title="Thêm tạm thời">✔️</button>
-                <button class="q-perm-add-btn" data-target="q-input-hv" title="Thêm vĩnh viễn">💾</button>
-            </div>
-            <div class="grid grid-cols-[24px,auto,24px,24px] items-center gap-2">
+            <div class="grid grid-cols-[auto,1fr,auto] items-center gap-3">
                 <label for="q-input-zw" class="font-bold text-sm text-accent-color">zw</label>
                 <input type="text" id="q-input-zw" class="w-full text-sm">
-                <button id="q-search-btn" title="Tìm kiếm trên Google" class="!p-0">🔍</button>
-                <button id="q-copy-btn" title="Sao chép chữ Hán" class="!p-0">📋</button>
+                <div class="flex gap-2">
+                    <button id="q-search-btn" title="Tìm kiếm trên Google" class="!p-0">🔍</button>
+                    <button id="q-copy-btn" title="Sao chép chữ Hán" class="!p-0">📋</button>
+                </div>
             </div>
-            <div class="grid grid-cols-[24px,auto,24px,24px] items-center gap-2">
+            <div class="grid grid-cols-[auto,1fr,auto] items-center gap-3">
+                <label for="q-input-hv" class="font-bold text-sm text-accent-color">hv</label>
+                <input type="text" id="q-input-hv" class="w-full text-sm">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-hv" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-hv" title="Thêm vĩnh viễn">💾</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[auto,1fr,auto] items-center gap-3">
+                <label for="q-input-HV" class="font-bold text-sm text-accent-color">HV</label>
+                <input type="text" id="q-input-HV" class="w-full text-sm">
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-HV" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-HV" title="Thêm vĩnh viễn">💾</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-[auto,1fr,auto] items-center gap-3">
                 <label for="q-input-Vp" class="font-bold text-sm text-accent-color">Vp</label>
                 <input type="text" id="q-input-Vp" class="w-full text-sm">
-                <button class="q-temp-add-btn" data-target="q-input-Vp" title="Thêm tạm thời">✔️</button>
-                <button class="q-perm-add-btn" data-target="q-input-Vp" title="Thêm vĩnh viễn">💾</button>
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-Vp" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-Vp" title="Thêm vĩnh viễn">💾</button>
+                </div>
             </div>
-            <div class="grid grid-cols-[24px,auto,24px,24px] items-center gap-2">
+            <div class="grid grid-cols-[auto,1fr,auto] items-center gap-3">
                 <label for="q-input-tc" class="font-bold text-sm text-accent-color">tc</label>
                 <input type="text" id="q-input-tc" class="w-full text-sm" placeholder="Nhập bản dịch của bạn...">
-                <button class="q-temp-add-btn" data-target="q-input-tc" title="Thêm tạm thời">✔️</button>
-                <button class="q-perm-add-btn" data-target="q-input-tc" title="Thêm vĩnh viễn">💾</button>
+                <div class="flex gap-1">
+                    <button class="q-temp-add-btn" data-target="q-input-tc" title="Thêm tạm thời">✔️</button>
+                    <button class="q-perm-add-btn" data-target="q-input-tc" title="Thêm vĩnh viễn">💾</button>
+                </div>
             </div>
         </div>
 
