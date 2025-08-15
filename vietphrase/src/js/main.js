@@ -138,10 +138,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    DOMElements.closeLogModalBtn.addEventListener('click', closeLogModalAndReloadIfNeeded);
+    function closeLogModal() {
+        DOMElements.logModal.classList.add('hidden');
+        DOMElements.logList.innerHTML = '';
+    }
+
+    DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
     DOMElements.logModal.addEventListener('click', (e) => {
         if (e.target === DOMElements.logModal) {
-            closeLogModalAndReloadIfNeeded();
+            closeLogModal();
         }
     });
     
