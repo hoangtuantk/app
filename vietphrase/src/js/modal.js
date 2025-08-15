@@ -309,7 +309,7 @@ export function initializeModal(state) {
             const text = document.getElementById(targetInputId).value;
             if (text && selectionState.originalText) {
                 temporaryNameDictionary.set(selectionState.originalText, text);
-                updateTranslationInPlace(text); // THAY ĐỔI
+                updateTranslationInPlace(text);
                 hideQuickEditPanel();
             }
         });
@@ -324,7 +324,7 @@ export function initializeModal(state) {
                 saveNameDictionaryToStorage();
                 renderNameList();
                 buildMasterKeySet(state);
-                updateTranslationInPlace(vnText); // THAY ĐỔI
+                updateTranslationInPlace(vnText);
                 hideQuickEditPanel();
             }
         });
@@ -332,6 +332,9 @@ export function initializeModal(state) {
     DOMElements.editModal.addEventListener('click', (e) => {
         if (e.target === DOMElements.editModal) closeOldModal();
     });
+
+    DOMElements.closeEditModalBtn.addEventListener('click', closeOldModal);
+    
     DOMElements.expandLeftBtn.addEventListener('click', () => expandOldModalSelection('left', state));
     DOMElements.expandRightBtn.addEventListener('click', () => expandOldModalSelection('right', state));
 
@@ -343,7 +346,7 @@ export function initializeModal(state) {
             saveNameDictionaryToStorage();
             renderNameList();
             buildMasterKeySet(state);
-            updateTranslationInPlace(vn); // THAY ĐỔI
+            updateTranslationInPlace(vn);
             closeOldModal();
         }
     });
@@ -353,7 +356,7 @@ export function initializeModal(state) {
         const vn = DOMElements.customMeaningInput.value.trim();
         if (cn && vn) {
             temporaryNameDictionary.set(cn, vn);
-            updateTranslationInPlace(vn); // THAY ĐỔI
+            updateTranslationInPlace(vn);
             closeOldModal();
         }
     });

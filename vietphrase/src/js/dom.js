@@ -27,6 +27,7 @@ const DOMElements = {
     fontSizeLabel: document.getElementById('font-size-label'),
     
     editModal: document.getElementById('edit-modal'),
+    closeEditModalBtn: document.getElementById('close-edit-modal-btn'),
     customMeaningInput: document.getElementById('custom-meaning'),
     addToNameListBtn: document.getElementById('add-to-name-list-btn'),
     addTempBtn: document.getElementById('add-temp-btn'),

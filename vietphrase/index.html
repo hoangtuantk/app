@@ -94,20 +94,24 @@
         <div class="modal-content">
             <div class="flex justify-between items-center pb-3 mb-3 border-b border-border-color">
                 <h3 class="text-xl font-bold text-text-highlight">Thêm name/Chỉnh name</h3>
-                <div class="flex gap-2">
-                    <button id="expand-left-btn" class="btn btn-secondary !p-2 h-8 text-xs">&lt; Mở rộng</button>
-                    <button id="expand-right-btn" class="btn btn-secondary !p-2 h-8 text-xs">Mở rộng &gt;</button>
+                <button id="close-edit-modal-btn" class="p-1 rounded-full text-text-color hover:bg-bg-input transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="mb-3">
+                <label class="text-sm font-bold mb-1 block">Tiếng Trung:</label>
+                <div class="flex items-center gap-2">
+                    <button id="expand-left-btn" title="Mở rộng sang trái" class="btn btn-secondary !p-2 h-10 text-lg">&lt;</button>
+                    <input type="text" id="original-word-input" class="w-full">
+                    <button id="expand-right-btn" title="Mở rộng sang phải" class="btn btn-secondary !p-2 h-10 text-lg">&gt;</button>
                 </div>
             </div>
 
             <div class="mb-3">
-                <label class="text-sm font-bold">Tiếng Trung:</label>
-                <input type="text" id="original-word-input" class="w-full mt-1">
-            </div>
-
-            <div class="mb-3">
                 <label class="text-sm font-bold">Hán Việt:</label>
-                <input type="text" id="hanviet-input" class="w-full mt-1" readonly> </div>
+                <input type="text" id="hanviet-input" class="w-full mt-1" readonly>
+            </div>
 
             <div class="mb-3">
                 <label class="text-sm font-bold">Vietphrase (chọn để điền nhanh):</label>
@@ -117,11 +121,11 @@
             <div class="mb-4">
                 <label class="text-sm font-bold">Nghĩa tùy chỉnh:</label>
                 <input type="text" id="custom-meaning" class="w-full mb-2 mt-1" placeholder="Nhập nghĩa bạn muốn lưu...">
-                <div class="flex flex-wrap gap-2">
-                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap">Hoa Chữ Đầu</button>
-                    <button class="case-btn btn btn-secondary text-xs p-2" data-case="cap2">Hoa 2 Chữ Đầu</button>
-                    <button class="case-btn btn-secondary text-xs p-2" data-case="lowerLast">Thường Chữ Cuối</button>
-                    <button class="case-btn btn-secondary text-xs p-2" data-case="upper">Hoa Toàn Bộ</button>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button class="case-btn btn btn-secondary text-xs whitespace-nowrap" data-case="cap">Hoa Chữ Đầu</button>
+                    <button class="case-btn btn btn-secondary text-xs whitespace-nowrap" data-case="cap2">Hoa 2 Chữ Đầu</button>
+                    <button class="case-btn btn btn-secondary text-xs whitespace-nowrap" data-case="lowerLast">Thường Chữ Cuối</button>
+                    <button class="case-btn btn btn-secondary text-xs whitespace-nowrap" data-case="upper">Hoa Toàn Bộ</button>
                 </div>
             </div>
 
