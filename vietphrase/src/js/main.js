@@ -130,17 +130,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-        function closeLogModal() {
-            DOMElements.logModal.classList.add('hidden');
-            DOMElements.logList.innerHTML = '';
-        }
+    function closeLogModal() {
+        DOMElements.logModal.classList.add('hidden');
+        DOMElements.logList.innerHTML = '';
+    }
 
-        DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
-        DOMElements.logModal.addEventListener('click', (e) => {
-            if (e.target === DOMElements.logModal) {
-                closeLogModal();
-            }
-        });
+    DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
+    DOMElements.logModal.addEventListener('click', (e) => {
+        if (e.target === DOMElements.logModal) {
+            closeLogModal();
+        }
+    });
 
     DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
     DOMElements.logModal.addEventListener('click', (e) => {
