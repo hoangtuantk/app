@@ -96,6 +96,7 @@ const App = {
       this.dom.capitalizationSubOptions = document.getElementById('capitalizationSubOptions');
       this.dom.subCapitalization_firstLetter = document.getElementById('subCapitalization_firstLetter');
       this.dom.subCapitalization_afterPunctuation = document.getElementById('subCapitalization_afterPunctuation');
+      this.dom.subCapitalization_afterColon = document.getElementById('subCapitalization_afterColon');
       this.dom.autoProcessTitleToggle = document.getElementById('autoProcessTitleToggle');
       this.dom.titleOptionsBtn = document.getElementById('titleOptionsBtn');
       this.dom.titleSubOptions = document.getElementById('titleSubOptions');
@@ -117,7 +118,7 @@ const App = {
       this.dom.batchLogContainer = document.getElementById('batchLogContainer');
       this.dom.batchLogOutput = document.getElementById('batchLogOutput');
       this.dom.batchDownloadBtn = document.getElementById('batchDownloadBtn');
-  },
+ },
 
   _saveState() {
       const rules = Array.from(this.dom.filterRulesContainer.querySelectorAll('.filter-rule-item'))
@@ -134,6 +135,7 @@ const App = {
           subCapitalization: {
               firstLetter: this.dom.subCapitalization_firstLetter.checked,
               afterPunctuation: this.dom.subCapitalization_afterPunctuation.checked,
+              afterColon: this.dom.subCapitalization_afterColon.checked,
           },
           autoProcessTitle: this.dom.autoProcessTitleToggle.checked,
           subTitle: {
@@ -168,19 +170,23 @@ const App = {
       this.dom.autoProcessPunctuationToggle.checked = state.autoProcessPunctuation ?? true;
       this.dom.punctuationOptionsBtn.disabled = !(state.autoProcessPunctuation ?? true);
       if (state.subPunctuation) {
-          this.dom.subPunctuationToggle_normalizeAll.checked = state.subPunctuation.normalizeAll ?? state.subPunctuation.normalizePeriodComma ?? true;
+          this.dom.subPunctuationToggle_normalizeAll.checked = state.subPunctuation.normalizeAll ??
+          state.subPunctuation.normalizePeriodComma ?? true;
           this.dom.subPunctuationToggle_normalizeBrackets.checked = state.subPunctuation.normalizeBrackets ?? true;
       }
       this.dom.autoCapitalizationToggle.checked = state.autoCapitalization ?? true;
       this.dom.capitalizationOptionsBtn.disabled = !(state.autoCapitalization ?? true);
       if (state.subCapitalization) {
-          this.dom.subCapitalization_firstLetter.checked = state.subCapitalization.firstLetter ?? true;
+          this.dom.subCapitalization_firstLetter.checked = state.subCapitalization.firstLetter ??
+          true;
           this.dom.subCapitalization_afterPunctuation.checked = state.subCapitalization.afterPunctuation ?? true;
+          this.dom.subCapitalization_afterColon.checked = state.subCapitalization.afterColon ?? true;
       }
       this.dom.autoProcessTitleToggle.checked = state.autoProcessTitle ?? true;
       this.dom.titleOptionsBtn.disabled = !(state.autoProcessTitle ?? true);
       if (state.subTitle) {
-          this.dom.subTitle_recognizeChapter.checked = state.subTitle.recognizeChapter ?? true;
+          this.dom.subTitle_recognizeChapter.checked = state.subTitle.recognizeChapter ??
+          true;
           this.dom.subTitle_insertIntoTitleTag.checked = state.subTitle.insertIntoTitleTag ?? true;
           this.dom.subTitle_headingLevelSelect.value = state.subTitle.headingLevel ?? 'h2';
       }
@@ -208,9 +214,10 @@ const App = {
           autoCapitalization: true,
           subCapitalization: {
               firstLetter: true,
-              afterPunctuation: true
+              afterPunctuation: true,
+              afterColon: true
           },
-          autoProcessTitle: true,
+           autoProcessTitle: true,
           subTitle: {
               recognizeChapter: true,
               insertIntoTitleTag: true,
@@ -218,7 +225,7 @@ const App = {
           },
           includeHeaderFooter: true,
           useFilter: false,
-          useSyncScroll: false,
+           useSyncScroll: false,
           nameFormat: 'chapter_prefix',
           customNameFormat: '[YYYY-MM-DD_HH-mm-ss]_[CHUONG]',
           fontSize: '22px',

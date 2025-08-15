@@ -226,14 +226,14 @@
                             <input id="subPunctuationToggle_normalizeAll" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
                             <label for="subPunctuationToggle_normalizeAll" class="ml-3 block text-sm text-gray-300 flex items-center gap-x-2">
                                 <span>Các loại dấu câu</span>
-                                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">. , : ? ! ;</code>
+                                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">. , : ; ? !</code>
                             </label>
                         </div>
                         <div class="flex items-center">
                             <input id="subPunctuationToggle_normalizeBrackets" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
                             <label for="subPunctuationToggle_normalizeBrackets" class="ml-3 block text-sm text-gray-300 flex items-center gap-x-2">
                                 <span>Các loại dấu ngoặc/nháy</span>
-                                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">() [] {} "' ‘’ “”</code>
+                                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">() [] {} "" '' ‘’ “”</code>
                             </label>
                         </div>
                     </div>
@@ -263,8 +263,15 @@
                         <div class="flex items-center">
                             <input id="subCapitalization_afterPunctuation" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
                             <label for="subCapitalization_afterPunctuation" class="ml-3 block text-sm text-gray-300 flex items-center gap-x-2">
-                                <span>Chữ cái sau dấu câu</span>
-                                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">. : ? !</code>
+                               <span>Chữ cái sau dấu câu</span>
+                                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">. ? !</code>
+                            </label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="subCapitalization_afterColon" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                            <label for="subCapitalization_afterColon" class="ml-3 block text-sm text-gray-300 flex items-center gap-x-2">
+                               <span>Chữ cái sau dấu hai chấm</span>
+                                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">:</code>
                             </label>
                         </div>
                     </div>

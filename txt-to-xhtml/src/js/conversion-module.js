@@ -94,8 +94,7 @@ export function _performReverseConversion() {
 export function _processLine(line) {
     let tempLine = line.trim();
     if (!tempLine) return '';
-
-        if (this.dom.autoProcessPunctuationToggle.checked) {
+    if (this.dom.autoProcessPunctuationToggle.checked) {
             if (this.dom.subPunctuationToggle_normalizeAll.checked) {
                 tempLine = tempLine.replace(/\s*([.,:;?!])\s*/g, '$1 ');
             }
@@ -104,8 +103,7 @@ export function _processLine(line) {
             const openBrackets = /[\(\[{“‘]/g;
             const closeBrackets = /[\)\]}”’]/g;
             const allQuotes = /["']/g;
-            tempLine = tempLine.replace(/\s+([\"'‘’“”])/g, '$1'); 
-            
+            tempLine = tempLine.replace(/\s+([\"'‘’“”])/g, '$1');
             tempLine = tempLine.replace(/([\(\[{“‘])\s+/g, '$1');
             tempLine = tempLine.replace(/\s+([\)\]}”’])/g, '$1');
             tempLine = tempLine.replace(/([^\s\(\[{“‘])([\({\[“‘])/g, '$1 $2');
@@ -115,18 +113,22 @@ export function _processLine(line) {
                 let inSingleQuote = false;
                 let correctedLine = '';
                 for (let i = 0; i < singleLine.length; i++) {
-                    const char = singleLine[i];
+              
+                     const char = singleLine[i];
                     const prevChar = i > 0 ? singleLine[i-1] : ' ';
                     const nextChar = i < singleLine.length - 1 ? singleLine[i+1] : ' ';
 
                     if (char === '"') {
-                        if (!inDoubleQuote) {
+     
+                                     if (!inDoubleQuote) {
                             if (prevChar !== ' ' && !prevChar.match(openBrackets)) correctedLine += ' ';
                             correctedLine += char;
-                            if (nextChar === ' ') {
+           
+                                   if (nextChar === ' ') {
                                 i++;
                             }
-                        } else {
+                  
+             } else {
                             if (prevChar === ' ') correctedLine = correctedLine.slice(0,-1);
                             correctedLine += char;
                             if (nextChar !== ' ' && !nextChar.match(closeBrackets) && nextChar !=='.' && nextChar !==',') correctedLine += ' ';
@@ -155,10 +157,16 @@ export function _processLine(line) {
     }
     
     if (this.dom.autoCapitalizationToggle.checked) {
-        // Tùy chọn: Viết hoa sau dấu câu
+        // Tùy chọn: Viết hoa sau dấu câu .?!
         if (this.dom.subCapitalization_afterPunctuation.checked) {
-            // Dấu . : ? ! và xử lý các ký tự không phải chữ cái sau dấu câu
-            tempLine = tempLine.replace(/([.:?!]\s+)([^a-zA-ZÀ-ỹ]*)([a-zA-ZÀ-ỹ])/gu, (match, p1, p2, p3) => {
+            tempLine = tempLine.replace(/([.?!]\s+)([^a-zA-ZÀ-ỹ]*)([a-zA-ZÀ-ỹ])/gu, (match, p1, p2, p3) => {
+                return p1 + p2 + p3.toUpperCase();
+            });
+        }
+        
+        // Tùy chọn: Viết hoa sau dấu hai chấm :
+        if (this.dom.subCapitalization_afterColon.checked) {
+            tempLine = tempLine.replace(/([:]\s+)([^a-zA-ZÀ-ỹ]*)([a-zA-ZÀ-ỹ])/gu, (match, p1, p2, p3) => {
                 return p1 + p2 + p3.toUpperCase();
             });
         }
