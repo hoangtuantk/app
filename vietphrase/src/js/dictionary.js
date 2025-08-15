@@ -1,6 +1,6 @@
 const HAN_VIET_DICT_NAME = 'PhienAm';
 const NAMES_FILES = [
-    'Names2.txt'
+    'Names2.txt', 'Name2.txt'
 ];
 
 const DICTIONARY_FILES = [
@@ -21,30 +21,35 @@ const DICTIONARY_FILES = [
         priority: 4
     },
     { 
-        id: 'IgnoredChinesePhrases', 
+        id: 'Blacklist', 
         names: ['IgnoredChinesePhrases.txt', 'IgnoreList.txt', 'Blacklist.txt'], 
         priority: 4
     },
     { 
         id: 'LacViet', 
-        names: ['LacViet.txt', 'Lac Viet.txt'],
+        names: ['LacViet.txt', 'Lac Viet.txt', 'LV.txt'],
         priority: 4
     },
     {   id: 'PhienAm',
-        names: ['ChinesePhienAmWords.txt','PhienAm.txt','HanViet.txt','HV.txt',],
-        priority: 4
+        names: [
+            'ChinesePhienAmWords.txt',
+            'PhienAm.txt', 'Phien Am.txt',
+            'HanViet.txt', 'HV.txt', 'Han Viet.txt', 'H V.txt',
+            'ChinesePhienAmWords-Han Viet.txt'
+        ],
+        priority: 3
     },
     {   id: 'LuatNhan',
-        names: ['LuatNhan.txt'],
+        names: ['LuatNhan.txt', 'Luat Nhan.txt'],
         priority: 4
     },
     {   id: 'Pronouns',
-         names: ['Pronouns.txt'],
-         priority: 4
-    },
-    {   id: 'ThieuChu',
-         names: ['ThieuChuu.txt'],
-         priority: 4
+        names: [
+            'Pronouns.txt',
+            'DaiTu', 'DaiTuNhanXung', 'Dai Tu', 'Dai Tu Nhan Xung',
+            'Pronouns-Dai Tu Nhan Xung.txt'
+        ],
+         priority: 3
     },
 ];
 
