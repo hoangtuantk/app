@@ -29,6 +29,7 @@ const DOMElements = {
     editModal: document.getElementById('edit-modal'),
     closeEditModalBtn: document.getElementById('close-edit-modal-btn'),
     editModalLockBtn: document.getElementById('edit-modal-lock-btn'),
+    originalWordInput: document.getElementById('original-word-input'),
     customMeaningInput: document.getElementById('custom-meaning'),
     addToNameListBtn: document.getElementById('add-to-name-list-btn'),
     addTempBtn: document.getElementById('add-temp-btn'),

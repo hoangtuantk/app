@@ -3,6 +3,15 @@ import { getHanViet, translateWord, segmentText } from './dictionary.js';
 import { nameDictionary, temporaryNameDictionary, saveNameDictionaryToStorage, renderNameList, buildMasterKeySet } from './nameList.js';
 import { synthesizeCompoundTranslation, performTranslation } from './translation.js';
 
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
 let selectionState = {
     spans: [],
     startIndex: -1,
@@ -274,19 +283,21 @@ export function initializeModal(state) {
     
     DOMElements.qCloseBtn.addEventListener('click', hideQuickEditPanel);
 
+    function updateLockIcon(button, isLocked, tooltips) {
+        button.classList.toggle('is-locked', isLocked);
+        button.title = isLocked ? tooltips.unlock : tooltips.lock;
+        const svgLocked = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`; // SVG icon đã khóa
+        const svgUnlocked = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`; // SVG icon đã mở
+        button.innerHTML = isLocked ? svgLocked : svgUnlocked;
+    }
+
     DOMElements.qLockBtn.addEventListener('click', () => {
         isPanelLocked = !isPanelLocked;
         localStorage.setItem('isPanelLocked', isPanelLocked);
-        const lockIcon = DOMElements.qLockBtn;
-        if (isPanelLocked) {
-            lockIcon.classList.add('is-locked');
-            lockIcon.title = "Bỏ ghim bảng dịch nhanh";
-            lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
-        } else {
-            lockIcon.classList.remove('is-locked');
-            lockIcon.title = "Ghim bảng dịch nhanh";
-            lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
-        }
+        updateLockIcon(DOMElements.qLockBtn, isPanelLocked, {
+            lock: "Ghim bảng dịch nhanh",
+            unlock: "Bỏ ghim bảng dịch nhanh"
+        });
     });
 
     DOMElements.editModalLockBtn.addEventListener('click', () => {
@@ -308,16 +319,18 @@ export function initializeModal(state) {
     DOMElements.qExpandRightBtn.addEventListener('click', () => expandQuickSelection('right', state));
     DOMElements.qAddNameBtn.addEventListener('click', () => openOldModal(state));
 
-    DOMElements.qInputZw.addEventListener('input', () => {
+    const debouncedPopulateQuickEdit = debounce(() => {
         const newText = DOMElements.qInputZw.value;
         populateQuickEditPanel(newText, state);
-    });
+    }, 250);
+    DOMElements.qInputZw.addEventListener('input', debouncedPopulateQuickEdit);
 
-    const originalWordInput = document.getElementById('original-word-input');
-    originalWordInput.addEventListener('input', () => {
-        const newText = originalWordInput.value;
+    const debouncedUpdateOldModal = debounce(() => {
+        const newText = DOMElements.originalWordInput.value;
         updateOldModalFields(newText, state);
-    });
+    }, 250);
+    DOMElements.originalWordInput.addEventListener('input', debouncedUpdateOldModal);
+
     DOMElements.qSearchBtn.addEventListener('click', () => {
         const text = DOMElements.qInputZw.value.trim();
         if(text) window.open(`https://www.google.com/search?q=${encodeURIComponent(text)}`, '_blank');

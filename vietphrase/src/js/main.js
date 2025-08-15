@@ -188,6 +188,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     DOMElements.modeToggle.addEventListener('change', () => performTranslation(state));
 
+    const savedInputText = localStorage.getItem('savedInputText');
+    if (savedInputText) {
+        DOMElements.inputText.value = savedInputText;
+    }
+
+    DOMElements.inputText.addEventListener('input', () => {
+        localStorage.setItem('savedInputText', DOMElements.inputText.value);
+    });
+
+    DOMElements.clearBtn.addEventListener('click', () => {
+        DOMElements.inputText.value = '';
+        localStorage.removeItem('savedInputText');
+    });
+
     let currentFontSize = parseInt(localStorage.getItem('translatorFontSize') || '18');
     const baseFontSize = 18;
 
