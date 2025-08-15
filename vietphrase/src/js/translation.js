@@ -109,8 +109,18 @@ export function performTranslation(state, options = {}) {
         if (line.trim() === '') return null;
 
         const segments = segmentText(line, state.masterKeySet);
-        
-        const lineHtml = segments.map((segment, index) => {
+        const cleanedSegments = [];
+        for (let i = 0; i < segments.length; i++) {
+            const currentSegment = segments[i];
+            const nextSegment = (i + 1 < segments.length) ? segments[i+1] : null;
+
+            if (currentSegment.trim() === '' && nextSegment && CLOSING_PUNCTUATION.has(nextSegment.trim())) {
+                continue;
+            }
+
+            cleanedSegments.push(currentSegment);
+        }
+        const lineHtml = cleanedSegments.map((segment, index) => {
             const span = document.createElement('span');
             span.className = 'word';
 
