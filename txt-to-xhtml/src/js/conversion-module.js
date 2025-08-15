@@ -95,13 +95,10 @@ export function _processLine(line) {
     let tempLine = line.trim();
     if (!tempLine) return '';
 
-    if (this.dom.autoProcessPunctuationToggle.checked) {
-        if (this.dom.subPunctuationToggle_normalizePeriodComma.checked) {
-            tempLine = tempLine.replace(/\s*([.,])\s*/g, '$1 ');
-        }
-        if (this.dom.subPunctuationToggle_formatColon.checked) {
-            tempLine = tempLine.replace(/\s*:\s*/g, ': ');
-        }
+        if (this.dom.autoProcessPunctuationToggle.checked) {
+            if (this.dom.subPunctuationToggle_normalizeAll.checked) {
+                tempLine = tempLine.replace(/\s*([.,:;?!])\s*/g, '$1 ');
+            }
 
         if (this.dom.subPunctuationToggle_normalizeBrackets.checked) {
             const openBrackets = /[\(\[{“‘]/g;

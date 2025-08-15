@@ -68,8 +68,7 @@ const App = {
       this.dom.fileNamePreview = document.getElementById('fileNamePreview');
       this.dom.punctuationOptionsBtn = document.getElementById('punctuationOptionsBtn');
       this.dom.punctuationSubOptions = document.getElementById('punctuationSubOptions');
-      this.dom.subPunctuationToggle_normalizePeriodComma = document.getElementById('subPunctuationToggle_normalizePeriodComma');
-      this.dom.subPunctuationToggle_formatColon = document.getElementById('subPunctuationToggle_formatColon');
+      this.dom.subPunctuationToggle_normalizeAll = document.getElementById('subPunctuationToggle_normalizeAll');
       this.dom.subPunctuationToggle_normalizeBrackets = document.getElementById('subPunctuationToggle_normalizeBrackets');
       this.dom.settingsBtn = document.getElementById('settingsBtn');
       this.dom.settingsOverlay = document.getElementById('settingsOverlay');
@@ -128,9 +127,8 @@ const App = {
           isXhtmlMode: this.dom.xhtmlConversionToggle.checked,
           autoProcessPunctuation: this.dom.autoProcessPunctuationToggle.checked,
           subPunctuation: {
-              normalizePeriodComma: this.dom.subPunctuationToggle_normalizePeriodComma.checked,
-              formatColon: this.dom.subPunctuationToggle_formatColon.checked,
-              normalizeBrackets: this.dom.subPunctuationToggle_normalizeBrackets.checked,
+            normalizeAll: this.dom.subPunctuationToggle_normalizeAll.checked,
+            normalizeBrackets: this.dom.subPunctuationToggle_normalizeBrackets.checked,
           },
           autoCapitalization: this.dom.autoCapitalizationToggle.checked,
           subCapitalization: {
@@ -170,8 +168,7 @@ const App = {
       this.dom.autoProcessPunctuationToggle.checked = state.autoProcessPunctuation ?? true;
       this.dom.punctuationOptionsBtn.disabled = !(state.autoProcessPunctuation ?? true);
       if (state.subPunctuation) {
-          this.dom.subPunctuationToggle_normalizePeriodComma.checked = state.subPunctuation.normalizePeriodComma ?? true;
-          this.dom.subPunctuationToggle_formatColon.checked = state.subPunctuation.formatColon ?? true;
+          this.dom.subPunctuationToggle_normalizeAll.checked = state.subPunctuation.normalizeAll ?? state.subPunctuation.normalizePeriodComma ?? true;
           this.dom.subPunctuationToggle_normalizeBrackets.checked = state.subPunctuation.normalizeBrackets ?? true;
       }
       this.dom.autoCapitalizationToggle.checked = state.autoCapitalization ?? true;
