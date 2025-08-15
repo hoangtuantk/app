@@ -28,11 +28,15 @@ const DOMElements = {
     
     editModal: document.getElementById('edit-modal'),
     closeEditModalBtn: document.getElementById('close-edit-modal-btn'),
+    editModalLockBtn: document.getElementById('edit-modal-lock-btn'),
     customMeaningInput: document.getElementById('custom-meaning'),
     addToNameListBtn: document.getElementById('add-to-name-list-btn'),
     addTempBtn: document.getElementById('add-temp-btn'),
     expandLeftBtn: document.getElementById('expand-left-btn'),
     expandRightBtn: document.getElementById('expand-right-btn'),
+    vietphraseInput: document.getElementById('vietphrase-input'),
+    vietphraseToggleBtn: document.getElementById('vietphrase-toggle-btn'),
+    vietphraseOptionsContainer: document.getElementById('vietphrase-options-container'),
 
     quickEditPanel: document.getElementById('quick-edit-panel'),
     qExpandLeftBtn: document.getElementById('q-expand-left-btn'),

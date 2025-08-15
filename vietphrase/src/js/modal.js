@@ -11,6 +11,7 @@ let selectionState = {
 };
 let isPanelVisible = false;
 let isPanelLocked = false;
+let isEditModalLocked = false;
 
 function updateTranslationInPlace(newText) {
     const { spans, startIndex, endIndex, originalText } = selectionState;
@@ -87,6 +88,14 @@ function groupSimilarMeanings(meanings, state) {
 
 function closeOldModal() {
     DOMElements.editModal.style.display = 'none';
+    DOMElements.vietphraseOptionsContainer.classList.add('hidden');
+    if (isEditModalLocked) {
+        isEditModalLocked = false;
+        const lockIcon = DOMElements.editModalLockBtn;
+        lockIcon.classList.remove('is-locked');
+        lockIcon.title = "Ghim bảng";
+        lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
+    }
 }
 
 function showQuickEditPanel(selection, state) {
@@ -167,7 +176,6 @@ function hideQuickEditPanel() {
         if (window.getSelection) {
             window.getSelection().removeAllRanges();
         }
-        // Reset lock state when panel is hidden
         if (isPanelLocked) {
             isPanelLocked = false;
             const lockIcon = DOMElements.qLockBtn;
@@ -230,36 +238,39 @@ export function initializeModal(state) {
     document.addEventListener('pointerup', (e) => {
         const outputPanel = DOMElements.outputPanel;
         const quickEditPanel = DOMElements.quickEditPanel;
+        const optionsContainer = DOMElements.vietphraseOptionsContainer;
 
+        if (isPanelVisible && !isPanelLocked && !quickEditPanel.contains(e.target) && !outputPanel.contains(e.target)) {
+            hideQuickEditPanel();
+        }
+
+        if (!optionsContainer.classList.contains('hidden') && !optionsContainer.contains(e.target) && !DOMElements.vietphraseToggleBtn.contains(e.target) && !DOMElements.vietphraseInput.contains(e.target)) {
+            optionsContainer.classList.add('hidden');
+        }
+        
         if (!outputPanel.contains(e.target) || quickEditPanel.contains(e.target)) {
-            if (isPanelVisible && !isPanelLocked && !quickEditPanel.contains(e.target)) {
-                 hideQuickEditPanel();
-            }
             return;
         }
 
         setTimeout(() => {
             const selection = window.getSelection();
-            
-             const targetSpan = e.target.closest('.word');
+            const targetSpan = e.target.closest('.word');
 
             if (targetSpan && selection.isCollapsed) {
                 const range = document.createRange();
-     
                 range.selectNode(targetSpan);
                 selection.removeAllRanges();
                 selection.addRange(range);
                 showQuickEditPanel(selection, state);
                 return;
-             }
+            }
 
             if (selection.toString().trim() !== '') {
                 showQuickEditPanel(selection, state);
             } else if (isPanelVisible && !isPanelLocked) {
                 hideQuickEditPanel();
             }
-
-        }, 50);  
+        }, 50);
     });
     
     DOMElements.qCloseBtn.addEventListener('click', hideQuickEditPanel);
@@ -274,6 +285,20 @@ export function initializeModal(state) {
         } else {
             lockIcon.classList.remove('is-locked');
             lockIcon.title = "Ghim bảng dịch nhanh";
+            lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
+        }
+    });
+
+    DOMElements.editModalLockBtn.addEventListener('click', () => {
+        isEditModalLocked = !isEditModalLocked;
+        const lockIcon = DOMElements.editModalLockBtn;
+        if (isEditModalLocked) {
+            lockIcon.classList.add('is-locked');
+            lockIcon.title = "Bỏ ghim bảng";
+            lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+        } else {
+            lockIcon.classList.remove('is-locked');
+            lockIcon.title = "Ghim bảng";
             lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
         }
     });
@@ -295,12 +320,26 @@ export function initializeModal(state) {
         const text = DOMElements.qInputZw.value.trim();
         if(text) navigator.clipboard.writeText(text);
     });
+    
     const hanvietInput = document.getElementById('hanviet-input');
     hanvietInput.addEventListener('click', () => {
         const hanvietValue = hanvietInput.value;
         if (hanvietValue && hanvietValue !== 'Không tìm thấy Hán Việt.') {
             DOMElements.customMeaningInput.value = hanvietValue;
         }
+    });
+
+    hanvietInput.addEventListener('input', () => {
+        DOMElements.customMeaningInput.value = hanvietInput.value;
+    });
+
+    DOMElements.vietphraseInput.addEventListener('input', () => {
+        DOMElements.customMeaningInput.value = DOMElements.vietphraseInput.value;
+        DOMElements.vietphraseOptionsContainer.classList.add('hidden');
+    });
+
+    DOMElements.vietphraseToggleBtn.addEventListener('click', () => {
+        DOMElements.vietphraseOptionsContainer.classList.toggle('hidden');
     });
 
     document.querySelectorAll('.q-temp-add-btn').forEach(btn => {
@@ -330,7 +369,7 @@ export function initializeModal(state) {
         });
     });
     DOMElements.editModal.addEventListener('click', (e) => {
-        if (e.target === DOMElements.editModal) closeOldModal();
+        if (e.target === DOMElements.editModal && !isEditModalLocked) closeOldModal();
     });
 
     DOMElements.closeEditModalBtn.addEventListener('click', closeOldModal);
@@ -391,18 +430,21 @@ export function initializeModal(state) {
 
 function updateOldModalFields(text, state) {
     const hanvietInput = document.getElementById('hanviet-input');
-    const vietphraseSelect = document.getElementById('vietphrase-select');
+    const vietphraseInput = DOMElements.vietphraseInput;
+    const optionsContainer = DOMElements.vietphraseOptionsContainer;
     const customMeaningInput = DOMElements.customMeaningInput;
 
     if (!text) {
         hanvietInput.value = '';
-        vietphraseSelect.innerHTML = '<option>Nhập Tiếng Trung để xem gợi ý</option>';
+        vietphraseInput.value = '';
+        optionsContainer.innerHTML = '<div class="vietphrase-option text-gray-400">Nhập Tiếng Trung để xem gợi ý</div>';
         customMeaningInput.value = '';
         return;
     }
     
     const baseHanViet = getHanViet(text, state.dictionaries);
     hanvietInput.value = baseHanViet ? baseHanViet.toLowerCase() : 'Không tìm thấy Hán Việt.';
+    
     const finalTranslation = translateWord(text, state.dictionaries, nameDictionary, temporaryNameDictionary);
     let allMeanings = finalTranslation.found ? [...new Set(finalTranslation.all)] : [];
     if (text.length > 1) {
@@ -410,24 +452,26 @@ function updateOldModalFields(text, state) {
         synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
     }
 
-    vietphraseSelect.innerHTML = '';
+    optionsContainer.innerHTML = '';
     if (allMeanings.length > 0) {
         allMeanings.forEach(meaning => {
-            const option = document.createElement('option');
-            option.value = meaning;
-            option.textContent = meaning;
-            vietphraseSelect.appendChild(option);
+            const optionEl = document.createElement('div');
+            optionEl.className = 'vietphrase-option';
+            optionEl.textContent = meaning;
+            optionEl.title = meaning;
+            optionEl.addEventListener('click', () => {
+                vietphraseInput.value = meaning;
+                customMeaningInput.value = meaning;
+                optionsContainer.classList.add('hidden');
+            });
+            optionsContainer.appendChild(optionEl);
         });
-        customMeaningInput.value = allMeanings[0];
+        const firstMeaning = allMeanings[0];
+        vietphraseInput.value = firstMeaning;
+        customMeaningInput.value = firstMeaning;
     } else {
-        const option = document.createElement('option');
-        option.textContent = 'Không tìm thấy Vietphrase';
-        option.disabled = true;
-        vietphraseSelect.appendChild(option);
+        optionsContainer.innerHTML = '<div class="vietphrase-option text-gray-400">Không tìm thấy Vietphrase</div>';
+        vietphraseInput.value = '';
         customMeaningInput.value = text;
     }
-
-    vietphraseSelect.onchange = () => {
-        customMeaningInput.value = vietphraseSelect.value;
-    };
 }
