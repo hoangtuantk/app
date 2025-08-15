@@ -130,18 +130,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    function closeLogModalAndReloadIfNeeded() {
-        DOMElements.logModal.classList.add('hidden');
-        DOMElements.logList.innerHTML = '';
-        if (importHasFinished) {
-            location.reload();
+        function closeLogModal() {
+            DOMElements.logModal.classList.add('hidden');
+            DOMElements.logList.innerHTML = '';
         }
-    }
 
-    function closeLogModal() {
-        DOMElements.logModal.classList.add('hidden');
-        DOMElements.logList.innerHTML = '';
-    }
+        DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
+        DOMElements.logModal.addEventListener('click', (e) => {
+            if (e.target === DOMElements.logModal) {
+                closeLogModal();
+            }
+        });
 
     DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
     DOMElements.logModal.addEventListener('click', (e) => {
