@@ -67,6 +67,10 @@ export function performTranslation(state, options = {}) {
 
         const segments = segmentText(line, state.masterKeySet);
         const rawLineHtml = segments.map((segment) => {
+            const blacklistDict = state.dictionaries.get('Blacklist')?.dict;
+            if (blacklistDict && blacklistDict.has(segment)) {
+                return '';
+            }
             const translation = translateWord(segment, state.dictionaries, nameDictionary, temporaryNameDictionary);
             const span = document.createElement('span');
             span.className = 'word';
