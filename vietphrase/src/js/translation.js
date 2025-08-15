@@ -1,6 +1,46 @@
 import DOMElements from './dom.js';
 import { segmentText, translateWord } from './dictionary.js';
 import { nameDictionary, temporaryNameDictionary } from './nameList.js';
+// HÀM HỖ TRỢ ĐỂ XỬ LÝ KÝ TỰ ĐẶC BIỆT
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// HÀM ÁP DỤNG LUẬT NHẤN
+function applyLuatNhan(text, state) {
+    const luatNhanDict = state.dictionaries.get('LuatNhan')?.dict;
+    if (!luatNhanDict || luatNhanDict.size === 0) {
+        return text;
+    }
+
+    let processedText = text;
+    // Sắp xếp các luật theo độ dài, ưu tiên luật dài hơn để tránh xung đột
+    const sortedRules = [...luatNhanDict.entries()].sort((a, b) => b[0].length - a[0].length);
+
+    for (const [ruleKey, ruleValue] of sortedRules) {
+        if (!ruleKey.includes('{0}')) continue;
+
+        // Tạo biểu thức chính quy từ luật, thay thế {0} bằng một nhóm ký tự tiếng Trung
+        const escapedKey = escapeRegExp(ruleKey).replace('\\{0\\}', '([\u4e00-\u9fa5]+)');
+        const regex = new RegExp(escapedKey, 'g');
+
+        processedText = processedText.replace(regex, (match, capturedWord) => {
+            // Kiểm tra xem từ bị bắt (capturedWord) có trong từ điển không
+            if (state.masterKeySet.has(capturedWord)) {
+                // Dịch từ bị bắt đó
+                const translationResult = translateWord(capturedWord, state.dictionaries, nameDictionary, temporaryNameDictionary);
+                if (translationResult && translationResult.found) {
+                    // Thay thế {0} trong vế phải của luật bằng kết quả dịch
+                    return ruleValue.replace('{0}', translationResult.best);
+                }
+            }
+            // Nếu không tìm thấy, trả về chuỗi gốc để không làm hỏng văn bản
+            return match;
+        });
+    }
+
+    return processedText;
+}
 
 const translationCache = new Map();
 export function synthesizeCompoundTranslation(text, state) {
@@ -48,6 +88,7 @@ export function synthesizeCompoundTranslation(text, state) {
 export function performTranslation(state, options = {}) {
     // Ưu tiên dịch văn bản được "ép" dịch (forceText), nếu không có thì lấy từ ô input
     const textToTranslate = options.forceText ?? DOMElements.inputText.value;
+    const textWithLuatNhan = applyLuatNhan(textToTranslate, state);
 
     // Nếu không có gì để dịch, xóa kết quả và dừng lại
     if (!textToTranslate.trim()) {
@@ -61,7 +102,7 @@ export function performTranslation(state, options = {}) {
     }
 
     const isVietphraseMode = DOMElements.modeToggle.checked;
-    const lines = textToTranslate.split('\n');
+    const lines = textWithLuatNhan.split('\n');
     const translatedLineHtmls = lines.map(line => {
         if (line.trim() === '') return null;
 
