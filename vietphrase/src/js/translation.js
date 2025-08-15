@@ -70,6 +70,8 @@ export function synthesizeCompoundTranslation(text, state) {
     return finalSuggestions;
 }
 
+// ===== BẮT ĐẦU HÀM MỚI - SAO CHÉP TẤT CẢ CODE BÊN DƯỚI =====
+
 export function performTranslation(state, options = {}) {
     const textToTranslate = options.forceText ?? DOMElements.inputText.value;
     const textWithLuatNhan = applyLuatNhan(textToTranslate, state);
@@ -86,36 +88,41 @@ export function performTranslation(state, options = {}) {
     const isVietphraseMode = DOMElements.modeToggle.checked;
     const lines = textWithLuatNhan.split('\n');
     
-    // Bộ quy tắc dấu câu hoàn chỉnh
     const OPENING_PUNCTUATION = new Set(['(', '[', '{', '“', '‘', '"', "'"]);
     const CLOSING_PUNCTUATION = new Set([')', ']', '}', '”', '’', ',', '.', '!', '?', ';', ':', '"', "'", '。', '：', '；', '，', '、', '！', '？', '……', '～']);
+    const ALL_PUNCTUATION = new Set([...OPENING_PUNCTUATION, ...CLOSING_PUNCTUATION]);
 
     const translatedLineHtmls = lines.map(line => {
         if (line.trim() === '') return null;
 
-        const segments = segmentText(line, state.masterKeySet);
+        const initialSegments = segmentText(line, state.masterKeySet);
         
-        // Bước 1: Lọc bỏ tất cả các segment chỉ chứa khoảng trắng.
-        // Chúng ta sẽ tự kiểm soát toàn bộ việc thêm khoảng trắng.
-        const nonEmptySegments = segments.filter(s => s.trim() !== '');
+        // BƯỚC TIỀN XỬ LÝ: Tách các dấu câu bị dính liền
+        const punctuationCharsForRegex = Array.from(ALL_PUNCTUATION).map(p => escapeRegExp(p)).join('');
+        const punctuationSplitRegex = new RegExp(`([${punctuationCharsForRegex}])`);
+        
+        const segments = initialSegments.flatMap(segment => {
+            if (/[\u4e00-\u9fa5]/.test(segment)) {
+                return [segment]; // Giữ nguyên các từ tiếng Trung
+            }
+            // Tách các segment không phải tiếng Trung (chứa chữ, số, dấu câu)
+            return segment.split(punctuationSplitRegex).filter(Boolean);
+        }).filter(s => s.trim() !== ''); // Lọc bỏ các khoảng trắng
 
-        // Bước 2: Tạo HTML cho từng segment và quyết định có thêm khoảng trắng phía trước hay không.
-        const htmlParts = nonEmptySegments.map((segment, index) => {
+
+        const htmlParts = segments.map((segment, index) => {
             const span = document.createElement('span');
             span.className = 'word';
             span.dataset.original = segment;
 
-            // Logic dịch thuật cho segment
             if (!/[\u4e00-\u9fa5]/.test(segment)) {
                 span.textContent = segment;
             } else {
                 const blacklistDict = state.dictionaries.get('Blacklist')?.dict;
                 if (blacklistDict && blacklistDict.has(segment)) {
-                    return ''; // Bỏ qua từ trong blacklist
+                    return '';
                 }
-
                 const translation = translateWord(segment, state.dictionaries, nameDictionary, temporaryNameDictionary);
-                
                 if (!translation.found) {
                     span.classList.add('untranslatable');
                     span.textContent = segment;
@@ -128,24 +135,27 @@ export function performTranslation(state, options = {}) {
             }
 
             let leadingSpace = '';
-            // Chỉ xem xét thêm khoảng trắng từ segment thứ hai trở đi.
             if (index > 0) {
-                const prevSegment = nonEmptySegments[index - 1];
-                
+                const prevSegment = segments[index - 1];
                 const lastCharOfPrev = prevSegment.slice(-1);
                 const firstCharOfCurrent = segment.charAt(0);
-
-                // Mặc định là sẽ thêm khoảng trắng.
                 leadingSpace = ' ';
 
-                // Các trường hợp KHÔNG thêm khoảng trắng:
-                // 1. Nếu segment trước đó kết thúc bằng một dấu mở.
-                if (OPENING_PUNCTUATION.has(lastCharOfPrev)) {
+                const isPrevOpening = OPENING_PUNCTUATION.has(lastCharOfPrev);
+                const isCurrentClosing = CLOSING_PUNCTUATION.has(firstCharOfCurrent);
+                
+                if (isPrevOpening) {
                     leadingSpace = '';
                 }
-                // 2. Nếu segment hiện tại bắt đầu bằng một dấu đóng.
-                if (CLOSING_PUNCTUATION.has(firstCharOfCurrent)) {
-                    leadingSpace = '';
+
+                if (isCurrentClosing) {
+                    const prevWantsSpaceAfter = new Set([':', ';', '.', '?', '!']).has(lastCharOfPrev);
+                    const currentIsOpeningQuote = new Set(['"', "'", '“', '‘']).has(firstCharOfCurrent);
+                    if (prevWantsSpaceAfter && currentIsOpeningQuote) {
+                        // Ngoại lệ: Giữ lại khoảng trắng cho trường hợp như `: "`
+                    } else {
+                        leadingSpace = '';
+                    }
                 }
             }
             
@@ -158,8 +168,10 @@ export function performTranslation(state, options = {}) {
 
     let finalHtml = translatedLineHtmls.join('<br><br>');
     
-    const replacements = { '“': '"', '”': '"', '‘': "'", '’': "'", '。': '.', '：': ':', '；': ';', '，': ',', '！': '!', '？': '?', '……': '...', '～': '~', '、': ',' };
-    finalHtml = finalHtml.replace(/[“”‘’。：；，、！？……～]/g, match => replacements[match] || match);
+    const replacements = { '。': '.', '：': ':', '；': ';', '，': ',', '！': '!', '？': '?', '……': '...', '～': '~', '、': ',' };
+    finalHtml = finalHtml.replace(/[。：；，、！？……～]/g, match => replacements[match] || match);
 
     DOMElements.outputPanel.innerHTML = finalHtml;
 }
+
+// ===== KẾT THÚC HÀM MỚI - DỪNG SAO CHÉP TẠI ĐÂY =====
