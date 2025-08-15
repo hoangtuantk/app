@@ -3,7 +3,6 @@ import { segmentText, translateWord } from './dictionary.js';
 import { nameDictionary, temporaryNameDictionary } from './nameList.js';
 
 const translationCache = new Map();
-
 export function synthesizeCompoundTranslation(text, state) {
     if (translationCache.has(text)) {
         return translationCache.get(text);
@@ -25,7 +24,6 @@ export function synthesizeCompoundTranslation(text, state) {
         const translation = translateWord(seg, state.dictionaries, nameDictionary, temporaryNameDictionary);
         return translation.all;
     });
-
     // Tạo ra tất cả các tổ hợp nghĩa có thể có.
     const cartesian = (...a) => a.reduce((acc, val) => acc.flatMap(d => val.map(e => [d, e].flat())));
     let combinations = [];
@@ -38,25 +36,32 @@ export function synthesizeCompoundTranslation(text, state) {
 
     // Lọc các nghĩa trùng lặp
     const uniqueCombinations = [...new Set(combinations)];
-    
     // Giới hạn số lượng gợi ý để tránh DOM quá tải khi hiển thị
-    const MAX_SUGGESTIONS = 50; 
+    const MAX_SUGGESTIONS = 50;
     const finalSuggestions = uniqueCombinations.slice(0, MAX_SUGGESTIONS);
 
     // Lưu kết quả đã tính toán vào cache trước khi trả về
     translationCache.set(text, finalSuggestions);
-
     return finalSuggestions;
 }
 
-export function performTranslation(state) {
-    const chineseText = DOMElements.inputText.value;
-    if (!chineseText.trim()) {
-        DOMElements.outputPanel.textContent = 'Vui lòng nhập văn bản.';
+export function performTranslation(state, options = {}) {
+    // Ưu tiên dịch văn bản được "ép" dịch (forceText), nếu không có thì lấy từ ô input
+    const textToTranslate = options.forceText ?? DOMElements.inputText.value;
+
+    // Nếu không có gì để dịch, xóa kết quả và dừng lại
+    if (!textToTranslate.trim()) {
+        DOMElements.outputPanel.textContent = 'Kết quả sẽ hiện ở đây...';
         return;
     }
+
+    // Nếu đây là một lần dịch mới từ ô input, lưu lại văn bản này
+    if (!options.forceText) {
+        state.lastTranslatedText = textToTranslate;
+    }
+
     const isVietphraseMode = DOMElements.modeToggle.checked;
-    const lines = chineseText.split('\n');
+    const lines = textToTranslate.split('\n');
     const translatedLineHtmls = lines.map(line => {
         if (line.trim() === '') return null;
 
@@ -65,12 +70,14 @@ export function performTranslation(state) {
             const translation = translateWord(segment, state.dictionaries, nameDictionary, temporaryNameDictionary);
             const span = document.createElement('span');
             span.className = 'word';
-            
+          
+               
             if (!translation.found) {
                 span.classList.add('untranslatable');
                 span.textContent = segment;
             } else if (isVietphraseMode) {
                 span.textContent = `(${translation.all.join('/')})`;
+                
                 span.classList.add('vietphrase-word');
             } else {
                 span.textContent = translation.best;

@@ -45,7 +45,22 @@
             </div>
 
             <div class="panel p-6 flex flex-col">
-                <h2 class="text-xl font-semibold mb-4 text-text-highlight">Name List</h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-text-highlight">Name List</h2>
+                    <div id="name-list-sort-container" class="relative">
+                        <button id="name-list-sort-btn" title="Sắp xếp" class="btn btn-secondary !p-2 w-8 h-8">☰</button>
+                        <div id="name-list-sort-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-bg-panel border border-border-color rounded-lg shadow-xl z-20">
+                            <ul class="text-sm">
+                                <li><button data-sort="newest" class="sort-option w-full text-left px-4 py-2 hover:bg-accent-color hover:text-bg-main">Thời gian (mới nhất)</button></li>
+                                <li><button data-sort="oldest" class="sort-option w-full text-left px-4 py-2 hover:bg-accent-color hover:text-bg-main">Thời gian (cũ nhất)</button></li>
+                                <li><button data-sort="vn-az" class="sort-option w-full text-left px-4 py-2 hover:bg-accent-color hover:text-bg-main">Tên Việt (A-Z)</button></li>
+                                <li><button data-sort="vn-za" class="sort-option w-full text-left px-4 py-2 hover:bg-accent-color hover:text-bg-main">Tên Việt (Z-A)</button></li>
+                                <li><button data-sort="cn-az" class="sort-option w-full text-left px-4 py-2 hover:bg-accent-color hover:text-bg-main">Tên Trung (A-Z)</button></li>
+                                <li><button data-sort="cn-za" class="sort-option w-full text-left px-4 py-2 hover:bg-accent-color hover:text-bg-main">Tên Trung (Z-A)</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
                 <textarea id="name-list-textarea" class="w-full flex-grow text-sm leading-relaxed" placeholder="[Tiếng Trung]=[Tiếng Việt]..."></textarea>
                 <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-2">
                     <button id="name-list-save" class="btn text-sm">Lưu</button>
@@ -171,8 +186,8 @@
         </div>
     </div>
 
-    <div id="log-modal" class="fixed inset-0 flex items-center justify-center hidden" style="background-color: rgba(0,0,0,0.7); z-index: 9999;">
-        <div class="bg-bg-panel p-6 rounded-lg border border-border-color shadow-2xl w-[90%] max-w-[600px]">
+    <div id="log-modal" class="fixed inset-0 flex items-center justify-center hidden">
+        <div class="modal-content bg-bg-panel p-6 rounded-lg border border-border-color shadow-2xl w-[90%] max-w-[600px]">
             <h3 class="text-xl font-bold mb-4 text-text-highlight">Tiến trình</h3>
             <ul id="log-list" class="bg-bg-input p-4 rounded-md h-[300px] overflow-y-auto text-sm leading-relaxed">
                 </ul>
@@ -184,8 +199,8 @@
 
     <input type="file" id="file-importer" multiple class="hidden" accept=".txt">
     <script type="module" src="src/js/main.js"></script>
-    <div id="custom-dialog-modal" class="fixed inset-0 flex items-center justify-center hidden" style="background-color: rgba(0,0,0,0.7); z-index: 10000;">
-        <div id="custom-dialog-content" class="bg-bg-panel p-6 rounded-lg border border-border-color shadow-2xl w-[90%] max-w-[450px]">
+    <div id="custom-dialog-modal" class="fixed inset-0 flex items-center justify-center hidden">
+        <div id="custom-dialog-content" class="modal-content bg-bg-panel p-6 rounded-lg border border-border-color shadow-2xl w-[90%] max-w-[450px]">
             <h3 id="custom-dialog-title" class="text-xl font-bold mb-4 text-text-highlight">Thông báo</h3>
             <p id="custom-dialog-message" class="text-text-color mb-6">Nội dung thông báo sẽ ở đây.</p>
             <div id="custom-dialog-buttons" class="mt-4 flex justify-end gap-3">
@@ -193,6 +208,6 @@
                 <button id="custom-dialog-ok-btn" class="btn">OK</button>
             </div>
         </div>
-    </div>    
+    </div>  
 </body>
 </html>

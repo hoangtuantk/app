@@ -1,6 +1,6 @@
 import DOMElements from './dom.js';
 import { initializeDictionaries, clearAllDictionaries, loadDictionariesFromFile, loadDictionariesFromServer } from './dictionary.js';
-import { customAlert, customConfirm } from './dialog.js'; 
+import { customAlert, customConfirm } from './dialog.js';
 import { initializeNameList, buildMasterKeySet } from './nameList.js';
 import { initializeModal } from './modal.js';
 import { performTranslation } from './translation.js';
@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const state = {
         dictionaries: null,
         masterKeySet: new Set(),
+        lastTranslatedText: '', // THÊM MỚI: Biến để lưu văn bản đã dịch lần cuối
     };
 
     let isImporting = false
@@ -61,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const updateState = (newDicts) => {
         state.dictionaries = newDicts;
         initializeNameList(state);
+ 
         initializeModal(state);
         // Bật các nút chức năng sau khi có từ điển
         DOMElements.translateBtn.disabled = false;
@@ -74,7 +76,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Kết nối các nút mới
-    DOMElements.importLocalBtn.addEventListener('click', () => {
+  
+     DOMElements.importLocalBtn.addEventListener('click', () => {
         if (isImporting) return;
         DOMElements.logModal.classList.remove('hidden');
         DOMElements.logList.innerHTML = '';
@@ -90,7 +93,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const files = e.target.files;
         if (files.length > 0) {
             const logHandler = { append: appendLog, update: updateLog };
-            const newDicts = await loadDictionariesFromFile(files, logHandler);
+   
+             const newDicts = await loadDictionariesFromFile(files, logHandler);
             updateState(newDicts);
         }
         e.target.value = null;
@@ -99,7 +103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         DOMElements.importLocalBtn.disabled = false;
         DOMElements.importServerBtn.disabled = false;
     });
-
     DOMElements.importServerBtn.addEventListener('click', async () => {
         if (isImporting) return;
         isImporting = true;
@@ -112,17 +115,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         const newDicts = await loadDictionariesFromServer(logHandler);
         updateState(newDicts);
 
-        isImporting = false;
+  
+         isImporting = false;
         DOMElements.importLocalBtn.disabled = false;
         DOMElements.importServerBtn.disabled = false;      
     });
-
     DOMElements.clearDbBtn.addEventListener('click', async () => {
         if (await customConfirm('Bạn có chắc muốn xóa toàn bộ từ điển đã lưu? Hành động này không thể hoàn tác.')) { // THAY ĐỔI DÒNG NÀY
             await clearAllDictionaries();
             await customAlert('Đã xóa dữ liệu từ điển. Vui lòng nhập lại từ điển.');
             // Reset trạng thái
-            state.dictionaries = null;
+           
+             state.dictionaries = null;
             state.masterKeySet = new Set();
             DOMElements.outputPanel.textContent = 'Kết quả sẽ hiện ở đây...';
             // Vô hiệu hóa các nút chức năng
@@ -130,30 +134,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             DOMElements.modeToggle.disabled = true;
         }
     });
-
     DOMElements.closeLogModalBtn.addEventListener('click', () => {
         DOMElements.logModal.classList.add('hidden');
         DOMElements.logList.innerHTML = '';
     });
-
     DOMElements.logModal.addEventListener('click', (e) => {
         if (e.target === DOMElements.logModal) {
             DOMElements.logModal.classList.add('hidden');
             DOMElements.logList.innerHTML = '';
         }
     });
-
     // Kích hoạt nút dịch để bắt đầu quá trình dịch
     DOMElements.translateBtn.addEventListener('click', () => performTranslation(state));
-    
     DOMElements.clearBtn.addEventListener('click', () => {
         DOMElements.inputText.value = '';
-        DOMElements.outputPanel.textContent = 'Kết quả sẽ hiện ở đây...';
     });
-
-
-
-
     // Trong phần xử lý sự kiện click của nút copyBtn
     DOMElements.copyBtn.addEventListener('click', () => {
         const outputPanel = DOMElements.outputPanel;
@@ -163,7 +158,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Tạo một phạm vi chọn mới
         const range = document.createRange();
-        range.selectNodeContents(outputPanel);
+      
+         range.selectNodeContents(outputPanel);
         
         // Xóa các lựa chọn hiện có
         const selection = window.getSelection();
@@ -174,14 +170,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         try {
             // Thực hiện sao chép
-            document.execCommand('copy');
+    
+             document.execCommand('copy');
             
             // Thông báo sao chép thành công
             const originalText = DOMElements.copyBtn.textContent;
             DOMElements.copyBtn.textContent = 'Đã sao chép!';
             DOMElements.copyBtn.disabled = true;
             
-            setTimeout(() => {
+     
+             setTimeout(() => {
                 DOMElements.copyBtn.textContent = originalText;
                 DOMElements.copyBtn.disabled = false;
             }, 300);
@@ -204,18 +202,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         DOMElements.fontSizeLabel.textContent = `${percent}%`;
         localStorage.setItem('translatorFontSize', currentFontSize);
     };
-
     DOMElements.increaseFontBtn.addEventListener('click', () => {
         currentFontSize += 1;
         updateFontSize();
     });
-
     DOMElements.decreaseFontBtn.addEventListener('click', () => {
         if (currentFontSize > 8) {
             currentFontSize -= 1;
             updateFontSize();
         }
     });
-
     updateFontSize();
 });

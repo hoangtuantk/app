@@ -5,10 +5,72 @@ import { performTranslation } from './translation.js';
 export let nameDictionary = new Map();
 export let temporaryNameDictionary = new Map();
 
+// HÀM MỚI: Sắp xếp và hiển thị Name List
+function renderSortedNameList(sortType = 'newest') {
+    if (nameDictionary.size === 0) {
+        DOMElements.nameListTextarea.value = '';
+        return;
+    }
+
+    let sortedEntries;
+    const entries = Array.from(nameDictionary.entries());
+
+    switch (sortType) {
+        case 'oldest':
+            sortedEntries = entries.reverse();
+            break;
+        case 'vn-az':
+            sortedEntries = entries.sort((a, b) => a[1].localeCompare(b[1], 'vi'));
+            break;
+        case 'vn-za':
+            sortedEntries = entries.sort((a, b) => b[1].localeCompare(a[1], 'vi'));
+            break;
+        case 'cn-az':
+            sortedEntries = entries.sort((a, b) => a[0].localeCompare(b[0], 'zh-CN'));
+            break;
+        case 'cn-za':
+            sortedEntries = entries.sort((a, b) => b[0].localeCompare(a[0], 'zh-CN'));
+            break;
+        case 'newest':
+        default:
+            sortedEntries = entries; // Map giữ nguyên thứ tự chèn, đây là thứ tự mới nhất
+            break;
+    }
+
+    const text = sortedEntries.map(([cn, vn]) => `${cn}=${vn}`).join('\n');
+    DOMElements.nameListTextarea.value = text;
+}
+
+
 export function initializeNameList(state) {
     loadNameDictionaryFromStorage();
     renderNameList();
     buildMasterKeySet(state);
+
+    const sortBtn = document.getElementById('name-list-sort-btn');
+    const sortDropdown = document.getElementById('name-list-sort-dropdown');
+
+    // MỚI: Xử lý hiển thị menu sắp xếp
+    sortBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sortDropdown.classList.toggle('hidden');
+    });
+
+    // MỚI: Xử lý chọn một tùy chọn sắp xếp
+    document.querySelectorAll('.sort-option').forEach(button => {
+        button.addEventListener('click', () => {
+            const sortType = button.dataset.sort;
+            renderSortedNameList(sortType);
+            sortDropdown.classList.add('hidden');
+        });
+    });
+
+    // MỚI: Ẩn menu khi click ra ngoài
+    document.addEventListener('click', (e) => {
+        if (!sortBtn.contains(e.target) && !sortDropdown.contains(e.target)) {
+            sortDropdown.classList.add('hidden');
+        }
+    });
 
     DOMElements.nameListSaveBtn.addEventListener('click', () => {
         const text = DOMElements.nameListTextarea.value;
@@ -21,19 +83,20 @@ export function initializeNameList(state) {
         DOMElements.nameListSaveBtn.disabled = true;
         setTimeout(() => {
             DOMElements.nameListSaveBtn.textContent = originalText;
-            DOMElements.nameListSaveBtn.disabled = false;
+    
+             DOMElements.nameListSaveBtn.disabled = false;
         }, 1500);
-        performTranslation(state); 
+        performTranslation(state, { forceText: state.lastTranslatedText }); // SỬA ĐỔI
     });
-
     DOMElements.nameListDeleteBtn.addEventListener('click', async () => {
         if (await customConfirm('Bạn có chắc muốn xóa toàn bộ Bảng Thuật Ngữ? Hành động này không thể hoàn tác.')) {
             nameDictionary.clear();
             saveNameDictionaryToStorage();
             renderNameList();
             buildMasterKeySet(state);
-            performTranslation(state);
+            performTranslation(state, { forceText: state.lastTranslatedText }); // SỬA ĐỔI
         }
+ 
     });
 
     DOMElements.nameListExportBtn.addEventListener('click', () => {
@@ -45,7 +108,6 @@ export function initializeNameList(state) {
         a.click();
         URL.revokeObjectURL(a.href);
     });
-
     DOMElements.nameListImportBtn.addEventListener('click', () => DOMElements.nameListFileInput.click());
     DOMElements.nameListFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
@@ -54,6 +116,7 @@ export function initializeNameList(state) {
             reader.onload = (event) => {
                 DOMElements.nameListTextarea.value = event.target.result;
                 DOMElements.nameListSaveBtn.click();
+      
             };
             reader.readAsText(file);
         }
@@ -80,7 +143,8 @@ export function renderNameList() {
         DOMElements.nameListTextarea.value = '';
         return;
     }
-    const sortedNames = [...nameDictionary.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    // Sửa lại: Hàm này giờ chỉ render theo thứ tự mặc định (mới nhất)
+    const sortedNames = [...nameDictionary.entries()];
     const text = sortedNames.map(([cn, vn]) => `${cn}=${vn}`).join('\n');
     DOMElements.nameListTextarea.value = text;
 }
