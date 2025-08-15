@@ -308,6 +308,11 @@ export function initializeModal(state) {
     DOMElements.qExpandRightBtn.addEventListener('click', () => expandQuickSelection('right', state));
     DOMElements.qAddNameBtn.addEventListener('click', () => openOldModal(state));
 
+    DOMElements.qInputZw.addEventListener('input', () => {
+        const newText = DOMElements.qInputZw.value;
+        populateQuickEditPanel(newText, state);
+    });
+
     const originalWordInput = document.getElementById('original-word-input');
     originalWordInput.addEventListener('input', () => {
         const newText = originalWordInput.value;
