@@ -121,6 +121,12 @@ export function performTranslation(state, options = {}) {
             cleanedSegments.push(currentSegment);
         }
         const lineHtml = cleanedSegments.map((segment, index) => {
+            let processedSegment = segment;
+            const trimmedSegment = segment.trim();
+            if (CLOSING_PUNCTUATION.has(trimmedSegment) && segment.length > trimmedSegment.length) {
+
+                processedSegment = trimmedSegment;
+            }
             const span = document.createElement('span');
             span.className = 'word';
 
