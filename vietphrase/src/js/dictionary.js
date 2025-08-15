@@ -4,15 +4,15 @@ const NAMES_FILES = [
 ];
 
 const DICTIONARY_FILES = [
-    ...NAMES_FILES.map(name => ({ id: name, names: [name], priority: 1})),
+    ...NAMES_FILES.map(name => ({ id: name, names: [name], priority: 2})),
     { 
         id: 'Names', 
         names: ['Names.txt','Name.txt'], 
-        priority: 1
+        priority: 3
     },
     {   id: 'LuatNhan',
         names: ['LuatNhan.txt', 'Luat Nhan.txt'],
-        priority: 2,
+        priority: 3,
         style: 'LuatNhan-Style'
     },
     {   id: 'Pronouns',
@@ -21,12 +21,12 @@ const DICTIONARY_FILES = [
             'DaiTu', 'DaiTuNhanXung', 'Dai Tu', 'Dai Tu Nhan Xung',
             'Pronouns-Dai Tu Nhan Xung.txt'
         ],
-         priority: 3
+         priority: 4
     },
     { 
         id: 'Vietphrase', 
         names: ['Vietphrase.txt', 'Vietphrase-custom.txt', 'VP.txt'], 
-        priority: 3
+        priority: 4
     },
     {   id: 'PhienAm',
         names: [
@@ -35,18 +35,18 @@ const DICTIONARY_FILES = [
             'HanViet.txt', 'HV.txt', 'Han Viet.txt', 'H V.txt',
             'ChinesePhienAmWords-Han Viet.txt'
         ],
-        priority: 3
+        priority: 4
     },
     { 
         id: 'LacViet', 
         names: ['LacViet.txt', 'Lac Viet.txt', 'LV.txt'],
-        priority: 4,
+        priority: 5,
         style: 'LacViet-Style'
     },
     { 
         id: 'Blacklist', 
         names: ['IgnoredChinesePhrases.txt', 'IgnoreList.txt', 'Blacklist.txt'], 
-        priority: 5,
+        priority: 6,
         style: 'Blacklist-Style'
     },
     { 
