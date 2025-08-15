@@ -176,6 +176,7 @@ export function _processLine(line) {
             tempLine = this._capitalizeFirstAlphabetic(tempLine);
         }
     }
+    tempLine = tempLine.trim();
     return tempLine;
 }
 
