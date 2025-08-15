@@ -143,9 +143,9 @@ export function performTranslation(state, options = {}) {
         let processedHtml = rawLineHtml.replace(/<\/span><span/g, '</span> <span');
         // Xóa khoảng trắng THỪA ở các vị trí không mong muốn
         // Xóa khoảng trắng TRƯỚC các dấu câu và dấu đóng ngoặc
-        processedHtml = processedHtml.replace(/\s+(<span[^>]*>[.,!?;:()\[\]{}'”]\<\/span>)/g, '$1');
+        processedHtml = processedHtml.replace(/\s+(<span[^>]*>[.,!?;:)\"'\\]}]<\/span>)/g, '$1');
         // Xóa khoảng trắng SAU các dấu mở ngoặc
-        processedHtml = processedHtml.replace(/(<span[^>]*>[“"\[\(]\<\/span>)\s+/g, '$1');
+        processedHtml = processedHtml.replace(/(<span[^>]*>[“‘\[\(\{]\<\/span>)\s+/g, '$1');
 
         return processedHtml;
 

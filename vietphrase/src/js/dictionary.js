@@ -10,27 +10,23 @@ const DICTIONARY_FILES = [
         names: ['Names.txt','Name.txt'], 
         priority: 1
     },
+    {   id: 'LuatNhan',
+        names: ['LuatNhan.txt', 'Luat Nhan.txt'],
+        priority: 2,
+        style: 'LuatNhan-Style'
+    },
+    {   id: 'Pronouns',
+        names: [
+            'Pronouns.txt',
+            'DaiTu', 'DaiTuNhanXung', 'Dai Tu', 'Dai Tu Nhan Xung',
+            'Pronouns-Dai Tu Nhan Xung.txt'
+        ],
+         priority: 3
+    },
     { 
         id: 'Vietphrase', 
         names: ['Vietphrase.txt', 'Vietphrase-custom.txt', 'VP.txt'], 
         priority: 3
-    },
-    { 
-        id: 'Babylon', //English file
-        names: ['Babylon.txt', 'babylon-vn.txt'], 
-        priority: 5
-    },
-    { 
-        id: 'Blacklist', 
-        names: ['IgnoredChinesePhrases.txt', 'IgnoreList.txt', 'Blacklist.txt'], 
-        priority: 4,
-        style: 'Blacklist-Style'
-    },
-    { 
-        id: 'LacViet', 
-        names: ['LacViet.txt', 'Lac Viet.txt', 'LV.txt'],
-        priority: 4,
-        style: 'LacViet-Style'
     },
     {   id: 'PhienAm',
         names: [
@@ -41,18 +37,22 @@ const DICTIONARY_FILES = [
         ],
         priority: 3
     },
-    {   id: 'LuatNhan',
-        names: ['LuatNhan.txt', 'Luat Nhan.txt'],
+    { 
+        id: 'LacViet', 
+        names: ['LacViet.txt', 'Lac Viet.txt', 'LV.txt'],
         priority: 4,
-        style: 'LuatNhan-Style'
+        style: 'LacViet-Style'
     },
-    {   id: 'Pronouns',
-        names: [
-            'Pronouns.txt',
-            'DaiTu', 'DaiTuNhanXung', 'Dai Tu', 'Dai Tu Nhan Xung',
-            'Pronouns-Dai Tu Nhan Xung.txt'
-        ],
-         priority: 3
+    { 
+        id: 'Blacklist', 
+        names: ['IgnoredChinesePhrases.txt', 'IgnoreList.txt', 'Blacklist.txt'], 
+        priority: 4,
+        style: 'Blacklist-Style'
+    },
+    { 
+        id: 'Babylon', //English file
+        names: ['Babylon.txt', 'babylon-vn.txt'], 
+        priority: 5
     },
 ];
 
