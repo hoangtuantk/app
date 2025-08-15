@@ -5,11 +5,24 @@ import { updateUI } from './ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     let processedFiles = [];
+    let removedFiles = [];
 
     const processAndUpdate = async (files) => {
-        const newFiles = await Actions.handleFiles(files, processedFiles);
-        processedFiles = newFiles;
-        updateUI(processedFiles);
+        const result = await Actions.handleFiles(files);
+
+        result.accepted.forEach(newFile => {
+            if (!processedFiles.find(existing => existing.path === newFile.path)) {
+                processedFiles.push(newFile);
+            }
+        });
+
+        result.rejected.forEach(newFile => {
+            if (!removedFiles.find(existing => existing.path === newFile.path)) {
+                removedFiles.push(newFile);
+            }
+        });
+
+        updateUI(processedFiles, removedFiles);
     };
 
     DOM.browseButton.addEventListener('click', () => DOM.fileInput.click());
@@ -26,10 +39,28 @@ document.addEventListener('DOMContentLoaded', () => {
         DOM.dropZone.classList.remove('drag-over');
     });
 
-    DOM.dropZone.addEventListener('drop', (e) => {
+    DOM.dropZone.addEventListener('drop', async (e) => {
         e.preventDefault();
         DOM.dropZone.classList.remove('drag-over');
-        processAndUpdate(e.dataTransfer.files);
+        const files = await Actions.getFilesFromDroppedItems(e.dataTransfer.items);
+        if (files && files.length > 0) {
+            processAndUpdate(files);
+        }
+    });
+
+    DOM.fileListElem.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-file-btn')) {
+            const pathToRemove = e.target.getAttribute('data-path');
+
+            const fileIndex = processedFiles.findIndex(file => file.path === pathToRemove);
+
+            if (fileIndex > -1) {
+                const [removedFile] = processedFiles.splice(fileIndex, 1);
+                removedFiles.push({ path: removedFile.path, reason: 'Bị xóa thủ công' });
+
+                updateUI(processedFiles, removedFiles);
+            }
+        }
     });
 
     DOM.mergeButton.addEventListener('click', () => {
@@ -40,8 +71,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     DOM.clearButton.addEventListener('click', () => {
-        processedFiles = Actions.clearAll();
-        updateUI(processedFiles);
+        processedFiles = [];
+        removedFiles = [];
+        DOM.fileInput.value = '';
+        updateUI(processedFiles, removedFiles);
     });
 
     DOM.splitButton.addEventListener('click', () => {
@@ -53,5 +86,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    updateUI(processedFiles);
+    updateUI(processedFiles, removedFiles);
 });

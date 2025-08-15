@@ -249,3 +249,61 @@ footer {
 ::-webkit-scrollbar-thumb:hover {
     background: #666;
 }
+
+.remove-file-btn {
+    color: var(--danger-color);
+    background-color: var(--primary-surface-color);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 1rem;
+    cursor: pointer;
+    font-weight: bold;
+    float: right;
+    transition: background-color 0.2s ease;
+}
+
+.remove-file-btn:hover {
+    background-color: var(--danger-color);
+    color: #fff;
+}
+
+#removed-file-list-container {
+    margin-top: 2rem;
+}
+
+#list-wrapper-removed {
+    background-color: var(--secondary-surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 100px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+#removed-file-list {
+    list-style-type: none;
+}
+
+#removed-file-list li {
+    background-color: #333;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    font-size: 16px;
+    color: var(--secondary-text-color);
+    word-break: break-all;
+    text-decoration: line-through;
+}
+
+#placeholder-text-removed {
+    color: var(--secondary-text-color);
+    text-align: center;
+    padding: 2rem 0;
+    background-color: transparent !important;
+    text-decoration: none;
+}
