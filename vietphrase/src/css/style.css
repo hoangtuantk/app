@@ -488,6 +488,9 @@ textarea:-webkit-autofill:focus {
 }
 
 /* --- VIETPHRASE CUSTOM DROPDOWN --- */
+#vietphrase-options-container {
+    background-color: var(--bg-panel);
+}
 .vietphrase-option {
     padding: 8px 12px;
     cursor: pointer;

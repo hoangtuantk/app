@@ -10,8 +10,8 @@ let selectionState = {
     originalText: '',
 };
 let isPanelVisible = false;
-let isPanelLocked = false;
-let isEditModalLocked = false;
+let isPanelLocked = localStorage.getItem('isPanelLocked') === 'true';
+let isEditModalLocked = localStorage.getItem('isEditModalLocked') === 'true';
 
 function updateTranslationInPlace(newText) {
     const { spans, startIndex, endIndex, originalText } = selectionState;
@@ -89,13 +89,6 @@ function groupSimilarMeanings(meanings, state) {
 function closeOldModal() {
     DOMElements.editModal.style.display = 'none';
     DOMElements.vietphraseOptionsContainer.classList.add('hidden');
-    if (isEditModalLocked) {
-        isEditModalLocked = false;
-        const lockIcon = DOMElements.editModalLockBtn;
-        lockIcon.classList.remove('is-locked');
-        lockIcon.title = "Ghim bảng";
-        lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
-    }
 }
 
 function showQuickEditPanel(selection, state) {
@@ -176,13 +169,6 @@ function hideQuickEditPanel() {
         if (window.getSelection) {
             window.getSelection().removeAllRanges();
         }
-        if (isPanelLocked) {
-            isPanelLocked = false;
-            const lockIcon = DOMElements.qLockBtn;
-            lockIcon.classList.remove('is-locked');
-            lockIcon.title = "Ghim bảng dịch nhanh";
-            lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
-        }
     }
 }
 
@@ -235,6 +221,19 @@ function expandOldModalSelection(direction, state) {
 }
 
 export function initializeModal(state) {
+// Cập nhật trạng thái icon khóa khi tải trang
+    if (isPanelLocked) {
+        const lockIcon = DOMElements.qLockBtn;
+        lockIcon.classList.add('is-locked');
+        lockIcon.title = "Bỏ ghim bảng dịch nhanh";
+        lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+    }
+    if (isEditModalLocked) {
+        const lockIcon = DOMElements.editModalLockBtn;
+        lockIcon.classList.add('is-locked');
+        lockIcon.title = "Bỏ ghim bảng";
+        lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+    }
     document.addEventListener('pointerup', (e) => {
         const outputPanel = DOMElements.outputPanel;
         const quickEditPanel = DOMElements.quickEditPanel;
@@ -277,6 +276,7 @@ export function initializeModal(state) {
 
     DOMElements.qLockBtn.addEventListener('click', () => {
         isPanelLocked = !isPanelLocked;
+        localStorage.setItem('isPanelLocked', isPanelLocked);
         const lockIcon = DOMElements.qLockBtn;
         if (isPanelLocked) {
             lockIcon.classList.add('is-locked');
@@ -291,6 +291,7 @@ export function initializeModal(state) {
 
     DOMElements.editModalLockBtn.addEventListener('click', () => {
         isEditModalLocked = !isEditModalLocked;
+        localStorage.setItem('isEditModalLocked', isEditModalLocked);
         const lockIcon = DOMElements.editModalLockBtn;
         if (isEditModalLocked) {
             lockIcon.classList.add('is-locked');
@@ -336,6 +337,10 @@ export function initializeModal(state) {
     DOMElements.vietphraseInput.addEventListener('input', () => {
         DOMElements.customMeaningInput.value = DOMElements.vietphraseInput.value;
         DOMElements.vietphraseOptionsContainer.classList.add('hidden');
+    });
+
+    DOMElements.vietphraseInput.addEventListener('focus', () => {
+        DOMElements.customMeaningInput.value = DOMElements.vietphraseInput.value;
     });
 
     DOMElements.vietphraseToggleBtn.addEventListener('click', () => {

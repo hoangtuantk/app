@@ -93,18 +93,18 @@
     <div id="edit-modal">
         <div class="modal-content">
             <div class="flex justify-between items-center">
+                <h3 class="text-xl font-bold text-text-highlight">Thêm name/Chỉnh name</h3>
                 <div class="flex items-center gap-2">
-                    <h3 class="text-xl font-bold text-text-highlight">Thêm name/Chỉnh name</h3>
                     <button id="edit-modal-lock-btn" title="Ghim bảng" class="p-1 rounded-full text-text-color hover:bg-bg-input transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
                     </button>
+                    <button id="close-edit-modal-btn" class="p-1 rounded-full text-text-color hover:bg-bg-input transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                    </button>
                 </div>
-                <button id="close-edit-modal-btn" class="p-1 rounded-full text-text-color hover:bg-bg-input transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-                </button>
             </div>
 
-            <div class="mt-4 mb-3">
+            <div class="mt-2 mb-3">
                 <label class="text-sm font-bold mb-1 block">Tiếng Trung:</label>
                 <div class="flex items-center gap-2">
                     <button id="expand-left-btn" title="Mở rộng sang trái" class="btn btn-secondary !p-1.5 h-9 text-base">&lt;</button>
@@ -119,14 +119,14 @@
             </div>
 
             <div class="mb-3 relative">
-                <label class="text-sm font-bold">Vietphrase (gõ để sửa, bấm mũi tên để chọn):</label>
+                <label class="text-sm font-bold">Vietphrase</label>
                 <div class="relative mt-1">
                     <input type="text" id="vietphrase-input" class="w-full">
                     <button id="vietphrase-toggle-btn" class="absolute right-0 top-0 h-full px-3 text-text-color hover:text-text-highlight">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
                     </button>
                 </div>
-                <div id="vietphrase-options-container" class="hidden absolute z-10 w-full mt-1 bg-bg-panel border border-border-color rounded-md shadow-lg max-h-40 overflow-y-auto">
+                <div id="vietphrase-options-container" class="hidden absolute z-10 w-full mt-1 border border-border-color rounded-md shadow-lg max-h-40 overflow-y-auto">
                     </div>
             </div>
 
