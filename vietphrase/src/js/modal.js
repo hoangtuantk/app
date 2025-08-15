@@ -11,13 +11,51 @@ let selectionState = {
 };
 let isPanelVisible = false;
 
+// ========================================================================
+// HÀM MỚI: CẬP NHẬT KẾT QUẢ DỊCH TẠI CHỖ (IN-PLACE UPDATE)
+// Chức năng: Thay thế các span cũ bằng một span mới mà không cần dịch lại toàn bộ.
+// ========================================================================
+function updateTranslationInPlace(newText) {
+    const { spans, startIndex, endIndex, originalText } = selectionState;
+    if (startIndex === -1 || !spans.length) return;
+
+    // 1. Tạo một span mới để chứa kết quả chỉnh sửa
+    const newSpan = document.createElement('span');
+    newSpan.className = 'word';
+    newSpan.textContent = newText;
+    newSpan.dataset.original = originalText; // Lưu lại chuỗi gốc của cả cụm đã chọn
+
+    // 2. Lấy ra danh sách các span cũ cần được thay thế
+    const spansToReplace = spans.slice(startIndex, endIndex + 1);
+    if (spansToReplace.length === 0) return;
+    
+    const parent = spansToReplace[0].parentNode;
+
+    // 3. Thực hiện thay thế trong DOM
+    // Chèn span mới vào ngay trước span cũ đầu tiên
+    parent.insertBefore(newSpan, spansToReplace[0]);
+    // Xóa tất cả các span cũ đã được chọn
+    spansToReplace.forEach(span => span.remove());
+
+    // 4. Cập nhật lại trạng thái toàn cục để các lần chỉnh sửa sau hoạt động đúng
+    // Lấy lại danh sách tất cả các span hiện có trong kết quả
+    const allCurrentSpans = Array.from(DOMElements.outputPanel.querySelectorAll('.word'));
+    const newIndex = allCurrentSpans.indexOf(newSpan);
+
+    // Cập nhật lại selectionState để phản ánh sự thay đổi
+    selectionState.spans = allCurrentSpans;
+    selectionState.startIndex = newIndex;
+    selectionState.endIndex = newIndex; // Vùng chọn giờ chỉ là span mới
+    selectionState.originalText = newSpan.dataset.original;
+}
+
+
 function applyCase(caseType) {
     const input = DOMElements.customMeaningInput;
     let text = input.value;
     if (!text) return;
     switch (caseType) {
-        case 'cap': text = text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-        break;
+        case 'cap': text = text.charAt(0).toUpperCase() + text.slice(1).toLowerCase(); break;
         case 'upper': text = text.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '); break;
         case 'cap2':
             const words2 = text.split(' ');
@@ -152,16 +190,13 @@ function expandQuickSelection(direction, state) {
     const { spans, startIndex, endIndex } = selectionState;
     let newStart = startIndex, newEnd = endIndex;
     
-    // Logic xác định chỉ mục mới
     if (direction === 'left' && startIndex > 0) newStart--;
     else if (direction === 'right' && endIndex < spans.length - 1) newEnd++;
     else return;
-    // Cập nhật trạng thái lựa chọn
     selectionState.startIndex = newStart;
     selectionState.endIndex = newEnd;
     selectionState.originalText = spans.slice(newStart, newEnd + 1).map(s => s.dataset.original).join('');
     
-    // Cập nhật DOM của lựa chọn
     const newRange = document.createRange();
     newRange.setStartBefore(spans[newStart]);
     newRange.setEndAfter(spans[newEnd]);
@@ -169,7 +204,6 @@ function expandQuickSelection(direction, state) {
     selection.removeAllRanges();
     selection.addRange(newRange);
     
-    // Chỉ cập nhật panel thay vì tạo lại toàn bộ
     populateQuickEditPanel(selectionState.originalText, state);
 }
 
@@ -182,9 +216,7 @@ function populateOldModal(text, state) {
 
 function openOldModal(state) {
     const text = selectionState.originalText;
-
     populateOldModal(text, state);
-
     hideQuickEditPanel();
     DOMElements.editModal.style.display = 'flex';
 }
@@ -193,16 +225,13 @@ function expandOldModalSelection(direction, state) {
     const { spans, startIndex, endIndex } = selectionState;
     let newStartIdx = startIndex, newEndIdx = endIndex;
     
-    // Logic xác định chỉ mục mới
     if (direction === 'left' && startIndex > 0) newStartIdx--;
     else if (direction === 'right' && endIndex < spans.length - 1) newEndIdx++;
     else return;
-    // Cập nhật trạng thái lựa chọn
     selectionState.startIndex = newStartIdx;
     selectionState.endIndex = newEndIdx;
     selectionState.originalText = selectionState.spans.slice(newStartIdx, newEndIdx + 1).map(s => s.dataset.original).join('');
     
-    // Chỉ cập nhật modal thay vì tạo lại toàn bộ
     populateOldModal(selectionState.originalText, state);
 }
 
@@ -217,12 +246,10 @@ export function initializeModal(state) {
 
         setTimeout(() => {
             const selection = window.getSelection();
-           
+            
              const targetSpan = e.target.closest('.word');
 
-            // Logic mới: Chỉ hiển thị panel nếu nhấp vào một từ và không có lựa chọn nào.
             if (targetSpan && selection.isCollapsed) {
-                // Tạo một lựa chọn mới chỉ chứa từ được nhấp vào
                 const range = document.createRange();
      
                 range.selectNode(targetSpan);
@@ -230,11 +257,9 @@ export function initializeModal(state) {
                 selection.addRange(range);
                 showQuickEditPanel(selection, state);
                 return;
-            }
+             }
 
             
-            // Ẩn panel nếu có lựa chọn nhưng không phải do nhấp chuột đơn
-            // Hoặc nhấp chuột ra ngoài panel
             if (isPanelVisible) {
                 hideQuickEditPanel();
             }
@@ -266,13 +291,17 @@ export function initializeModal(state) {
             DOMElements.customMeaningInput.value = hanvietValue;
         }
     });
+
+    // ==========================================================
+    // SỬA ĐỔI LOGIC CÁC NÚT BẤM ĐỂ DÙNG updateTranslationInPlace
+    // ==========================================================
     document.querySelectorAll('.q-temp-add-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetInputId = e.target.dataset.target;
             const text = document.getElementById(targetInputId).value;
             if (text && selectionState.originalText) {
                 temporaryNameDictionary.set(selectionState.originalText, text);
-                performTranslation(state, { forceText: state.lastTranslatedText }); // SỬA ĐỔI
+                updateTranslationInPlace(text); // THAY ĐỔI
                 hideQuickEditPanel();
             }
         });
@@ -287,7 +316,7 @@ export function initializeModal(state) {
                 saveNameDictionaryToStorage();
                 renderNameList();
                 buildMasterKeySet(state);
-                performTranslation(state, { forceText: state.lastTranslatedText }); // SỬA ĐỔI
+                updateTranslationInPlace(vnText); // THAY ĐỔI
                 hideQuickEditPanel();
             }
         });
@@ -297,6 +326,7 @@ export function initializeModal(state) {
     });
     DOMElements.expandLeftBtn.addEventListener('click', () => expandOldModalSelection('left', state));
     DOMElements.expandRightBtn.addEventListener('click', () => expandOldModalSelection('right', state));
+
     DOMElements.addToNameListBtn.addEventListener('click', () => {
         const cn = document.getElementById('original-word-input').value.trim();
         const vn = DOMElements.customMeaningInput.value.trim();
@@ -305,41 +335,36 @@ export function initializeModal(state) {
             saveNameDictionaryToStorage();
             renderNameList();
             buildMasterKeySet(state);
+            updateTranslationInPlace(vn); // THAY ĐỔI
             closeOldModal();
-            performTranslation(state, { forceText: state.lastTranslatedText }); // SỬA ĐỔI
         }
     });
+
     DOMElements.addTempBtn.addEventListener('click', () => {
         const cn = document.getElementById('original-word-input').value.trim();
         const vn = DOMElements.customMeaningInput.value.trim();
         if (cn && vn) {
             temporaryNameDictionary.set(cn, vn);
+            updateTranslationInPlace(vn); // THAY ĐỔI
             closeOldModal();
-            performTranslation(state, { forceText: state.lastTranslatedText }); // SỬA ĐỔI
         }
     });
+
     document.querySelectorAll('.case-btn').forEach(btn => {
-        // Giữ nguyên chức năng click chuột đơn
         btn.addEventListener('click', (e) => applyCase(e.target.dataset.case));
 
-        // THÊM MỚI: Chức năng double-click để lưu thẳng vào Name List
         btn.addEventListener('dblclick', () => {
-            // Áp dụng kiểu chữ trước khi lưu
             applyCase(btn.dataset.case); 
-
-          
-             const cn = document.getElementById('original-word-input').value.trim();
+            const cn = document.getElementById('original-word-input').value.trim();
             const vn = DOMElements.customMeaningInput.value.trim();
             if (cn && vn) {
                 nameDictionary.set(cn, vn);
                 saveNameDictionaryToStorage();
                 renderNameList();
-               
-                 buildMasterKeySet(state);
+                buildMasterKeySet(state);
+                updateTranslationInPlace(vn); // THAY ĐỔI
                 closeOldModal();
-                performTranslation(state, { forceText: state.lastTranslatedText }); // SỬA ĐỔI
 
-                // Hiển thị thông báo nhanh trên nút "Thêm vào Name"
                 const addButton = DOMElements.addToNameListBtn;
                 const originalText = addButton.textContent;
                 addButton.textContent = 'Đã lưu!';
@@ -354,12 +379,10 @@ export function initializeModal(state) {
 }
 
 function updateOldModalFields(text, state) {
-    // Lấy các DOM element
     const hanvietInput = document.getElementById('hanviet-input');
     const vietphraseSelect = document.getElementById('vietphrase-select');
     const customMeaningInput = DOMElements.customMeaningInput;
 
-    // Nếu không có text, xóa trống các ô và dừng lại
     if (!text) {
         hanvietInput.value = '';
         vietphraseSelect.innerHTML = '<option>Nhập Tiếng Trung để xem gợi ý</option>';
@@ -367,18 +390,15 @@ function updateOldModalFields(text, state) {
         return;
     }
     
-    // Điền dữ liệu vào các ô input
     const baseHanViet = getHanViet(text, state.dictionaries);
     hanvietInput.value = baseHanViet ? baseHanViet.toLowerCase() : 'Không tìm thấy Hán Việt.';
-    // Lấy tất cả các nghĩa Vietphrase
     const finalTranslation = translateWord(text, state.dictionaries, nameDictionary, temporaryNameDictionary);
-    let allMeanings = finalTranslation.found ? [...new Set(finalTranslation.all)] : []; // Dùng Set để loại bỏ nghĩa trùng lặp
+    let allMeanings = finalTranslation.found ? [...new Set(finalTranslation.all)] : [];
     if (text.length > 1) {
         const synthesized = synthesizeCompoundTranslation(text, state);
         synthesized.forEach(m => { if (!allMeanings.includes(m)) allMeanings.push(m); });
     }
 
-    // Đổ các nghĩa vào danh sách thả xuống (select)
     vietphraseSelect.innerHTML = '';
     if (allMeanings.length > 0) {
         allMeanings.forEach(meaning => {
@@ -387,7 +407,7 @@ function updateOldModalFields(text, state) {
             option.textContent = meaning;
             vietphraseSelect.appendChild(option);
         });
-        customMeaningInput.value = allMeanings[0]; // Mặc định điền nghĩa đầu tiên
+        customMeaningInput.value = allMeanings[0];
     } else {
         const option = document.createElement('option');
         option.textContent = 'Không tìm thấy Vietphrase';
@@ -396,7 +416,6 @@ function updateOldModalFields(text, state) {
         customMeaningInput.value = text;
     }
 
-    // Cập nhật ô nhập nghĩa tùy chỉnh khi người dùng chọn từ danh sách
     vietphraseSelect.onchange = () => {
         customMeaningInput.value = vietphraseSelect.value;
     };

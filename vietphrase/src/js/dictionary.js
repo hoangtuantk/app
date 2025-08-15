@@ -46,13 +46,13 @@ const DICTIONARY_FILES = [
     { 
         id: 'Blacklist', 
         names: ['IgnoredChinesePhrases.txt', 'IgnoreList.txt', 'Blacklist.txt'], 
-        priority: 4,
+        priority: 5,
         style: 'Blacklist-Style'
     },
     { 
         id: 'Babylon', //English file
         names: ['Babylon.txt', 'babylon-vn.txt'], 
-        priority: 5
+        priority: 10
     },
 ];
 
@@ -257,7 +257,7 @@ export async function loadDictionariesFromFile(files, logHandler) {
 
     const missingFiles = REQUIRED_FILES.filter(f => !foundDictionaryTypes.has(f));
     if (missingFiles.length > 0) {
-        logHandler.append(`Lỗi: Thiếu các file bắt buộc: ${missingFiles.join(', ')}`, 'error');
+        logHandler.append(`Lỗi: Thiếu các file bắt buộc (Cần nhập các file ĐÚNG THEO TÊN): ${missingFiles.join(', ')}`, 'error');
         return null;
     }
 

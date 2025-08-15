@@ -86,75 +86,84 @@ export function synthesizeCompoundTranslation(text, state) {
 }
 
 export function performTranslation(state, options = {}) {
-    // Ưu tiên dịch văn bản được "ép" dịch (forceText), nếu không có thì lấy từ ô input
     const textToTranslate = options.forceText ?? DOMElements.inputText.value;
-
-    // Áp dụng Luật Nhấn vào văn bản gốc
     const textWithLuatNhan = applyLuatNhan(textToTranslate, state);
 
-    // Nếu không có gì để dịch, xóa kết quả và dừng lại
     if (!textToTranslate.trim()) {
         DOMElements.outputPanel.textContent = 'Kết quả sẽ hiện ở đây...';
         return;
     }
 
-    // Nếu đây là một lần dịch mới từ ô input, lưu lại văn bản này
     if (!options.forceText) {
         state.lastTranslatedText = textToTranslate;
     }
 
     const isVietphraseMode = DOMElements.modeToggle.checked;
-    // Sử dụng văn bản đã qua xử lý Luật Nhấn
     const lines = textWithLuatNhan.split('\n');
+
+    // Định nghĩa các bộ ký tự để kiểm tra
+    const OPENING_PUNCTUATION = new Set(['(', '[', '{', '“', '‘']);
+    const CLOSING_PUNCTUATION = new Set([')', ']', '}', '”', '’', ',', '.', '!', '?', ';', ':', '。', '：', '；', '，', '、', '！', '？', '……', '～']);
+
     const translatedLineHtmls = lines.map(line => {
         if (line.trim() === '') return null;
 
         const segments = segmentText(line, state.masterKeySet);
-        const rawLineHtml = segments.map((segment) => {
-            // Nếu segment không chứa ký tự tiếng Trung, coi nó là đã được dịch (từ LuatNhan)
+        
+        const lineHtml = segments.map((segment, index) => {
+            const span = document.createElement('span');
+            span.className = 'word';
+
+            // Dịch từng segment và tạo span tương ứng
             if (!/[\u4e00-\u9fa5]/.test(segment)) {
-                const span = document.createElement('span');
-                span.className = 'word'; // Dùng class tiêu chuẩn
                 span.textContent = segment;
                 span.dataset.original = segment;
-                return span.outerHTML;
+            } else {
+                const blacklistDict = state.dictionaries.get('Blacklist')?.dict;
+                if (blacklistDict && blacklistDict.has(segment)) {
+                    return ''; // Bỏ qua từ trong blacklist
+                }
+
+                const translation = translateWord(segment, state.dictionaries, nameDictionary, temporaryNameDictionary);
+                
+                if (!translation.found) {
+                    span.classList.add('untranslatable');
+                    span.textContent = segment;
+                } else if (isVietphraseMode) {
+                    span.classList.add('vietphrase-word');
+                    span.textContent = `(${translation.all.join('/')})`;
+                } else {
+                    span.textContent = translation.best;
+                }
+                span.dataset.original = segment;
             }
 
-            const blacklistDict = state.dictionaries.get('Blacklist')?.dict;
-            if (blacklistDict && blacklistDict.has(segment)) {
-                return '';
+            // Logic chèn khoảng trắng chủ động
+            let trailingSpace = '';
+            if (index < segments.length - 1) { // Chỉ xét khi không phải từ cuối cùng
+                const currentSegment = segment.trim();
+                const nextSegment = segments[index + 1].trim();
+
+                // Nếu từ hiện tại là dấu mở ngoặc, HOẶC từ tiếp theo là dấu đóng ngoặc/dấu câu
+                // thì KHÔNG thêm khoảng trắng.
+                if (!OPENING_PUNCTUATION.has(currentSegment) && !CLOSING_PUNCTUATION.has(nextSegment)) {
+                    trailingSpace = ' ';
+                }
             }
-            const translation = translateWord(segment, state.dictionaries, nameDictionary, temporaryNameDictionary);
-            const span = document.createElement('span');
-            span.className = 'word';  
-            if (!translation.found) {
-                 span.classList.add('untranslatable');
-                span.textContent = segment;
-            } else if (isVietphraseMode) {
-                span.textContent = `(${translation.all.join('/')})`;
-                span.classList.add('vietphrase-word');
-             } else {
-                span.textContent = translation.best;
-            }
-            span.dataset.original = segment;
-            return span.outerHTML;
+            
+            return span.outerHTML + trailingSpace;
+
         }).join('');
-        // Chèn một khoảng trắng giữa tất cả các span theo mặc định
-        let processedHtml = rawLineHtml.replace(/<\/span><span/g, '</span> <span');
-        // Xóa khoảng trắng THỪA ở các vị trí không mong muốn
-        // Xóa khoảng trắng TRƯỚC các dấu câu và dấu đóng ngoặc
-        processedHtml = processedHtml.replace(/\s+(<span[^>]*>[.,!?;:)\"'\\]}]<\/span>)/g, '$1');
-        // Xóa khoảng trắng SAU các dấu mở ngoặc
-        processedHtml = processedHtml.replace(/(<span[^>]*>[“‘\[\(\{]\<\/span>)\s+/g, '$1');
 
-        return processedHtml;
+        return lineHtml;
 
     }).filter(Boolean);
 
     let finalHtml = translatedLineHtmls.join('<br><br>');
+    
+    // Thay thế các dấu câu full-width (nếu còn)
     const replacements = { '。': '.', '：': ':', '；': ';', '，': ',', '！': '!', '？': '?', '……': '...', '～': '~', '、': ',' };
-    finalHtml = finalHtml.replace(/。|：|；|，|、|！|？|……|～/g, match => replacements[match]);
-    finalHtml = finalHtml.replace(/<\/span>\s+([.,!?;:])/g, '</span>$1');
+    finalHtml = finalHtml.replace(/[。：；，、！？……～]/g, match => replacements[match] || match);
 
     DOMElements.outputPanel.innerHTML = finalHtml;
 }
