@@ -153323,3 +153323,5 @@ cannibalcandy(魔术舔食者)=Cannibal Candy(Ma Thuật Thiểm Thực Giả)
 佐佐木志乃=Sasaki Shino
 火野来夏=Hino Raika
 备前长船长光=Bị Tiền Trường Thuyền Trường Quang
+守阁长老=thủ các trưởng lão
+阁长老=các trưởng lão

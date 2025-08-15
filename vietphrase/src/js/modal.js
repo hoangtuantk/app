@@ -10,6 +10,7 @@ let selectionState = {
     originalText: '',
 };
 let isPanelVisible = false;
+let isPanelLocked = false;
 
 function updateTranslationInPlace(newText) {
     const { spans, startIndex, endIndex, originalText } = selectionState;
@@ -93,7 +94,7 @@ function showQuickEditPanel(selection, state) {
     const allSpans = Array.from(DOMElements.outputPanel.querySelectorAll('.word'));
     const selectedSpans = allSpans.filter(span => selection.containsNode(span, true) && span.textContent.trim() !== '');
     if (selectedSpans.length === 0) {
-        if (isPanelVisible) hideQuickEditPanel();
+        if (isPanelVisible && !isPanelLocked) hideQuickEditPanel();
         return;
     }
 
@@ -166,6 +167,14 @@ function hideQuickEditPanel() {
         if (window.getSelection) {
             window.getSelection().removeAllRanges();
         }
+        // Reset lock state when panel is hidden
+        if (isPanelLocked) {
+            isPanelLocked = false;
+            const lockIcon = DOMElements.qLockBtn;
+            lockIcon.classList.remove('is-locked');
+            lockIcon.title = "Ghim bảng dịch nhanh";
+            lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
+        }
     }
 }
 
@@ -223,6 +232,9 @@ export function initializeModal(state) {
         const quickEditPanel = DOMElements.quickEditPanel;
 
         if (!outputPanel.contains(e.target) || quickEditPanel.contains(e.target)) {
+            if (isPanelVisible && !isPanelLocked && !quickEditPanel.contains(e.target)) {
+                 hideQuickEditPanel();
+            }
             return;
         }
 
@@ -241,12 +253,29 @@ export function initializeModal(state) {
                 return;
              }
 
-            
-            if (isPanelVisible) {
+            if (selection.toString().trim() !== '') {
+                showQuickEditPanel(selection, state);
+            } else if (isPanelVisible && !isPanelLocked) {
                 hideQuickEditPanel();
             }
 
         }, 50);  
+    });
+    
+    DOMElements.qCloseBtn.addEventListener('click', hideQuickEditPanel);
+
+    DOMElements.qLockBtn.addEventListener('click', () => {
+        isPanelLocked = !isPanelLocked;
+        const lockIcon = DOMElements.qLockBtn;
+        if (isPanelLocked) {
+            lockIcon.classList.add('is-locked');
+            lockIcon.title = "Bỏ ghim bảng dịch nhanh";
+            lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+        } else {
+            lockIcon.classList.remove('is-locked');
+            lockIcon.title = "Ghim bảng dịch nhanh";
+            lockIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`;
+        }
     });
 
     DOMElements.qExpandLeftBtn.addEventListener('click', () => expandQuickSelection('left', state));

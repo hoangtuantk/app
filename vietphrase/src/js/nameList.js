@@ -82,7 +82,7 @@ export function initializeNameList(state) {
     
              DOMElements.nameListSaveBtn.disabled = false;
         }, 1500);
-        performTranslation(state, { forceText: state.lastTranslatedText }); // SỬA ĐỔI
+        performTranslation(state, { forceText: state.lastTranslatedText });
     });
     DOMElements.nameListDeleteBtn.addEventListener('click', async () => {
         if (await customConfirm('Bạn có chắc muốn xóa toàn bộ Bảng Thuật Ngữ? Hành động này không thể hoàn tác.')) {
@@ -90,7 +90,7 @@ export function initializeNameList(state) {
             saveNameDictionaryToStorage();
             renderNameList();
             buildMasterKeySet(state);
-            performTranslation(state, { forceText: state.lastTranslatedText }); // SỬA ĐỔI
+            performTranslation(state, { forceText: state.lastTranslatedText });
         }
  
     });
@@ -161,6 +161,12 @@ function loadNameDictionaryFromStorage() {
 }
 
 export function buildMasterKeySet(state) {
+
+    if (!state || !state.dictionaries) {
+        console.warn("buildMasterKeySet được gọi nhưng từ điển chưa sẵn sàng.");
+        state.masterKeySet = new Set([...nameDictionary.keys()]);
+        return;
+    }
     state.masterKeySet = new Set([...nameDictionary.keys()]);
     state.dictionaries.forEach(d => {
         d.dict.forEach((_, key) => state.masterKeySet.add(key));

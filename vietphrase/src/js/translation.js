@@ -63,6 +63,12 @@ export function synthesizeCompoundTranslation(text, state) {
 }
 
 export function performTranslation(state, options = {}) {
+
+    if (!state || !state.dictionaries) {
+        DOMElements.outputPanel.textContent = 'Lỗi: Từ điển chưa được tải. Vui lòng tải từ điển trước khi dịch.';
+        return;
+    }
+
     const textToTranslate = options.forceText ?? DOMElements.inputText.value;
     const textWithLuatNhan = applyLuatNhan(textToTranslate, state);
     if (!textToTranslate.trim()) {
