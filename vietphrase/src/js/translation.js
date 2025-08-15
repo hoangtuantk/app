@@ -162,7 +162,36 @@ export function performTranslation(state, options = {}) {
             return leadingSpace + span.outerHTML;
         });
 
-        return htmlParts.join('');
+        const lineHtml = htmlParts.join('');
+
+        // --- VIẾT HOA CHỮ CÁI ĐẦU DÒNG ---
+        // Tạo một element tạm thời trong bộ nhớ để xử lý chuỗi HTML một cách an toàn.
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = lineHtml;
+
+        // Sử dụng TreeWalker để duyệt qua các node văn bản (nội dung chữ).
+        const treeWalker = document.createTreeWalker(tempDiv, NodeFilter.SHOW_TEXT);
+        let firstTextNodeContainingLetter = null;
+
+        // Vòng lặp để tìm node văn bản ĐẦU TIÊN có chứa ít nhất một chữ cái.
+        while (treeWalker.nextNode()) {
+            // Regex /\p{L}/u sẽ tìm bất kỳ ký tự chữ cái nào trong bảng mã Unicode.
+            if (/\p{L}/u.test(treeWalker.currentNode.nodeValue)) {
+                firstTextNodeContainingLetter = treeWalker.currentNode;
+                break; // Dừng lại ngay khi tìm thấy.
+            }
+        }
+
+        // Nếu đã tìm thấy node văn bản phù hợp...
+        if (firstTextNodeContainingLetter) {
+            // ...tiến hành thay thế chỉ chữ cái đầu tiên trong node đó thành chữ hoa.
+            firstTextNodeContainingLetter.nodeValue = firstTextNodeContainingLetter.nodeValue.replace(
+                /(\p{L})/u,
+                (match) => match.toUpperCase()
+            );
+        }
+
+        return tempDiv.innerHTML; // Trả về nội dung HTML đã được viết hoa.
 
     }).filter(Boolean);
 
