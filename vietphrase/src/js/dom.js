@@ -11,12 +11,14 @@ const DOMElements = {
     clearBtn: document.getElementById('clear-btn'),
     copyBtn: document.getElementById('copy-btn'),
     outputPanel: document.getElementById('output-panel'),
+
     nameListTextarea: document.getElementById('name-list-textarea'),
     nameListSaveBtn: document.getElementById('name-list-save'),
     nameListDeleteBtn: document.getElementById('name-list-delete'),
     nameListExportBtn: document.getElementById('name-list-export'),
     nameListImportBtn: document.getElementById('name-list-import'),
     nameListFileInput: document.getElementById('name-list-file-input'),
+    
     loader: document.getElementById('loader'),
     loaderText: document.getElementById('loader-text'),
     modeToggle: document.getElementById('mode-toggle'),
@@ -24,7 +26,6 @@ const DOMElements = {
     decreaseFontBtn: document.getElementById('decrease-font-btn'),
     fontSizeLabel: document.getElementById('font-size-label'),
     
-    // Popup (Bảng Thêm Name)
     editModal: document.getElementById('edit-modal'),
     customMeaningInput: document.getElementById('custom-meaning'),
     addToNameListBtn: document.getElementById('add-to-name-list-btn'),
@@ -32,7 +33,6 @@ const DOMElements = {
     expandLeftBtn: document.getElementById('expand-left-btn'),
     expandRightBtn: document.getElementById('expand-right-btn'),
 
-    // Bảng chọn chữ nhanh
     quickEditPanel: document.getElementById('quick-edit-panel'),
     qExpandLeftBtn: document.getElementById('q-expand-left-btn'),
     qExpandRightBtn: document.getElementById('q-expand-right-btn'),

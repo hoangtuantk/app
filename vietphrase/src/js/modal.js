@@ -11,41 +11,27 @@ let selectionState = {
 };
 let isPanelVisible = false;
 
-// ========================================================================
-// HÀM MỚI: CẬP NHẬT KẾT QUẢ DỊCH TẠI CHỖ (IN-PLACE UPDATE)
-// Chức năng: Thay thế các span cũ bằng một span mới mà không cần dịch lại toàn bộ.
-// ========================================================================
 function updateTranslationInPlace(newText) {
     const { spans, startIndex, endIndex, originalText } = selectionState;
     if (startIndex === -1 || !spans.length) return;
 
-    // 1. Tạo một span mới để chứa kết quả chỉnh sửa
     const newSpan = document.createElement('span');
     newSpan.className = 'word';
     newSpan.textContent = newText;
-    newSpan.dataset.original = originalText; // Lưu lại chuỗi gốc của cả cụm đã chọn
+    newSpan.dataset.original = originalText;
 
-    // 2. Lấy ra danh sách các span cũ cần được thay thế
     const spansToReplace = spans.slice(startIndex, endIndex + 1);
     if (spansToReplace.length === 0) return;
-    
     const parent = spansToReplace[0].parentNode;
-
-    // 3. Thực hiện thay thế trong DOM
-    // Chèn span mới vào ngay trước span cũ đầu tiên
     parent.insertBefore(newSpan, spansToReplace[0]);
-    // Xóa tất cả các span cũ đã được chọn
     spansToReplace.forEach(span => span.remove());
 
-    // 4. Cập nhật lại trạng thái toàn cục để các lần chỉnh sửa sau hoạt động đúng
-    // Lấy lại danh sách tất cả các span hiện có trong kết quả
     const allCurrentSpans = Array.from(DOMElements.outputPanel.querySelectorAll('.word'));
     const newIndex = allCurrentSpans.indexOf(newSpan);
 
-    // Cập nhật lại selectionState để phản ánh sự thay đổi
     selectionState.spans = allCurrentSpans;
     selectionState.startIndex = newIndex;
-    selectionState.endIndex = newIndex; // Vùng chọn giờ chỉ là span mới
+    selectionState.endIndex = newIndex;
     selectionState.originalText = newSpan.dataset.original;
 }
 
@@ -97,7 +83,6 @@ function groupSimilarMeanings(meanings, state) {
     });
     return vpParts.join(' ');
 }
-
 
 function closeOldModal() {
     DOMElements.editModal.style.display = 'none';
@@ -174,7 +159,6 @@ function populateQuickEditPanel(text, state) {
 
 }
 
-
 function hideQuickEditPanel() {
     if (isPanelVisible) {
         DOMElements.quickEditPanel.classList.add('hidden');
@@ -184,7 +168,6 @@ function hideQuickEditPanel() {
         }
     }
 }
-
 
 function expandQuickSelection(direction, state) {
     const { spans, startIndex, endIndex } = selectionState;
@@ -206,7 +189,6 @@ function expandQuickSelection(direction, state) {
     
     populateQuickEditPanel(selectionState.originalText, state);
 }
-
 
 function populateOldModal(text, state) {
     const originalWordInput = document.getElementById('original-word-input');
@@ -292,9 +274,6 @@ export function initializeModal(state) {
         }
     });
 
-    // ==========================================================
-    // SỬA ĐỔI LOGIC CÁC NÚT BẤM ĐỂ DÙNG updateTranslationInPlace
-    // ==========================================================
     document.querySelectorAll('.q-temp-add-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const targetInputId = e.target.dataset.target;
@@ -362,7 +341,7 @@ export function initializeModal(state) {
                 saveNameDictionaryToStorage();
                 renderNameList();
                 buildMasterKeySet(state);
-                updateTranslationInPlace(vn); // THAY ĐỔI
+                updateTranslationInPlace(vn);
                 closeOldModal();
 
                 const addButton = DOMElements.addToNameListBtn;

@@ -5,7 +5,6 @@ import { performTranslation } from './translation.js';
 export let nameDictionary = new Map();
 export let temporaryNameDictionary = new Map();
 
-// HÀM MỚI: Sắp xếp và hiển thị Name List
 function renderSortedNameList(sortType = 'newest') {
     if (nameDictionary.size === 0) {
         DOMElements.nameListTextarea.value = '';
@@ -33,7 +32,7 @@ function renderSortedNameList(sortType = 'newest') {
             break;
         case 'newest':
         default:
-            sortedEntries = entries; // Map giữ nguyên thứ tự chèn, đây là thứ tự mới nhất
+            sortedEntries = entries;
             break;
     }
 
@@ -50,13 +49,11 @@ export function initializeNameList(state) {
     const sortBtn = document.getElementById('name-list-sort-btn');
     const sortDropdown = document.getElementById('name-list-sort-dropdown');
 
-    // MỚI: Xử lý hiển thị menu sắp xếp
     sortBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         sortDropdown.classList.toggle('hidden');
     });
 
-    // MỚI: Xử lý chọn một tùy chọn sắp xếp
     document.querySelectorAll('.sort-option').forEach(button => {
         button.addEventListener('click', () => {
             const sortType = button.dataset.sort;
@@ -65,7 +62,6 @@ export function initializeNameList(state) {
         });
     });
 
-    // MỚI: Ẩn menu khi click ra ngoài
     document.addEventListener('click', (e) => {
         if (!sortBtn.contains(e.target) && !sortDropdown.contains(e.target)) {
             sortDropdown.classList.add('hidden');
@@ -132,8 +128,6 @@ function parseDictionary(text) {
         if (parts.length >= 2) {
             let key = parts[0].trim();
             const value = parts.slice(1).join('=').trim();
-
-            // Kiểm tra xem key có bắt đầu bằng ký tự '$' không
             if (key.startsWith('$')) {
                 // Nếu có, loại bỏ ký tự '$' ở đầu đi
                 key = key.substring(1).trim();
@@ -152,7 +146,6 @@ export function renderNameList() {
         DOMElements.nameListTextarea.value = '';
         return;
     }
-    // Sửa lại: Hàm này giờ chỉ render theo thứ tự mặc định (mới nhất)
     const sortedNames = [...nameDictionary.entries()];
     const text = sortedNames.map(([cn, vn]) => `${cn}=${vn}`).join('\n');
     DOMElements.nameListTextarea.value = text;

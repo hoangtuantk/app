@@ -64,7 +64,7 @@ const REQUIRED_FILES = [
     'Names',
 ];
 
-// --- CÁC HÀM HỖ TRỢ LÀM VIỆC VỚI INDEXEDDB ---
+// --- INDEXEDDB ---
 const DB_NAME = 'VietphraseDB';
 const STORE_NAME = 'dictionaryStore';
 
@@ -116,8 +116,6 @@ export async function clearAllDictionaries() {
         }
     });
 }
-// --- KẾT THÚC CÁC HÀM HỖ TRỢ ---
-
 
 export async function initializeDictionaries() {
     try {
@@ -153,7 +151,6 @@ export async function loadDictionariesFromServer(logHandler) {
             let response = null;
             let foundName = null;
 
-            // Lặp qua các tên có thể có và thử tải file đầu tiên tồn tại
             for (const pName of possibleNames) {
                 if (!pName) continue;
                 try {
@@ -164,7 +161,6 @@ export async function loadDictionariesFromServer(logHandler) {
                         break;
                     }
                 } catch (e) {
-                    // Bỏ qua lỗi mạng và thử tên tiếp theo
                 }
             }
 
@@ -209,20 +205,18 @@ export async function loadDictionariesFromFile(files, logHandler) {
     const fileReaderPromises = [];
 
     for (const fileInfo of DICTIONARY_FILES) {
-        // Lấy ra danh sách tên có thể có và ID của từ điển từ cấu trúc mới
         const possibleNames = Array.isArray(fileInfo.names) ? fileInfo.names : [fileInfo.name];
         const dictionaryId = fileInfo.id || fileInfo.name;
         let file = null;
 
-        // Tìm file đầu tiên khớp với một trong các tên có thể có
         for (const pName of possibleNames) {
-            if (!pName) continue; // Bỏ qua nếu tên không hợp lệ
+            if (!pName) continue;
             const potentialFile = Array.from(files).find(f => 
                 f.name.toLowerCase() === pName.toLowerCase() && !usedActualFileNames.has(f.name)
             );
             if (potentialFile) {
-                file = potentialFile; // Đã tìm thấy file phù hợp!
-                break; // Dừng tìm kiếm cho loại từ điển này
+                file = potentialFile;
+                break;
             }
         }
 
@@ -296,7 +290,7 @@ function parseBlacklistStyle(text) {
     lines.forEach(line => {
         const trimmedLine = line.trim();
         if (trimmedLine && !trimmedLine.startsWith('#')) {
-            dictionary.set(trimmedLine, ''); // Giá trị là một chuỗi rỗng
+            dictionary.set(trimmedLine, '');
         }
     });
     return dictionary;
@@ -313,24 +307,17 @@ function parseLacVietStyle(text) {
             const key = parts[0].trim();
             let value = parts.slice(1).join('=').trim();
 
-            // Bỏ qua 1: <✚[$]> hoặc <[$]>
             value = value.replace(/✚?\[.*?\]\s*/, '');
 
-            // Bỏ qua 2: <Hán Việt: $>
-            // Tạo regex động dựa trên số lượng ký tự tiếng Trung
             if (value.includes('Hán Việt:')) {
                 const chineseCharCount = (key.match(/[\u4e00-\u9fa5]/g) || []).length;
                 if (chineseCharCount > 0) {
-                    // Regex này tìm "Hán Việt:" theo sau bởi đúng số lượng từ (không phải ký tự)
                      const hanVietRegex = new RegExp(`Hán Việt: (\\S+\\s+){${chineseCharCount - 1}}\\S+\\s*`);
                      value = value.replace(hanVietRegex, '');
                 }
             }
 
-            // Bỏ qua 3 và Thay thế: <\n\t$.> thành dấu phân tách ;
             value = value.replace(/\n\t\d+\.\s*/g, '; ');
-
-            // Dọn dẹp kết quả cuối cùng
             value = value.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim();
             value = value.startsWith(';') ? value.slice(1).trim() : value;
 
@@ -340,14 +327,12 @@ function parseLacVietStyle(text) {
     return dictionary;
 }
 
-// Hàm chính để chọn style xử lý phù hợp
 function parseDictionary(text, style = 'Style-Chung') {
     switch (style) {
         case 'LacViet-Style':
             return parseLacVietStyle(text);
         case 'Blacklist-Style':
             return parseBlacklistStyle(text);
-        // LuatNhan-Style sử dụng trình phân tích mặc định để tải các quy tắc
         case 'LuatNhan-Style':
         case 'Style-Chung':
         default:

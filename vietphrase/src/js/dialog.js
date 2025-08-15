@@ -25,7 +25,7 @@ function showModal(message, showCancelButton = false) {
     }
 
     modal.classList.remove('hidden');
-    okBtn.focus(); // Tự động focus vào nút OK
+    okBtn.focus();
 
     document.addEventListener('keydown', handleKeyDown);
 

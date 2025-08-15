@@ -5,7 +5,6 @@ import { initializeNameList, buildMasterKeySet } from './nameList.js';
 import { initializeModal } from './modal.js';
 import { performTranslation } from './translation.js';
 
-// Hàm này chỉ thêm một dòng log mới vào danh sách
 function appendLog(message, type) {
     const li = document.createElement('li');
     let icon = '';
@@ -24,12 +23,11 @@ function appendLog(message, type) {
     li.classList.add(`log-${type}`);
     DOMElements.logList.appendChild(li);
 
-    // Tự động cuộn xuống cuối danh sách
     DOMElements.logList.scrollTop = DOMElements.logList.scrollHeight;
-    return li; // Trả về phần tử li để có thể cập nhật sau này
+    return li;
 }
 
-// Hàm mới để cập nhật một dòng log đã có
+
 function updateLog(li, message, type) {
     let icon = '';
     if (type === 'success') {
@@ -56,22 +54,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     let isImporting = false;
     let importHasFinished = false;
 
-    // Vô hiệu hóa loader ban đầu
     DOMElements.loader.style.display = 'none';
 
-    // Cập nhật state sau khi có từ điển mới
     const updateState = (newDicts) => {
         state.dictionaries = newDicts;
         if (newDicts) {
             initializeNameList(state);
             initializeModal(state);
-            // Bật các nút chức năng sau khi có từ điển
             DOMElements.translateBtn.disabled = false;
             DOMElements.modeToggle.disabled = false;
         }
     };
 
-    // Load từ điển đã có sẵn trong IndexedDB (nếu có)
     const db = await initializeDictionaries();
     if (db) {
         updateState(db);
@@ -144,7 +138,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Gán hàm mới cho các sự kiện đóng
     DOMElements.closeLogModalBtn.addEventListener('click', closeLogModalAndReloadIfNeeded);
     DOMElements.logModal.addEventListener('click', (e) => {
         if (e.target === DOMElements.logModal) {
@@ -152,7 +145,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
     
-    // Kích hoạt nút dịch để bắt đầu quá trình dịch
     DOMElements.translateBtn.addEventListener('click', () => {
         if (!state.dictionaries || state.dictionaries.size === 0) {
             customAlert('Vui lòng tải Từ Điển trước khi dịch.');
