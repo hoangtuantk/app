@@ -129,10 +129,19 @@ function parseDictionary(text) {
     lines.forEach(line => {
         if (line.startsWith('#') || line.trim() === '') return;
         const parts = line.split('=');
-        if (parts.length === 2) {
-            const key = parts[0].trim();
-            const value = parts[1].trim();
-            if (key) dictionary.set(key, value);
+        if (parts.length >= 2) {
+            let key = parts[0].trim();
+            const value = parts.slice(1).join('=').trim();
+
+            // Kiểm tra xem key có bắt đầu bằng ký tự '$' không
+            if (key.startsWith('$')) {
+                // Nếu có, loại bỏ ký tự '$' ở đầu đi
+                key = key.substring(1).trim();
+            }
+
+            if (key) {
+                dictionary.set(key, value);
+            }
         }
     });
     return dictionary;
