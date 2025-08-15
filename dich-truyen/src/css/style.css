@@ -116,7 +116,11 @@ input:disabled {
     font-style: italic;
 }
 
-#edit-modal, #log-modal, #custom-dialog-modal {
+#edit-modal, #log-modal {
+    background-color: rgba(26, 27, 38, 0.7);
+}
+
+#custom-dialog-modal {
     background-color: transparent;
     pointer-events: none;
 }

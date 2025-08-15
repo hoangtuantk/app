@@ -86,14 +86,22 @@ export function performTranslation(state, options = {}) {
             return span.outerHTML;
         }).join('');
 
+        // Chèn một khoảng trắng giữa tất cả các span theo mặc định
         let processedHtml = rawLineHtml.replace(/<\/span><span/g, '</span> <span');
-        processedHtml = processedHtml.replace(/\s+(<span[^>]*>[.,!?;:()\[\]{}'"]<\/span>)/g, '$1');
+
+        // Xóa khoảng trắng THỪA ở các vị trí không mong muốn
+        // Xóa khoảng trắng TRƯỚC các dấu câu và dấu đóng ngoặc
+        processedHtml = processedHtml.replace(/\s+(<span[^>]*>[.,!?;:()\[\]{}'”]\<\/span>)/g, '$1');
+        // Xóa khoảng trắng SAU các dấu mở ngoặc
+        processedHtml = processedHtml.replace(/(<span[^>]*>[“"\[\(]\<\/span>)\s+/g, '$1');
+
         return processedHtml;
+
     }).filter(Boolean);
 
     let finalHtml = translatedLineHtmls.join('<br><br>');
-    const replacements = { '。': '.', '：': ':', '；': ';', '，': ',', '！': '!', '？': '?', '……': '...', '～': '~' };
-    finalHtml = finalHtml.replace(/。|：|；|，|！|？|……|～/g, match => replacements[match]);
+    const replacements = { '。': '.', '：': ':', '；': ';', '，': ',', '！': '!', '？': '?', '……': '...', '～': '~', '、': ',' };
+    finalHtml = finalHtml.replace(/。|：|；|，|、|！|？|……|～/g, match => replacements[match]);
     finalHtml = finalHtml.replace(/<\/span>\s+([.,!?;:])/g, '</span>$1');
 
     DOMElements.outputPanel.innerHTML = finalHtml;
