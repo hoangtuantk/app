@@ -16,19 +16,21 @@ const DICTIONARY_FILES = [
         priority: 3
     },
     { 
-        id: 'Babylon', 
+        id: 'Babylon', //English file
         names: ['Babylon.txt', 'babylon-vn.txt'], 
-        priority: 4
+        priority: 5
     },
     { 
         id: 'Blacklist', 
         names: ['IgnoredChinesePhrases.txt', 'IgnoreList.txt', 'Blacklist.txt'], 
-        priority: 4
+        priority: 4,
+        style: 'Blacklist-Style'
     },
     { 
         id: 'LacViet', 
         names: ['LacViet.txt', 'Lac Viet.txt', 'LV.txt'],
-        priority: 4
+        priority: 4,
+        style: 'LacViet-Style'
     },
     {   id: 'PhienAm',
         names: [
@@ -41,7 +43,8 @@ const DICTIONARY_FILES = [
     },
     {   id: 'LuatNhan',
         names: ['LuatNhan.txt', 'Luat Nhan.txt'],
-        priority: 4
+        priority: 4,
+        style: 'LuatNhan-Style'
     },
     {   id: 'Pronouns',
         names: [
@@ -168,10 +171,9 @@ export async function loadDictionariesFromServer(logHandler) {
             const loadingLi = logHandler.append(`Đang xử lý ${dictionaryId} từ server...`, 'loading');
             if (response && response.ok) {
                 const content = await response.text();
-                // Vì bạn đã bỏ `type`, chúng ta mặc định dùng parseDictionary cho tất cả
                 dictionaries.set(dictionaryId, {
                     priority: fileInfo.priority,
-                    dict: parseDictionary(content)
+                    dict: parseDictionary(content, fileInfo.style)
                 });
                 logHandler.update(loadingLi, `Đã xử lý xong: ${foundName} (dưới dạng ${dictionaryId})`, 'success');
             } else {
@@ -232,10 +234,10 @@ export async function loadDictionariesFromFile(files, logHandler) {
             const promise = new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    // Vì bạn đã bỏ `type`, chúng ta mặc định dùng parseDictionary
                     dictionaries.set(dictionaryId, {
+
                         priority: fileInfo.priority,
-                        dict: parseDictionary(e.target.result)
+                        dict: parseDictionary(e.target.result, fileInfo.style)
                     });
 
                     logHandler.update(loadingLi, `Đã đọc xong file: ${file.name}`, 'success');
@@ -271,7 +273,8 @@ export async function loadDictionariesFromFile(files, logHandler) {
     return dictionaries;
 }
 
-function parseDictionary(text) {
+// Style mặc định: [A]=[B]
+function parseStyleChung(text) {
     const dictionary = new Map();
     const lines = text.split(/\r?\n/);
     lines.forEach(line => {
@@ -284,6 +287,72 @@ function parseDictionary(text) {
         }
     });
     return dictionary;
+}
+
+// Style cho Blacklist: Mỗi dòng là một mục cần loại bỏ
+function parseBlacklistStyle(text) {
+    const dictionary = new Map();
+    const lines = text.split(/\r?\n/);
+    lines.forEach(line => {
+        const trimmedLine = line.trim();
+        if (trimmedLine && !trimmedLine.startsWith('#')) {
+            dictionary.set(trimmedLine, ''); // Giá trị là một chuỗi rỗng
+        }
+    });
+    return dictionary;
+}
+
+// Style cho LacViet: Xử lý các định dạng đặc biệt
+function parseLacVietStyle(text) {
+    const dictionary = new Map();
+    const lines = text.split(/\r?\n/);
+    lines.forEach(line => {
+        if (line.startsWith('#') || line.trim() === '') return;
+        const parts = line.split('=');
+        if (parts.length >= 2) {
+            const key = parts[0].trim();
+            let value = parts.slice(1).join('=').trim();
+
+            // Bỏ qua 1: <✚[$]> hoặc <[$]>
+            value = value.replace(/✚?\[.*?\]\s*/, '');
+
+            // Bỏ qua 2: <Hán Việt: $>
+            // Tạo regex động dựa trên số lượng ký tự tiếng Trung
+            if (value.includes('Hán Việt:')) {
+                const chineseCharCount = (key.match(/[\u4e00-\u9fa5]/g) || []).length;
+                if (chineseCharCount > 0) {
+                    // Regex này tìm "Hán Việt:" theo sau bởi đúng số lượng từ (không phải ký tự)
+                     const hanVietRegex = new RegExp(`Hán Việt: (\\S+\\s+){${chineseCharCount - 1}}\\S+\\s*`);
+                     value = value.replace(hanVietRegex, '');
+                }
+            }
+
+            // Bỏ qua 3 và Thay thế: <\n\t$.> thành dấu phân tách ;
+            value = value.replace(/\n\t\d+\.\s*/g, '; ');
+
+            // Dọn dẹp kết quả cuối cùng
+            value = value.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim();
+            value = value.startsWith(';') ? value.slice(1).trim() : value;
+
+            if (key) dictionary.set(key, value);
+        }
+    });
+    return dictionary;
+}
+
+// Hàm chính để chọn style xử lý phù hợp
+function parseDictionary(text, style = 'Style-Chung') {
+    switch (style) {
+        case 'LacViet-Style':
+            return parseLacVietStyle(text);
+        case 'Blacklist-Style':
+            return parseBlacklistStyle(text);
+        // LuatNhan-Style sử dụng trình phân tích mặc định để tải các quy tắc
+        case 'LuatNhan-Style':
+        case 'Style-Chung':
+        default:
+            return parseStyleChung(text);
+    }
 }
 
 export function getTranslationFromPrioritizedDicts(word, dictionaries) {
