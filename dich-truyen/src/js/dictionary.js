@@ -1,32 +1,59 @@
-const HAN_VIET_DICT_NAME = 'ChinesePhienAmWords.txt';
+const HAN_VIET_DICT_NAME = 'PhienAm';
 const NAMES_FILES = [
-    'Names9.txt', 'Names8.txt', 'Names7.txt', 'Names6.txt',
-    'Names5.txt', 'Names4.txt', 'Names3.txt', 'Names2.txt', 'Names.txt'
+    'Names2.txt'
 ];
 
 const DICTIONARY_FILES = [
-    ...NAMES_FILES.map(name => ({ name, priority: 1 })),
-    { name: 'Vietphrase.txt', priority: 3 },
-    { name: 'Babylon.txt', priority: 4 },
-    { name: 'ChinesePhienAmEnglishWords.txt', priority: 4 },
-    { name: HAN_VIET_DICT_NAME, priority: 4 },
-    { name: 'IgnoredChinesePhrases.txt', priority: 4 },
-    { name: 'LacViet.txt', priority: 4 },
-    { name: 'LuatNhan.txt', priority: 4 },
-    { name: 'Pronouns.txt', priority: 4 },
-    { name: 'ThieuChuu.txt', priority: 4 },
+    ...NAMES_FILES.map(name => ({ id: name, names: [name], priority: 1})),
+    { 
+        id: 'Names', 
+        names: ['Names.txt','Name.txt'], 
+        priority: 1
+    },
+    { 
+        id: 'Vietphrase', 
+        names: ['Vietphrase.txt', 'Vietphrase-custom.txt', 'VP.txt'], 
+        priority: 3
+    },
+    { 
+        id: 'Babylon', 
+        names: ['Babylon.txt', 'babylon-vn.txt'], 
+        priority: 4
+    },
+    { 
+        id: 'IgnoredChinesePhrases', 
+        names: ['IgnoredChinesePhrases.txt', 'IgnoreList.txt', 'Blacklist.txt'], 
+        priority: 4
+    },
+    { 
+        id: 'LacViet', 
+        names: ['LacViet.txt', 'Lac Viet.txt'],
+        priority: 4
+    },
+    {   id: 'PhienAm',
+        names: ['ChinesePhienAmWords.txt','PhienAm.txt','HanViet.txt','HV.txt',],
+        priority: 4
+    },
+    {   id: 'LuatNhan',
+        names: ['LuatNhan.txt'],
+        priority: 4
+    },
+    {   id: 'Pronouns',
+         names: ['Pronouns.txt'],
+         priority: 4
+    },
+    {   id: 'ThieuChu',
+         names: ['ThieuChuu.txt'],
+         priority: 4
+    },
 ];
 
 const REQUIRED_FILES = [
-    'Vietphrase.txt',
-    'Babylon.txt',
-    'ChinesePhienAmEnglishWords.txt',
+    'Vietphrase',
     HAN_VIET_DICT_NAME,
-    'IgnoredChinesePhrases.txt',
-    'LacViet.txt',
-    'LuatNhan.txt',
-    'Pronouns.txt',
-    'ThieuChuu.txt',
+    'LacViet',
+    'LuatNhan',
+    'Names',
 ];
 
 // --- CÁC HÀM HỖ TRỢ LÀM VIỆC VỚI INDEXEDDB ---
@@ -113,17 +140,37 @@ export async function loadDictionariesFromServer(logHandler) {
         const db = await openDB();
 
         for (const fileInfo of DICTIONARY_FILES) {
-            const loadingLi = logHandler.append(`Đang xử lý file: ${fileInfo.name}`, 'loading');
-            const response = await fetch(`data/${fileInfo.name}`);
-            if (response.ok) {
+            const possibleNames = Array.isArray(fileInfo.names) ? fileInfo.names : [fileInfo.name];
+            const dictionaryId = fileInfo.id || fileInfo.name;
+            let response = null;
+            let foundName = null;
+
+            // Lặp qua các tên có thể có và thử tải file đầu tiên tồn tại
+            for (const pName of possibleNames) {
+                if (!pName) continue;
+                try {
+                    const res = await fetch(`data/${pName}`);
+                    if (res.ok) {
+                        response = res;
+                        foundName = pName;
+                        break;
+                    }
+                } catch (e) {
+                    // Bỏ qua lỗi mạng và thử tên tiếp theo
+                }
+            }
+
+            const loadingLi = logHandler.append(`Đang xử lý ${dictionaryId} từ server...`, 'loading');
+            if (response && response.ok) {
                 const content = await response.text();
-                dictionaries.set(fileInfo.name, {
+                // Vì bạn đã bỏ `type`, chúng ta mặc định dùng parseDictionary cho tất cả
+                dictionaries.set(dictionaryId, {
                     priority: fileInfo.priority,
                     dict: parseDictionary(content)
                 });
-                logHandler.update(loadingLi, `Đã xử lý xong: ${fileInfo.name}`, 'success'); 
+                logHandler.update(loadingLi, `Đã xử lý xong: ${foundName} (dưới dạng ${dictionaryId})`, 'success');
             } else {
-                logHandler.update(loadingLi, `Lỗi: Không thể tải ${fileInfo.name}. Bỏ qua.`, 'error');
+                logHandler.update(loadingLi, `Lỗi: Không thể tải từ điển ${dictionaryId} từ server.`, 'error');
             }
         }
 
@@ -136,7 +183,7 @@ export async function loadDictionariesFromServer(logHandler) {
 
         const savingLi = logHandler.append('Đang lưu từ điển vào IndexedDB...', 'loading');
         await saveDataToDB(db, { id: 'parsed-dictionaries', data: storableDicts });
-        logHandler.update(savingLi, 'Đã lưu từ điển vào IndexedDB.', 'success'); 
+        logHandler.update(savingLi, 'Đã lưu từ điển vào IndexedDB.', 'success');
 
         return dictionaries;
     } catch (error) {
@@ -150,26 +197,47 @@ export async function loadDictionariesFromServer(logHandler) {
 
 export async function loadDictionariesFromFile(files, logHandler) {
     const dictionaries = new Map();
-    const loadedFileNames = new Set();
+    const foundDictionaryTypes = new Set();
+    const usedActualFileNames = new Set();
     const fileReaderPromises = [];
 
     for (const fileInfo of DICTIONARY_FILES) {
-        const file = Array.from(files).find(f => f.name.toLowerCase() === fileInfo.name.toLowerCase());
+        // Lấy ra danh sách tên có thể có và ID của từ điển từ cấu trúc mới
+        const possibleNames = Array.isArray(fileInfo.names) ? fileInfo.names : [fileInfo.name];
+        const dictionaryId = fileInfo.id || fileInfo.name;
+        let file = null;
+
+        // Tìm file đầu tiên khớp với một trong các tên có thể có
+        for (const pName of possibleNames) {
+            if (!pName) continue; // Bỏ qua nếu tên không hợp lệ
+            const potentialFile = Array.from(files).find(f => 
+                f.name.toLowerCase() === pName.toLowerCase() && !usedActualFileNames.has(f.name)
+            );
+            if (potentialFile) {
+                file = potentialFile; // Đã tìm thấy file phù hợp!
+                break; // Dừng tìm kiếm cho loại từ điển này
+            }
+        }
+
         if (file) {
-            loadedFileNames.add(fileInfo.name);
-            const loadingLi = logHandler.append(`Đang đọc file: ${fileInfo.name}`, 'loading');
+            foundDictionaryTypes.add(dictionaryId);
+            usedActualFileNames.add(file.name);
+
+            const loadingLi = logHandler.append(`Đang đọc file: ${file.name} (dưới dạng ${dictionaryId})`, 'loading');
             const promise = new Promise((resolve) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    dictionaries.set(fileInfo.name, {
+                    // Vì bạn đã bỏ `type`, chúng ta mặc định dùng parseDictionary
+                    dictionaries.set(dictionaryId, {
                         priority: fileInfo.priority,
                         dict: parseDictionary(e.target.result)
                     });
-                    logHandler.update(loadingLi, `Đã đọc xong file: ${fileInfo.name}`, 'success'); 
+
+                    logHandler.update(loadingLi, `Đã đọc xong file: ${file.name}`, 'success');
                     resolve();
                 };
                 reader.onerror = () => {
-                    logHandler.update(loadingLi, `Lỗi khi đọc file: ${fileInfo.name}`, 'error'); 
+                    logHandler.update(loadingLi, `Lỗi khi đọc file: ${file.name}`, 'error');
                     resolve();
                 };
                 reader.readAsText(file);
@@ -180,7 +248,7 @@ export async function loadDictionariesFromFile(files, logHandler) {
 
     await Promise.all(fileReaderPromises);
 
-    const missingFiles = REQUIRED_FILES.filter(f => !loadedFileNames.has(f));
+    const missingFiles = REQUIRED_FILES.filter(f => !foundDictionaryTypes.has(f));
     if (missingFiles.length > 0) {
         logHandler.append(`Lỗi: Thiếu các file bắt buộc: ${missingFiles.join(', ')}`, 'error');
         return null;
@@ -189,12 +257,8 @@ export async function loadDictionariesFromFile(files, logHandler) {
     const db = await openDB();
     const savingLi = logHandler.append('Đang lưu từ điển vào IndexedDB...', 'loading');
     const storableDicts = Array.from(dictionaries.entries()).map(([name, data]) => {
-        return [name, {
-            priority: data.priority,
-            dict: Array.from(data.dict.entries())
-        }];
+        return [name, { priority: data.priority, dict: Array.from(data.dict.entries()) }];
     });
-
     await saveDataToDB(db, { id: 'parsed-dictionaries', data: storableDicts });
     logHandler.update(savingLi, 'Đã lưu từ điển vào IndexedDB.', 'success');
     logHandler.append('Quá trình hoàn tất.', 'info');
