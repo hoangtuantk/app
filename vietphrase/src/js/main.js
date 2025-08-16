@@ -200,17 +200,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // 3. Lắng nghe sự kiện thay đổi trên ô "Lưu văn bản"
   DOMElements.saveTextToggle.addEventListener('change', () => {
     const isChecked = DOMElements.saveTextToggle.checked;
     localStorage.setItem('shouldSaveTextInput', isChecked);
-    // Nếu người dùng bỏ tích, hãy xóa văn bản đã lưu ngay lập tức
+
     if (!isChecked) {
       localStorage.removeItem('savedInputText');
+    } else {
+      localStorage.setItem('savedInputText', DOMElements.inputText.value);
     }
   });
 
-  // 4. Chỉ lưu văn bản vào localStorage khi người dùng nhập nếu ô được tích
   DOMElements.inputText.addEventListener('input', () => {
     if (DOMElements.saveTextToggle.checked) {
       localStorage.setItem('savedInputText', DOMElements.inputText.value);
