@@ -28,5 +28,5 @@ export function updateClock() {
   const timezoneSign = timezoneOffsetHours >= 0 ? '+' : '';
   const timezoneString = `${timezoneSign}${String(timezoneOffsetHours).padStart(2, '0')}:${String(timezoneOffsetMinutesRemainder).padStart(2, '0')}`;
 
-  clockElement.textContent = `${year}-${month}-${day} ${hours}:${minutes}`;
+  clockElement.textContent = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
