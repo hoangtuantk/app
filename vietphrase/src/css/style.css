@@ -577,3 +577,35 @@ textarea:-webkit-autofill:focus {
   background-color: var(--accent-color);
   color: var(--bg-main);
 }
+
+.credits-container {
+  display: flex;
+  justify-content: center;
+  font-size: 15px;
+  width: 100%;
+  padding-top: 20px;
+}
+
+.subtle-glowing-clock {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1rem;
+  color: #e0f2fe;
+  background-color: #1a1b26;
+  padding: 4px 8px;
+  border-radius: 4px;
+  animation: subtle-glow 4s ease-in-out infinite;
+}
+
+@keyframes subtle-glow {
+  0% {
+    text-shadow: 0 0 5px rgba(135, 206, 250, 0.4);
+  }
+
+  50% {
+    text-shadow: 0 0 15px rgba(135, 206, 250, 0.8);
+  }
+
+  100% {
+    text-shadow: 0 0 5px rgba(135, 206, 250, 0.4);
+  }
+}

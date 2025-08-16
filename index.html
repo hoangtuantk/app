@@ -84,18 +84,14 @@
     }
   </style>
 
-  <!-- SCRIPT CHẠY ĐẦU TIÊN: Thiết lập giao diện ngay lập tức -->
   <script>
-    // Hàm này sẽ đặt thuộc tính data-theme trên thẻ <html>
     const applyTheme = (theme) => {
       document.documentElement.setAttribute('data-theme', theme);
     };
 
-    // Lấy theme đã lưu hoặc theme hệ thống
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    // Ưu tiên theme đã lưu, nếu không có thì dùng theme hệ thống, mặc định là 'dark'
     if (savedTheme) {
       applyTheme(savedTheme);
     } else {
@@ -109,7 +105,6 @@
 
   <div class="main-content container mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- Header Section -->
     <header class="flex justify-between items-center mb-8">
       <h1 class="header-title text-3xl font-bold">
         Bộ sưu tập ứng dụng
@@ -308,7 +303,6 @@
     </main>
   </div>
 
-  <!-- Footer Section -->
   <footer class="footer text-center py-4 text-sm">
     <div class="inline-flex items-center">
       <img src="/404/logo.png" alt="Logo" class="h-5 w-5 mr-2">
@@ -316,7 +310,6 @@
     </div>
   </footer>
 
-  <!-- SCRIPT TƯƠNG TÁC -->
   <script>
     const themeToggleButton = document.getElementById('theme-toggle');
     const iconMoon = document.getElementById('icon-moon');
@@ -332,7 +325,6 @@
       }
     };
 
-    // Xử lý sự kiện click nút
     themeToggleButton.addEventListener('click', () => {
       const currentTheme = document.documentElement.getAttribute('data-theme');
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';

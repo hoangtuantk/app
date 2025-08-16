@@ -4,6 +4,7 @@ import { customAlert, customConfirm } from './dialog.js';
 import { initializeNameList, buildMasterKeySet } from './nameList.js';
 import { initializeModal } from './modal.js';
 import { performTranslation } from './translation.js';
+import { updateClock } from './ui.js';
 
 function appendLog(message, type) {
   const li = document.createElement('li');
@@ -27,7 +28,6 @@ function appendLog(message, type) {
   return li;
 }
 
-
 function updateLog(li, message, type) {
   let icon = '';
   if (type === 'success') {
@@ -42,7 +42,6 @@ function updateLog(li, message, type) {
   li.classList.remove('log-loading');
   li.classList.add(`log-${type}`);
 }
-
 
 document.addEventListener('DOMContentLoaded', async () => {
   const state = {
@@ -245,4 +244,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   updateFontSize();
+
+  updateClock();
+  setInterval(updateClock, 1000);
 });
