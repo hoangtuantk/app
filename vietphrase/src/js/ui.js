@@ -1,4 +1,4 @@
-/*
+/* 
 export function updateCurrentYear() {
   const yearSpan = document.getElementById('current-year');
   if (yearSpan) {
