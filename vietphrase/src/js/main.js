@@ -6,223 +6,243 @@ import { initializeModal } from './modal.js';
 import { performTranslation } from './translation.js';
 
 function appendLog(message, type) {
-    const li = document.createElement('li');
-    let icon = '';
+  const li = document.createElement('li');
+  let icon = '';
 
-    if (type === 'loading') {
-        icon = '<div class="w-4 h-4 border-2 border-dashed rounded-full animate-spin border-accent-color spinner-icon"></div>';
-    } else if (type === 'success') {
-        icon = '<span>✅</span>';
-    } else if (type === 'error') {
-        icon = '<span>❌</span>';
-    } else {
-        icon = '<span>ℹ️</span>';
-    }
+  if (type === 'loading') {
+    icon = '<div class="w-4 h-4 border-2 border-dashed rounded-full animate-spin border-accent-color spinner-icon"></div>';
+  } else if (type === 'success') {
+    icon = '<span>✅</span>';
+  } else if (type === 'error') {
+    icon = '<span>❌</span>';
+  } else {
+    icon = '<span>ℹ️</span>';
+  }
 
-    li.innerHTML = `${icon}<span>${message}</span>`;
-    li.classList.add(`log-${type}`);
-    DOMElements.logList.appendChild(li);
+  li.innerHTML = `${icon}<span>${message}</span>`;
+  li.classList.add(`log-${type}`);
+  DOMElements.logList.appendChild(li);
 
-    DOMElements.logList.scrollTop = DOMElements.logList.scrollHeight;
-    return li;
+  DOMElements.logList.scrollTop = DOMElements.logList.scrollHeight;
+  return li;
 }
 
 
 function updateLog(li, message, type) {
-    let icon = '';
-    if (type === 'success') {
-        icon = '<span>✅</span>';
-    } else if (type === 'error') {
-        icon = '<span>❌</span>';
-    } else {
-        icon = '<span>ℹ️</span>';
-    }
+  let icon = '';
+  if (type === 'success') {
+    icon = '<span>✅</span>';
+  } else if (type === 'error') {
+    icon = '<span>❌</span>';
+  } else {
+    icon = '<span>ℹ️</span>';
+  }
 
-    li.innerHTML = `${icon}<span>${message}</span>`;
-    li.classList.remove('log-loading');
-    li.classList.add(`log-${type}`);
+  li.innerHTML = `${icon}<span>${message}</span>`;
+  li.classList.remove('log-loading');
+  li.classList.add(`log-${type}`);
 }
 
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const state = {
-        dictionaries: null,
-        masterKeySet: new Set(),
-        lastTranslatedText: '',
-    };
+  const state = {
+    dictionaries: null,
+    masterKeySet: new Set(),
+    lastTranslatedText: '',
+  };
 
-    let isImporting = false;
-    let importHasFinished = false;
+  let isImporting = false;
+  let importHasFinished = false;
 
-    DOMElements.loader.style.display = 'none';
+  DOMElements.loader.style.display = 'none';
 
-    const updateState = (newDicts) => {
-        state.dictionaries = newDicts;
-        if (newDicts) {
-            initializeNameList(state);
-            initializeModal(state);
-            DOMElements.translateBtn.disabled = false;
-            DOMElements.modeToggle.disabled = false;
-        }
-    };
-
-    const db = await initializeDictionaries();
-    if (db) {
-        updateState(db);
+  const updateState = (newDicts) => {
+    state.dictionaries = newDicts;
+    if (newDicts) {
+      initializeNameList(state);
+      initializeModal(state);
+      DOMElements.translateBtn.disabled = false;
+      DOMElements.modeToggle.disabled = false;
     }
-  
-     DOMElements.importLocalBtn.addEventListener('click', () => {
-        if (isImporting) return;
-        importHasFinished = false; 
-        DOMElements.logModal.classList.remove('hidden');
-        DOMElements.logList.innerHTML = '';
-        DOMElements.fileImporter.click();
-    });
-    
-    DOMElements.fileImporter.addEventListener('change', async (e) => {
-        if (isImporting) return;
-        isImporting = true;
-        DOMElements.importLocalBtn.disabled = true;
-        DOMElements.importServerBtn.disabled = true;
-        
-        const files = e.target.files;
-        if (files.length > 0) {
-            const logHandler = { append: appendLog, update: updateLog };
-            const newDicts = await loadDictionariesFromFile(files, logHandler);
-            if (newDicts) {
-                updateState(newDicts);
-                importHasFinished = true;
-            }
-        }
-        e.target.value = null;
+  };
 
-        isImporting = false;
-        DOMElements.importLocalBtn.disabled = false;
-        DOMElements.importServerBtn.disabled = false;
-    });
+  const db = await initializeDictionaries();
+  if (db) {
+    updateState(db);
+  }
 
-    DOMElements.importServerBtn.addEventListener('click', async () => {
-        if (isImporting) return;
-        importHasFinished = false;
-        isImporting = true;
-        DOMElements.importLocalBtn.disabled = true;
-        DOMElements.importServerBtn.disabled = true;
+  DOMElements.importLocalBtn.addEventListener('click', () => {
+    if (isImporting) return;
+    importHasFinished = false;
+    DOMElements.logModal.classList.remove('hidden');
+    DOMElements.logList.innerHTML = '';
+    DOMElements.fileImporter.click();
+  });
 
-        DOMElements.logModal.classList.remove('hidden');
-        DOMElements.logList.innerHTML = '';
-        const logHandler = { append: appendLog, update: updateLog };
-        const newDicts = await loadDictionariesFromServer(logHandler);
-        if (newDicts) {
-            updateState(newDicts);
-            importHasFinished = true;
-        }
-        
-        isImporting = false;
-        DOMElements.importLocalBtn.disabled = false;
-        DOMElements.importServerBtn.disabled = false;      
-    });
+  DOMElements.fileImporter.addEventListener('change', async (e) => {
+    if (isImporting) return;
+    isImporting = true;
+    DOMElements.importLocalBtn.disabled = true;
+    DOMElements.importServerBtn.disabled = true;
 
-    DOMElements.clearDbBtn.addEventListener('click', async () => {
-        if (await customConfirm('Bạn có chắc muốn xóa toàn bộ từ điển đã lưu? Hành động này không thể hoàn tác.')) {
-            await clearAllDictionaries();
-            await customAlert('Đã xóa dữ liệu từ điển. Vui lòng nhập lại từ điển.');
-            location.reload(); 
-        }
-    });
+    const files = e.target.files;
+    if (files.length > 0) {
+      const logHandler = { append: appendLog, update: updateLog };
+      const newDicts = await loadDictionariesFromFile(files, logHandler);
+      if (newDicts) {
+        updateState(newDicts);
+        importHasFinished = true;
+      }
+    }
+    e.target.value = null;
 
-    function closeLogModal() {
-        DOMElements.logModal.classList.add('hidden');
-        DOMElements.logList.innerHTML = '';
+    isImporting = false;
+    DOMElements.importLocalBtn.disabled = false;
+    DOMElements.importServerBtn.disabled = false;
+  });
+
+  DOMElements.importServerBtn.addEventListener('click', async () => {
+    if (isImporting) return;
+    importHasFinished = false;
+    isImporting = true;
+    DOMElements.importLocalBtn.disabled = true;
+    DOMElements.importServerBtn.disabled = true;
+
+    DOMElements.logModal.classList.remove('hidden');
+    DOMElements.logList.innerHTML = '';
+    const logHandler = { append: appendLog, update: updateLog };
+    const newDicts = await loadDictionariesFromServer(logHandler);
+    if (newDicts) {
+      updateState(newDicts);
+      importHasFinished = true;
     }
 
-    DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
-    DOMElements.logModal.addEventListener('click', (e) => {
-        if (e.target === DOMElements.logModal) {
-            closeLogModal();
-        }
-    });
+    isImporting = false;
+    DOMElements.importLocalBtn.disabled = false;
+    DOMElements.importServerBtn.disabled = false;
+  });
 
-    DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
-    DOMElements.logModal.addEventListener('click', (e) => {
-        if (e.target === DOMElements.logModal) {
-            closeLogModal();
-        }
-    });
-    
-    DOMElements.translateBtn.addEventListener('click', () => {
-        if (!state.dictionaries || state.dictionaries.size === 0) {
-            customAlert('Vui lòng tải Từ Điển trước khi dịch.');
-        } else {
-            performTranslation(state);
-        }
-    });
-    DOMElements.clearBtn.addEventListener('click', () => {
-        DOMElements.inputText.value = '';
-    });
+  DOMElements.clearDbBtn.addEventListener('click', async () => {
+    if (await customConfirm('Bạn có chắc muốn xóa toàn bộ từ điển đã lưu? Hành động này không thể hoàn tác.')) {
+      await clearAllDictionaries();
+      await customAlert('Đã xóa dữ liệu từ điển. Vui lòng nhập lại từ điển.');
+      location.reload();
+    }
+  });
 
-    DOMElements.copyBtn.addEventListener('click', () => {
-        const outputPanel = DOMElements.outputPanel;
-        if (outputPanel.textContent.trim().length === 0 || outputPanel.textContent.trim() === 'Kết quả sẽ hiện ở đây...') {
-            return;
-        }
+  function closeLogModal() {
+    DOMElements.logModal.classList.add('hidden');
+    DOMElements.logList.innerHTML = '';
+  }
 
-        const range = document.createRange();
-        range.selectNodeContents(outputPanel);
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
+  DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
+  DOMElements.logModal.addEventListener('click', (e) => {
+    if (e.target === DOMElements.logModal) {
+      closeLogModal();
+    }
+  });
 
-        try {
-            document.execCommand('copy');
-            const originalText = DOMElements.copyBtn.textContent;
-            DOMElements.copyBtn.textContent = 'Đã sao chép!';
-            DOMElements.copyBtn.disabled = true;
-            setTimeout(() => {
-                DOMElements.copyBtn.textContent = originalText;
-                DOMElements.copyBtn.disabled = false;
-            }, 300);
-        } catch (err) {
-            console.error('Không thể sao chép tự động:', err);
-        }
-    });
-    
-    DOMElements.modeToggle.addEventListener('change', () => performTranslation(state));
+  DOMElements.closeLogModalBtn.addEventListener('click', closeLogModal);
+  DOMElements.logModal.addEventListener('click', (e) => {
+    if (e.target === DOMElements.logModal) {
+      closeLogModal();
+    }
+  });
 
+  DOMElements.translateBtn.addEventListener('click', () => {
+    if (!state.dictionaries || state.dictionaries.size === 0) {
+      customAlert('Vui lòng tải Từ Điển trước khi dịch.');
+    } else {
+      performTranslation(state);
+    }
+  });
+  DOMElements.clearBtn.addEventListener('click', () => {
+    DOMElements.inputText.value = '';
+  });
+
+  DOMElements.copyBtn.addEventListener('click', () => {
+    const outputPanel = DOMElements.outputPanel;
+    if (outputPanel.textContent.trim().length === 0 || outputPanel.textContent.trim() === 'Kết quả sẽ hiện ở đây...') {
+      return;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(outputPanel);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    try {
+      document.execCommand('copy');
+      const originalText = DOMElements.copyBtn.textContent;
+      DOMElements.copyBtn.textContent = 'Đã sao chép!';
+      DOMElements.copyBtn.disabled = true;
+      setTimeout(() => {
+        DOMElements.copyBtn.textContent = originalText;
+        DOMElements.copyBtn.disabled = false;
+      }, 300);
+    } catch (err) {
+      console.error('Không thể sao chép tự động:', err);
+    }
+  });
+
+  DOMElements.modeToggle.addEventListener('change', () => performTranslation(state));
+
+  const storedSaveState = localStorage.getItem('shouldSaveTextInput');
+  const shouldSaveText = storedSaveState === null ? true : storedSaveState === 'true';
+  DOMElements.saveTextToggle.checked = shouldSaveText;
+
+  // 2. Tải lại văn bản gốc nếu tùy chọn được bật và có dữ liệu đã lưu
+  if (shouldSaveText) {
     const savedInputText = localStorage.getItem('savedInputText');
     if (savedInputText) {
-        DOMElements.inputText.value = savedInputText;
+      DOMElements.inputText.value = savedInputText;
     }
+  }
 
-    DOMElements.inputText.addEventListener('input', () => {
-        localStorage.setItem('savedInputText', DOMElements.inputText.value);
-    });
+  // 3. Lắng nghe sự kiện thay đổi trên ô "Lưu văn bản"
+  DOMElements.saveTextToggle.addEventListener('change', () => {
+    const isChecked = DOMElements.saveTextToggle.checked;
+    localStorage.setItem('shouldSaveTextInput', isChecked);
+    // Nếu người dùng bỏ tích, hãy xóa văn bản đã lưu ngay lập tức
+    if (!isChecked) {
+      localStorage.removeItem('savedInputText');
+    }
+  });
 
-    DOMElements.clearBtn.addEventListener('click', () => {
-        DOMElements.inputText.value = '';
-        localStorage.removeItem('savedInputText');
-    });
+  // 4. Chỉ lưu văn bản vào localStorage khi người dùng nhập nếu ô được tích
+  DOMElements.inputText.addEventListener('input', () => {
+    if (DOMElements.saveTextToggle.checked) {
+      localStorage.setItem('savedInputText', DOMElements.inputText.value);
+    }
+  });
 
-    let currentFontSize = parseInt(localStorage.getItem('translatorFontSize') || '18');
-    const baseFontSize = 18;
+  DOMElements.clearBtn.addEventListener('click', () => {
+    DOMElements.inputText.value = '';
+    localStorage.removeItem('savedInputText');
+  });
 
-    const updateFontSize = () => {
-        DOMElements.outputPanel.style.fontSize = `${currentFontSize}px`;
-        const percent = Math.round((currentFontSize / baseFontSize) * 100);
-        DOMElements.fontSizeLabel.textContent = `${percent}%`;
-        localStorage.setItem('translatorFontSize', currentFontSize);
-    };
+  let currentFontSize = parseInt(localStorage.getItem('translatorFontSize') || '18');
+  const baseFontSize = 18;
 
-    DOMElements.increaseFontBtn.addEventListener('click', () => {
-        currentFontSize += 1;
-        updateFontSize();
-    });
+  const updateFontSize = () => {
+    DOMElements.outputPanel.style.fontSize = `${currentFontSize}px`;
+    const percent = Math.round((currentFontSize / baseFontSize) * 100);
+    DOMElements.fontSizeLabel.textContent = `${percent}%`;
+    localStorage.setItem('translatorFontSize', currentFontSize);
+  };
 
-    DOMElements.decreaseFontBtn.addEventListener('click', () => {
-        if (currentFontSize > 8) {
-            currentFontSize -= 1;
-            updateFontSize();
-        }
-    });
-    
+  DOMElements.increaseFontBtn.addEventListener('click', () => {
+    currentFontSize += 1;
     updateFontSize();
+  });
+
+  DOMElements.decreaseFontBtn.addEventListener('click', () => {
+    if (currentFontSize > 8) {
+      currentFontSize -= 1;
+      updateFontSize();
+    }
+  });
+
+  updateFontSize();
 });
