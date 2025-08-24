@@ -1,0 +1,107 @@
+.btn-hover {
+  transition: $transition-fast;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-btn-hover;
+  }
+}
+
+#convertBtn {
+  position: relative;
+  overflow: hidden;
+  min-width: 160px;
+  min-height: 52px;
+  background-color: $primary-blue;
+  color: $white;
+  font-weight: 600;
+  padding: 12px 32px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.font-size-btn-small {
+  width: 36px;
+  height: 36px;
+  font-size: 0.9rem;
+  border-radius: 9999px;
+  background-color: $gray-500;
+  color: $gray-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: $transition-fast;
+  cursor: pointer;
+  border: none;
+
+  &:hover {
+    background-color: $gray-600;
+    transform: translateY(-1px);
+  }
+}
+
+.range-filter-toggle-btn {
+  background-color: $gray-500;
+  color: $gray-50;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
+  border: none;
+
+  &.active {
+    background-color: $settings-blue;
+
+    &:hover {
+      background-color: $primary-blue;
+    }
+  }
+
+  &:hover {
+    background-color: $gray-600;
+  }
+}
+
+.line-mode-toggle-btn {
+  background-color: $primary-blue;
+  color: $gray-50;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease-in-out;
+  cursor: pointer;
+  border: 1px solid $primary-blue-dark;
+
+  &:hover {
+    background-color: $primary-blue-dark;
+  }
+}
+
+.rule-label-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background-color: $gray-500;
+  color: $gray-50;
+  cursor: default;
+  user-select: none;
+  border: 1px solid $gray-300;
+}
+
+#batchSelectFilesBtn {
+  &:hover {
+    animation: pulse-animation 1.5s infinite;
+  }
+}

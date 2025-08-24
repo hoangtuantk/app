@@ -1,0 +1,50 @@
+textarea,
+input,
+select {
+  &:focus {
+    box-shadow: $shadow-focus;
+    border-color: $primary-blue-light;
+    outline: none;
+  }
+}
+
+.font-size-control-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.font-size-input {
+  width: 80px;
+  text-align: center;
+  background-color: $gray-500;
+  border: 1px solid $gray-300;
+  border-radius: 0.5rem;
+  color: $gray-50;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  transition: $transition-fast;
+}
+
+.export-import-area {
+  width: 100%;
+  min-height: 100px;
+  padding: 0.75rem;
+  border: 1px solid $gray-400;
+  border-radius: 0.5rem;
+  background-color: $gray-700;
+  color: $light-cyan;
+  font-family: $font-monospace;
+  resize: vertical;
+  margin-top: 1rem;
+}
+
+.range-filter-textarea,
+.filter-find-input,
+.filter-replace-input {
+  min-height: 80px;
+  resize: vertical;
+}

@@ -1,0 +1,42 @@
+#batchProcessOverlay.visible {
+  opacity: 1;
+}
+
+#batchProcessModal {
+  &.visible {
+    opacity: 1;
+    transform: scale(1);
+
+    .transform {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+}
+
+#batchDropzone.dragover {
+  border-color: $primary-indigo;
+  background-color: rgba($gray-600, 0.7);
+  transform: scale(1.02);
+  box-shadow: 0 0 25px rgba($primary-indigo, 0.3);
+}
+
+#batchLogContainer {
+  scrollbar-width: thin;
+  scrollbar-color: $primary-indigo-dark $gray-800;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $gray-800;
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $primary-indigo-dark;
+    border-radius: 10px;
+    border: 2px solid $gray-800;
+  }
+}

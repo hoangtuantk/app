@@ -1,0 +1,12 @@
+export const dropZone = document.getElementById('drop-zone');
+export const fileInput = document.getElementById('file-input');
+export const browseButton = document.getElementById('browse-button');
+export const fileListElem = document.getElementById('file-list');
+export const placeholderText = document.getElementById('placeholder-text');
+export const mergeButton = document.getElementById('merge-button');
+export const clearButton = document.getElementById('clear-button');
+export const splitButton = document.getElementById('split-button');
+export const fileListHeader = document.querySelector('#file-list-container h2');
+export const removedFileListElem = document.getElementById('removed-file-list');
+export const removedFileListHeader = document.querySelector('#removed-file-list-container h2');
+export const placeholderTextRemoved = document.getElementById('placeholder-text-removed');

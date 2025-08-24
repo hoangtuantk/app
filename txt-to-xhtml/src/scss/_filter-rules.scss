@@ -1,0 +1,172 @@
+#filterRulesContainer {
+  border: 1px solid $gray-400;
+  border-radius: 0.5rem;
+  background-color: $gray-700;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 800px;
+  overflow-y: auto;
+}
+
+.filter-rule-item {
+  background-color: $gray-800;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  details {
+    width: 100%;
+
+    &[open] summary::before {
+      transform: rotate(90deg);
+    }
+  }
+
+  summary {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: $gray-50;
+    cursor: pointer;
+    background-color: $gray-600;
+    border-bottom: 1px solid $gray-400;
+    transition: background-color 0.2s ease-in-out;
+
+    &:hover {
+      background-color: $gray-500;
+    }
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: '▶';
+      margin-right: 0.5rem;
+      transition: transform 0.2s ease-in-out;
+      transform-origin: center;
+    }
+  }
+
+  .rule-name-input {
+    flex-grow: 1;
+    background-color: transparent;
+    border: none;
+    color: $gray-50;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s ease-in-out;
+    cursor: text;
+
+    &:focus {
+      background-color: $gray-500;
+      outline: none;
+      box-shadow: none;
+    }
+  }
+
+  .action-btn {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+  }
+
+  .move-btn {
+    background-color: $gray-500;
+    color: $white;
+    padding: 0.5rem;
+
+    &:hover {
+      background-color: $gray-300;
+    }
+
+    &.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  }
+
+  .duplicate-btn {
+    background-color: $primary-yellow;
+    color: $white;
+
+    &:hover {
+      background-color: $primary-yellow-dark;
+    }
+  }
+
+  .delete-btn {
+    background-color: $primary-red;
+    color: $white;
+
+    &:hover {
+      background-color: $primary-red-dark;
+    }
+  }
+
+  .case-toggle-btn {
+    background-color: $gray-100;
+    color: $gray-400;
+
+    &.active {
+      background-color: $primary-green;
+      color: $white;
+
+      &:hover {
+        background-color: $primary-green-dark;
+      }
+    }
+
+    &:hover {
+      background-color: $gray-200;
+    }
+  }
+
+  .whole-word-toggle-btn {
+    background-color: $gray-100;
+    color: $gray-400;
+
+    &.active {
+      background-color: $settings-blue;
+      color: $white;
+
+      &:hover {
+        background-color: $primary-blue;
+      }
+    }
+
+    &:hover {
+      background-color: $gray-200;
+    }
+  }
+
+  .rule-content {
+    padding: 1rem;
+    padding-top: 0.5rem;
+  }
+
+  &[data-rule-type="range"] .rule-content .grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.rule-type-select {
+  background-color: $gray-500;
+  color: $gray-50;
+  border: 1px solid $gray-300;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  margin-left: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+}

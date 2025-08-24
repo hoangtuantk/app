@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0X2Q2KKSFE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-K9CK2BHBDQ'); //Root domain
+    gtag('config', 'G-0X2Q2KKSFE'); //Subdomain
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chuyển đổi văn bản sang XHTML</title>
+  <link rel="icon" type="image/png" href="/404/logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/scss/style.css">
+</head>
+
+<body class="bg-gray-900 text-gray-200 min-h-screen flex flex-col items-center justify-center p-4">
+
+  <div class="w-full max-w-full mx-auto bg-gray-800 rounded-2xl shadow-xl px-6 md:px-10 py-6 md:py-8">
+
+    <div class="flex justify-center items-center mb-8">
+      <h1 class="text-3xl md:text-4xl font-bold text-white">Chuyển đổi văn bản sang XHTML</h1>
+    </div>
+
+    <div class="font-size-control-container">
+      <button id="decreaseFontBtn" class="font-size-btn-small" title="Giảm cỡ chữ">A-</button>
+      <input type="text" id="currentFontSizeInput" class="font-size-input" value="22px" aria-label="Cỡ chữ hiện tại">
+      <button id="increaseFontBtn" class="font-size-btn-small" title="Tăng cỡ chữ">A+</button>
+
+      <div class="w-px h-6 bg-gray-600 mx-4"></div>
+
+      <div class="flex items-center gap-2">
+        <label for="xhtmlConversionToggle" class="text-gray-300 font-medium cursor-pointer select-none">XHTML</label>
+        <label class="toggle-switch settings-toggle">
+          <input type="checkbox" id="xhtmlConversionToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 mt-6">
+
+      <div>
+        <div class="flex justify-between items-center mb-2">
+          <label for="inputText" class="block text-sm font-medium text-gray-300">
+            Văn bản gốc <span id="inputTextStats" class="text-gray-400 text-xs">(Ký tự: 0 | Dòng: 0)</span>
+          </label>
+        </div>
+        <textarea id="inputText" rows="15"
+          class="w-full p-4 border border-gray-600 rounded-lg bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+          placeholder="Chương 1: Tiêu đề chương&#10;&#10;Nội dung đoạn văn bắt đầu ở đây...&#10;
+            Đề xuất: Nên sửa văn bản trực tiếp ở bảng này
+                    " style="font-size: 22px;"></textarea>
+      </div>
+
+      <div>
+        <div class="flex justify-between items-center mb-2">
+          <label for="outputText" class="block text-sm font-medium text-gray-300">
+            <span id="outputLabel">Kết quả XHTML</span> <span id="outputTextStats" class="text-gray-400 text-xs">(Ký tự:
+              0 | Dòng: 0)</span>
+          </label>
+        </div>
+        <textarea id="outputText" rows="15"
+          class="w-full p-4 border border-gray-600 rounded-lg bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+          placeholder="Kết quả sẽ hiển thị ở đây...&#10;
+            Đề xuất: Nhập nội dung XHTML vào đây nếu muốn Dịch Ngược" style="font-size: 22px;"></textarea>
+      </div>
+    </div>
+
+    <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+      <button id="pasteAndDownloadBtn"
+        class="w-full sm:w-auto btn-hover bg-teal-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-300 dark:focus:ring-teal-800 flex items-center justify-center gap-2">
+        Dán và Tải
+      </button>
+      <button id="convertBtn"
+        class="w-full sm:w-auto btn-hover bg-blue-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800 flex items-center justify-content-center">
+        <span id="convertBtnText">Chuyển đổi</span>
+        <div id="progressBar"></div>
+      </button>
+      <button id="batchProcessBtn"
+        class="w-full sm:w-auto btn-hover bg-indigo-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800 flex items-center justify-center gap-2">
+        Xử lý hàng loạt
+      </button>
+      <button id="copyBtn"
+        class="w-full sm:w-auto btn-hover bg-green-600 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 dark:focus:ring-green-800">
+        Copy
+      </button>
+      <button id="clearBtn"
+        class="w-full sm:w-auto btn-hover bg-gray-500 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-gray-600 focus:outline-none focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-800">
+        Delete
+      </button>
+    </div>
+
+    <div class="mt-6 flex flex-col items-center gap-3">
+      <div class="w-full max-w-md bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-2">
+        <code id="fileNamePreview" class="block text-green-400 truncate w-full text-center"
+          title="Tên file sẽ được tạo khi xuất">filename_preview.xhtml</code>
+      </div>
+      <div class="flex items-center justify-center gap-2">
+        <button id="exportIconBtn"
+          class="p-2 rounded-full bg-gray-700 text-gray-200 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          title="Xuất dữ liệu">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-download">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" x2="12" y1="15" y2="3" />
+          </svg>
+        </button>
+        <select id="exportOptionSelect"
+          class="p-2 border border-gray-600 rounded-lg bg-gray-700 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <option value="html">Kết quả XHTML (.xhtml)</option>
+          <option value="original">Văn bản gốc (.txt)</option>
+          <option value="both">Cả hai (.xhtml)(.txt)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="details-container mt-8">
+      <details id="detailsHeaderFooter"
+        class="p-4 bg-gray-700 rounded-lg shadow-inner transition-all duration-300 ease-in-out">
+        <summary class="text-lg font-semibold text-gray-200 cursor-pointer">
+          Chỉnh sửa Header/Footer XHTML
+        </summary>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+          <div>
+            <label for="htmlHeaderInput" class="block text-sm font-medium text-gray-300 mb-2">Nội dung Header
+              XHTML</label>
+            <textarea id="htmlHeaderInput" rows="10"
+              class="w-full p-3 border border-gray-600 rounded-lg bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"></textarea>
+          </div>
+          <div>
+            <label for="htmlFooterInput" class="block text-sm font-medium text-gray-300 mb-2">Nội dung Footer
+              XHTML</label>
+            <textarea id="htmlFooterInput" rows="10"
+              class="w-full p-3 border border-gray-600 rounded-lg bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"></textarea>
+          </div>
+        </div>
+      </details>
+
+      <details id="detailsFilter"
+        class="p-4 bg-gray-700 rounded-lg shadow-inner transition-all duration-300 ease-in-out">
+        <summary class="text-lg font-semibold text-gray-200 cursor-pointer">
+          Chỉnh sửa Lọc (Bật trong Cài đặt)
+        </summary>
+        <div class="mt-4">
+          <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+            <label class="block text-sm font-medium text-gray-300">Quy tắc lọc</label>
+            <div class="flex gap-2">
+              <button id="addFilterRuleBtn"
+                class="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-blue-600 transition"
+                title="Thêm quy tắc mới">
+                Thêm quy tắc
+              </button>
+              <button id="exportFilterRulesBtn"
+                class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-500 transition"
+                title="Xuất quy tắc">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-upload">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" x2="12" y1="3" y2="15" />
+                </svg>
+              </button>
+              <button id="importFilterRulesBtn"
+                class="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-purple-600 transition"
+                title="Nhập quy tắc">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-download">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" x2="12" y1="15" y2="3" />
+                </svg>
+              </button>
+              <button id="toggleAllFiltersBtn"
+                class="bg-teal-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-teal-600 transition"
+                title="Thu gọn/Mở rộng tất cả">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-chevrons-up-down">
+                  <path d="m7 15 5 5 5-5" />
+                  <path d="m7 9 5-5 5 5" />
+                </svg>
+              </button>
+              <button id="clearAllFilterRulesBtn"
+                class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-red-600 transition"
+                title="Xóa tất cả quy tắc">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="lucide lucide-trash-2">
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  <line x1="10" x2="10" y1="11" y2="17" />
+                  <line x1="14" x2="14" y1="11" y2="17" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div id="filterRulesContainer">
+          </div>
+
+          <div id="exportImportArea" class="hidden mt-4">
+            <textarea id="exportImportTextarea" class="export-import-area"
+              placeholder="Dán hoặc sao chép quy tắc lọc dạng JSON tại đây..."></textarea>
+            <div class="flex justify-end gap-2 mt-2">
+              <button id="importRulesFromFileBtn"
+                class="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-teal-600 transition hidden">Nhập
+                từ File</button>
+              <button id="exportRulesToFileBtn"
+                class="bg-sky-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-sky-600 transition hidden">Lưu
+                vào File</button>
+              <button id="loadImportedRulesBtn"
+                class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-600 transition hidden">Tải
+                quy tắc</button>
+              <button id="closeExportImportAreaBtn"
+                class="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-600 transition">Đóng</button>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div id="copyNotification"
+      class="fixed top-5 right-5 bg-gray-900 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-50">
+      Đã sao chép vào clipboard!
+    </div>
+
+  </div>
+
+  <footer class="text-center py-4 mt-auto flex items-center justify-end gap-2">
+    <span id="live-clock" class="subtle-glowing-clock"></span>
+  </footer>
+
+  <button id="settingsBtn"
+    class="fixed bottom-5 right-5 bg-gray-700 text-white p-3 rounded-full shadow-lg hover:bg-gray-600 transition z-40">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings">
+      <path
+        d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  </button>
+
+  <div id="settingsOverlay" class="fixed inset-0 bg-black bg-opacity-70 z-40 hidden"></div>
+  <div id="settingsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-lg flex flex-col max-h-full">
+      <div class="p-4 border-b border-gray-700 flex-shrink-0">
+        <h2 class="text-xl font-bold text-white">Cài đặt chung</h2>
+      </div>
+
+      <div class="p-6 space-y-6 overflow-y-auto">
+
+        <div class="setting-item-with-options pb-3">
+          <div class="flex items-center justify-between pt-3">
+            <div class="flex items-center">
+              <label for="autoProcessPunctuationToggle" class="text-gray-300 font-medium">Tự động chuẩn hóa dấu
+                câu</label>
+              <button id="punctuationOptionsBtn" title="Mở tùy chọn chi tiết"
+                class="ml-3 p-1 rounded-full hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                  </path>
+                </svg>
+              </button>
+            </div>
+            <label class="toggle-switch settings-toggle">
+              <input type="checkbox" id="autoProcessPunctuationToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div id="punctuationSubOptions" class="pl-8 pt-4 space-y-3 hidden">
+            <div class="flex items-center">
+              <input id="subPunctuationToggle_normalizeAll" type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+              <label for="subPunctuationToggle_normalizeAll"
+                class="ml-3 block text-sm text-gray-300 flex items-center gap-x-2">
+                <span>Các loại dấu câu</span>
+                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">. , : ; ? !</code>
+              </label>
+            </div>
+            <div class="flex items-center">
+              <input id="subPunctuationToggle_normalizeBrackets" type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+              <label for="subPunctuationToggle_normalizeBrackets"
+                class="ml-3 block text-sm text-gray-300 flex items-center gap-x-2">
+                <span>Các loại dấu ngoặc/nháy</span>
+                <code
+                  class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">() [] {} "" '' ‘’ “”</code>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-item-with-options pb-3">
+          <div class="flex items-center justify-between pt-3">
+            <div class="flex items-center">
+              <label for="autoCapitalizationToggle" class="text-gray-300 font-medium">Tự động viết hoa</label>
+              <button id="capitalizationOptionsBtn" title="Mở tùy chọn chi tiết"
+                class="ml-3 p-1 rounded-full hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                  </path>
+                </svg>
+              </button>
+            </div>
+            <label class="toggle-switch settings-toggle">
+              <input type="checkbox" id="autoCapitalizationToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div id="capitalizationSubOptions" class="pl-8 pt-4 space-y-3 hidden">
+            <div class="flex items-center">
+              <input id="subCapitalization_firstLetter" type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+              <label for="subCapitalization_firstLetter"
+                class="ml-3 block text-sm text-gray-300 flex items-center gap-x-2">
+                <span>Chữ cái đầu dòng</span>
+              </label>
+            </div>
+            <div class="flex items-center">
+              <input id="subCapitalization_afterPunctuation" type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+              <label for="subCapitalization_afterPunctuation"
+                class="ml-3 block text-sm text-gray-300 flex items-center gap-x-2">
+                <span>Chữ cái sau dấu câu</span>
+                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">. ? !</code>
+              </label>
+            </div>
+            <div class="flex items-center">
+              <input id="subCapitalization_afterColon" type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+              <label for="subCapitalization_afterColon"
+                class="ml-3 block text-sm text-gray-300 flex items-center gap-x-2">
+                <span>Chữ cái sau dấu hai chấm</span>
+                <code class="bg-gray-700 text-teal-300 px-2 py-1 rounded-md text-xs font-mono">:</code>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-item-with-options border-b border-gray-700 pb-3">
+          <div class="flex items-center justify-between pt-3">
+            <div class="flex items-center">
+              <label for="autoProcessTitleToggle" class="text-gray-300 font-medium">Tự động xử lý tiêu đề</label>
+              <button id="titleOptionsBtn" title="Mở tùy chọn chi tiết"
+                class="ml-3 p-1 rounded-full hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                  </path>
+                </svg>
+              </button>
+            </div>
+            <label class="toggle-switch settings-toggle">
+              <input type="checkbox" id="autoProcessTitleToggle" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div id="titleSubOptions" class="pl-8 pt-4 space-y-4 hidden">
+            <div class="flex items-center">
+              <input id="subTitle_recognizeChapter" type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+              <label for="subTitle_recognizeChapter" class="ml-3 block text-sm text-gray-300">Tự nhận diện và xử lý
+                Chương</label>
+            </div>
+            <div class="flex items-center">
+              <input id="subTitle_insertIntoTitleTag" type="checkbox"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+              <label for="subTitle_insertIntoTitleTag" class="ml-3 block text-sm text-gray-300">Tự chèn tiêu đề vào thẻ
+                <code>&lt;title&gt;</code></label>
+            </div>
+            <div class="flex items-center">
+              <label for="subTitle_headingLevelSelect" class="block text-sm text-gray-300 mr-3">Chọn thẻ cho tiêu
+                đề:</label>
+              <select id="subTitle_headingLevelSelect" class="rule-type-select">
+                <option value="h1">h1</option>
+                <option value="h2" selected>h2</option>
+                <option value="h3">h3</option>
+                <option value="h4">h4</option>
+                <option value="h5">h5</option>
+                <option value="h6">h6</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <label for="includeHeaderFooterToggle" class="text-gray-300 font-medium">Chèn Header/Footer</label>
+          <label class="toggle-switch settings-toggle">
+            <input type="checkbox" id="includeHeaderFooterToggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="flex items-center justify-between">
+          <label for="filterSettingToggle" class="text-gray-300 font-medium">Chế độ Lọc</label>
+          <label class="toggle-switch settings-toggle">
+            <input type="checkbox" id="filterSettingToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="flex items-center justify-between">
+          <label for="syncScrollSettingToggle" class="text-gray-300 font-medium">Đồng bộ cuộn</label>
+          <label class="toggle-switch settings-toggle">
+            <input type="checkbox" id="syncScrollSettingToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <hr class="border-gray-600">
+
+        <div>
+          <h3 class="text-lg font-semibold text-gray-200 mb-3">Định dạng Tên File</h3>
+          <div class="space-y-2">
+            <div class="flex items-center">
+              <input id="nameFormatChapter" name="nameFormat" type="radio" value="chapter_prefix"
+                class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+              <label for="nameFormatChapter" class="ml-3 block text-sm font-medium text-gray-300">Tiền tố Chương: <code
+                  class="text-sm bg-gray-700 p-1 rounded">[CHUONG]_[THOIGIAN]</code></label>
+            </div>
+            <div class="flex items-center">
+              <input id="nameFormatTimestamp" name="nameFormat" type="radio" value="timestamp_prefix"
+                class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+              <label for="nameFormatTimestamp" class="ml-3 block text-sm font-medium text-gray-300">Tiền tố Thời gian:
+                <code class="text-sm bg-gray-700 p-1 rounded">[THOIGIAN]_[CHUONG]</code></label>
+            </div>
+            <div class="flex items-center">
+              <input id="nameFormatTitle" name="nameFormat" type="radio" value="title"
+                class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+              <label for="nameFormatTitle" class="ml-3 block text-sm font-medium text-gray-300">Theo Tiêu đề</label>
+            </div>
+            <div class="flex items-center">
+              <input id="nameFormatCustom" name="nameFormat" type="radio" value="custom"
+                class="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500">
+              <label for="nameFormatCustom" class="ml-3 block text-sm font-medium text-gray-300">Tùy chỉnh:</label>
+            </div>
+            <div class="pl-7">
+              <input type="text" id="customNameFormatInput"
+                class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-sm text-gray-200 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+                value="[YYYY-MM-DD_HH-mm-ss]_[CHUONG]" disabled>
+              <div id="customNameFormatExample" class="hidden mt-2 text-gray-400 bg-gray-700 p-2 rounded-md space-y-2">
+                <div>
+                  <p class="text-sm text-gray-200">Biến: [CHUONG], [TIEUDE], [THOIGIAN], [YYYY MM DD HH hh mm ss]</p>
+                  <p class="text-sm text-gray-200">- Biến phân biệt chữ Hoa, chữ thường</p>
+                  <p class="text-sm text-gray-200">- HH là 24h, hh là 12h (tự động thêm am/pm)</p>
+                </div>
+                <div>
+                  <p><span class="font-semibold text-gray-200">Ví dụ 1:</span> <code
+                      class="text-sm text-blue-400">[TIEUDE]_[YYYY-MM-DD]</code></p>
+                  <p><span class="font-semibold text-gray-200">Kết quả:</span> <code
+                      class="text-sm text-green-400">Tiêu đề file_2025-08-01.xhtml</code></p>
+                </div>
+                <div>
+                  <p><span class="font-semibold text-gray-200">Ví dụ 2:</span> <code
+                      class="text-sm text-blue-400">[YYYY-MM-DD_hh-mm-ss]_[CHUONG]</code></p>
+                  <p><span class="font-semibold text-gray-200">Kết quả:</span> <code
+                      class="text-sm text-green-400">2025-08-01_02-36-00AM_C1.xhtml</code></p>
+                </div>
+                <div>
+                  <p><span class="font-semibold text-gray-200">Ví dụ 3:</span> <code
+                      class="text-sm text-blue-400">MyStory_[CHUONG]_[THOIGIAN]</code></p>
+                  <p><span class="font-semibold text-gray-200">Kết quả:</span> <code
+                      class="text-sm text-green-400">MyStory_C1_20250801_143600.xhtml</code></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 border-t border-gray-700 flex-shrink-0 flex justify-end gap-3">
+        <button id="resetSettingsBtn"
+          class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition">Reset</button>
+        <button id="closeSettingsBtn"
+          class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmationOverlay" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden"></div>
+  <div id="confirmationModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-gray-800 rounded-lg shadow-xl w-full max-w-md">
+      <div class="p-6">
+        <h3 class="text-lg font-bold text-white mb-4">Xác nhận hành động</h3>
+        <p id="confirmationMessage" class="text-gray-300 mb-6">Bạn có chắc chắn muốn tiếp tục?</p>
+      </div>
+      <div class="p-4 bg-gray-700 rounded-b-lg flex justify-end gap-4">
+        <button id="cancelBtn"
+          class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-500 transition">Hủy</button>
+        <button id="confirmBtn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Xác
+          nhận</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="importRulesFileInput" class="hidden" accept=".txt,.json">
+  <input type="file" id="batchFilesInput" class="hidden" multiple accept=".txt,.xhtml,.html,.zip">
+
+  <div id="batchProcessOverlay" class="fixed inset-0 bg-black bg-opacity-80 z-50 hidden"></div>
+  <div id="batchProcessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div
+      class="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh] transform transition-all duration-300 scale-95 opacity-0">
+      <div class="p-5 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
+        <h2 class="text-2xl font-bold text-white flex items-center gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="text-indigo-400">
+            <path
+              d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1V14c0 .8.6 1.4 1.4 1.4h9.8c.8 0 1.4-.6 1.4-1.4V6.5L15.5 2z" />
+            <path d="M3 7.6v12.8c0 .8.6 1.4 1.4 1.4h9.8" />
+            <path d="M15 2v5h5" />
+          </svg>
+          Xử lý Tệp Hàng loạt
+        </h2>
+        <button id="closeBatchProcessModalBtn"
+          class="p-2 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6 overflow-y-auto">
+
+        <div class="flex items-center justify-center mb-4 p-3 bg-gray-900/50 rounded-lg border border-gray-700">
+          <label for="keepOriginalFilenameToggle" class="text-gray-300 font-medium cursor-pointer select-none">Giữ tên
+            file gốc</label>
+          <div class="w-px h-6 bg-gray-600 mx-4"></div>
+          <label class="toggle-switch settings-toggle">
+            <input type="checkbox" id="keepOriginalFilenameToggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+
+        <div id="batchDropzone"
+          class="relative border-4 border-dashed border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-indigo-500 hover:bg-gray-700/50 transition-all duration-300">
+          <div class="flex flex-col items-center justify-center text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-upload-cloud mb-4 text-gray-500">
+              <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+              <path d="M12 12v9" />
+              <path d="m16 16-4-4-4 4" />
+            </svg>
+            <p class="text-xl font-semibold">Kéo và thả tệp vào đây</p>
+            <p class="text-gray-500 mt-1">hoặc</p>
+            <button id="batchSelectFilesBtn"
+              class="mt-4 px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-400 transition">
+              Chọn Tệp
+            </button>
+            <p class="text-xs text-gray-500 mt-4">Hỗ trợ .txt, .xhtml, .html và .zip</p>
+          </div>
+        </div>
+
+        <div id="batchProgressContainer" class="hidden space-y-4">
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <span id="batchStatusText" class="text-sm font-medium text-gray-300">Đang chuẩn bị...</span>
+              <span id="batchProgressPercentage" class="text-sm font-bold text-indigo-400">0%</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2.5">
+              <div id="batchProgressBar" class="bg-indigo-500 h-2.5 rounded-full transition-all duration-300 ease-out"
+                style="width: 0%"></div>
+            </div>
+          </div>
+          <div id="batchLogContainer"
+            class="w-full max-h-60 bg-gray-900/70 rounded-lg p-4 overflow-y-auto border border-gray-700">
+            <pre id="batchLogOutput" class="text-sm font-mono text-gray-400 whitespace-pre-wrap"></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-gray-800 border-t border-gray-700 flex-shrink-0 flex justify-end gap-3">
+        <button id="batchDownloadBtn"
+          class="hidden px-5 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-400 transition flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            class="lucide lucide-package-check">
+            <path d="M16 16h2a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h2" />
+            <path d="M16 16l2 2 4-4" />
+            <path d="M3 14h6" />
+            <path d="M6 11H3" />
+            <path d="M3 8h1" />
+          </svg>
+          Tải tất cả (.zip)
+        </button>
+        <button id="batchCancelBtn"
+          class="px-5 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="src/js/main.js"></script>
+</body>
+
+</html>

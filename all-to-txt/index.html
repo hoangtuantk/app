@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0X2Q2KKSFE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-K9CK2BHBDQ'); //Root domain
+    gtag('config', 'G-0X2Q2KKSFE'); //Subdomain
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Công Cụ Gộp File</title>
+  <link rel="icon" type="image/png" href="/404/logo.png" />
+  <link rel="stylesheet" href="src/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app-container">
+    <header>
+      <h1>Công Cụ Gộp File</h1>
+      <p>Gộp nhiều tệp (html, css, js, v.v.), thư mục, hoặc file .zip thành một tệp .txt duy nhất.</p>
+    </header>
+
+    <main>
+      <div id="drop-zone">
+        <input type="file" id="file-input" multiple style="display: none;">
+        <div id="drop-zone-content">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor"
+            class="bi bi-cloud-arrow-up-fill" viewBox="0 0 16 16">
+            <path
+              d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2zm2.354 5.146a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2a.5.5 0 0 1 .708 0l2 2z" />
+          </svg>
+          <p>Kéo và thả tệp, thư mục, hoặc .zip vào đây</p>
+          <p class="separator">hoặc</p>
+          <button type="button" id="browse-button">Chọn từ máy tính</button>
+        </div>
+      </div>
+
+      <div id="file-list-container">
+        <h2>Các tệp đã được nhận diện:</h2>
+        <div id="list-wrapper">
+          <ul id="file-list">
+            <li id="placeholder-text">Chưa có tệp nào được chọn.</li>
+          </ul>
+        </div>
+        <!-- Thêm thông báo về việc lọc tệp -->
+        <div id="filter-info">
+          <p><strong>Lưu ý:</strong> Các tệp (jpg, png, svg, pdf, exe, v.v.) sẽ tự động được bỏ qua.</p>
+        </div>
+        <div id="removed-file-list-container">
+          <h2>Các tệp đã bị loại bỏ:</h2>
+          <div id="list-wrapper-removed">
+            <ul id="removed-file-list">
+              <li id="placeholder-text-removed">Chưa có tệp nào bị loại bỏ.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div id="actions">
+        <button id="merge-button" disabled>Gộp và Tải xuống</button>
+        <button id="split-button">Tách và Tải xuống</button>
+        <button id="clear-button">Xóa tất cả</button>
+      </div>
+
+    </main>
+
+    <footer>
+    </footer>
+  </div>
+
+  <script src="lib/jszip.min.js"></script>
+  <script src="src/js/main.js" type="module"></script>
+</body>
+
+</html>

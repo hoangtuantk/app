@@ -1,0 +1,76 @@
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #1f2937;
+  color: #f3f4f6;
+}
+
+textarea {
+  background-color: #4b5563;
+  color: #f3f4f6;
+  border-color: #6b7280;
+  resize: none;
+  overflow: hidden;
+}
+
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.copied {
+  background-color: #10b981;
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.modal-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-content {
+  background-color: #2d3748;
+  color: #f3f4f6;
+  padding: 2rem;
+  border-radius: 0.75rem;
+  width: 90%;
+  max-width: 500px;
+  transform: scale(0.95);
+  transition: transform 0.3s ease-in-out;
+}
+
+.modal-backdrop.show .modal-content {
+  transform: scale(1);
+}
+
+.disabled-icon {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+#presetContentInput {
+  overflow-y: auto;
+}
+
+code {
+  background-color: #4a5568;
+  color: #a0aec0;
+  padding: 0.2em 0.4em;
+  margin: 0;
+  font-size: 85%;
+  border-radius: 3px;
+}

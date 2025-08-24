@@ -1,0 +1,19 @@
+// 1. Variables and foundational settings
+@import 'variables';
+@import 'base';
+
+// 2. Reusable components
+@import 'buttons';
+@import 'forms';
+@import 'toggles';
+
+// 3. Layout specific styles
+@import 'layout';
+
+// 4. Complex components
+@import 'filter-rules';
+@import 'modal';
+
+// 5. Utilities and animations
+@import 'animations';
+@import 'utilities';

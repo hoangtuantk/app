@@ -1,0 +1,54 @@
+#progressBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background-color: rgba(96, 165, 250, 0.75);
+  z-index: 0;
+  opacity: 0;
+}
+
+#convertBtnText {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.subtle-glowing-clock {
+  font-family: $font-monospace;
+  font-size: 1rem;
+  color: $light-cyan;
+  animation: subtle-glow 4s ease-in-out infinite;
+}
+
+#copyNotification {
+  font-size: 1.1rem;
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  background-color: $gray-900;
+  color: $light-cyan;
+  box-shadow: $shadow-notification;
+  text-align: center;
+  top: 1.25rem;
+  bottom: auto;
+}
+
+.range-replace-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: $gray-500;
+  color: $gray-50;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  cursor: default;
+  user-select: none;
+}
+
+#fileNamePreview {
+  font-size: 17px;
+}

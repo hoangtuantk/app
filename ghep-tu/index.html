@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0X2Q2KKSFE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-K9CK2BHBDQ'); //Root domain
+    gtag('config', 'G-0X2Q2KKSFE'); //Subdomain
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ứng Dụng Ghép Từ</title>
+  <link rel="icon" type="image/png" href="/404/logo.png" />
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="p-4 md:p-8 flex items-center justify-center min-h-screen">
+
+  <div class="bg-gray-800 p-6 md:p-10 rounded-xl shadow-2xl w-full max-w-2xl border border-gray-700 relative">
+    <h1 class="text-3xl font-bold text-center text-white mb-6">Ứng Dụng Ghép Từ</h1>
+
+    <p class="text-center text-gray-400 mb-8">
+      Nhập từ gốc và danh sách từ thêm. Dùng <code>@</code> trong "Từ Gốc" để chỉ định vị trí chèn từ.
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label for="baseInput" class="block text-sm font-medium text-gray-300 mb-2">
+          Từ Gốc
+        </label>
+        <textarea id="baseInput" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors"
+          placeholder="辰幽境@=Thần U Cảnh @"></textarea>
+      </div>
+
+      <div>
+        <label for="suffixInput" class="block text-sm font-medium text-gray-300 mb-2">
+          Danh Sách Từ Thêm
+        </label>
+        <textarea id="suffixInput"
+          class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors"
+          placeholder="一重=nhất trọng&#10;二重=nhị trọng"></textarea>
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-4 justify-center mt-6 items-center">
+      <button id="generateBtn"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105">
+        Tạo Kết Quả
+      </button>
+      <button id="clearInputBtn"
+        class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105"
+        title="Xóa toàn bộ nội dung từ phần nhập">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          class="lucide lucide-trash-2">
+          <path d="M3 6h18" />
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+          <line x1="10" x2="10" y1="11" y2="17" />
+          <line x1="14" x2="14" y1="11" y2="17" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="mt-8">
+      <div class="flex justify-between items-center mb-2">
+        <label for="outputArea" class="block text-sm font-medium text-gray-300">
+          Kết Quả
+        </label>
+        <div class="flex items-center space-x-2">
+          <button id="copyBtn"
+            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 text-sm">
+            Sao chép
+          </button>
+          <button id="dollarBtn"
+            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 text-sm">
+            $
+          </button>
+        </div>
+      </div>
+      <textarea id="outputArea" rows="10"
+        class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 transition-colors" readonly></textarea>
+    </div>
+
+    <div class="mt-8 p-4 bg-gray-700 rounded-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-semibold text-white">Bộ Cài Sẵn</h2>
+        <div class="flex items-center space-x-2">
+          <button id="addPresetBtn"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 text-sm">
+            Thêm bộ mới
+          </button>
+
+          <button id="importPresetsBtn"
+            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 text-sm"
+            title="Nhập bộ cài sẵn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-download">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" x2="12" y1="15" y2="3" />
+            </svg>
+          </button>
+          <button id="exportPresetsBtn"
+            class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 text-sm"
+            title="Xuất bộ cài sẵn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-upload">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" x2="12" y1="3" y2="15" />
+            </svg>
+          </button>
+
+          <input type="file" id="importFile" class="hidden" accept="application/json">
+
+          <button id="resetPresetsBtn" class="text-gray-400 hover:text-gray-200 transition-colors"
+            title="Đặt lại bộ cài sẵn về mặc định">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-refresh-ccw">
+              <path d="M21 12a9 9 0 0 0-9-9c-2.42 0-4.65.94-6.36 2.64L3 8" />
+              <path d="M3 12a9 9 0 0 0 9 9c2.42 0 4.65-.94 6.36-2.64L21 16" />
+              <path d="M17 16l4 4-4 4" />
+              <path d="M7 8l-4-4 4-4" />
+            </svg>
+          </button>
+          <button id="deleteAllPresetsBtn" class="text-red-400 hover:text-red-500 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+              class="lucide lucide-trash-2">
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+              <line x1="10" x2="10" y1="11" y2="17" />
+              <line x1="14" x2="14" y1="11" y2="17" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <ul id="presetList" class="space-y-3">
+      </ul>
+    </div>
+  </div>
+
+  <div id="presetModal" class="modal-backdrop">
+    <div class="modal-content">
+      <h3 id="modalTitle" class="text-2xl font-bold mb-4">Thêm bộ cài sẵn mới</h3>
+      <div class="mb-4">
+        <label for="presetNameInput" class="block text-sm font-medium text-gray-300 mb-2">Tên</label>
+        <input type="text" id="presetNameInput"
+          class="w-full p-2 rounded-lg bg-gray-600 border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white">
+      </div>
+      <div class="mb-6">
+        <label for="presetContentInput" class="block text-sm font-medium text-gray-300 mb-2">Nội dung</label>
+        <textarea id="presetContentInput" rows="8"
+          class="w-full p-2 rounded-lg bg-gray-600 border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"></textarea>
+      </div>
+      <div class="flex justify-end space-x-4">
+        <button id="cancelModalBtn"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Hủy</button>
+        <button id="saveModalBtn"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmModal" class="modal-backdrop">
+    <div class="modal-content">
+      <h3 class="text-2xl font-bold mb-4">Xác nhận</h3>
+      <p id="confirmMessage" class="mb-6 text-gray-300">Bạn có chắc chắn muốn xóa bộ cài sẵn này không?</p>
+      <div class="flex justify-end space-x-4">
+        <button id="cancelConfirmBtn"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">Hủy</button>
+        <button id="actionConfirmBtn"
+          class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Xóa</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

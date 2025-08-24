@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-0X2Q2KKSFE"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-K9CK2BHBDQ'); //Root domain
+    gtag('config', 'G-0X2Q2KKSFE'); //Subdomain
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Công Cụ Tìm và Lọc Trùng Lặp</title>
+  <link rel="icon" type="image/png" href="/404/logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dark">
+  <div class="container">
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100">Công Cụ Tìm và Lọc Trùng Lặp</h1>
+    </div>
+
+    <div
+      class="options-section bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg shadow-inner border border-gray-200 dark:border-gray-600">
+      <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Tùy chọn so sánh</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <div class="flex items-center">
+          <label for="caseSensitiveToggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="caseSensitiveToggle" class="sr-only peer">
+            <div
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-blue-600">
+            </div>
+            <span class="ml-3 font-medium text-gray-900 dark:text-gray-300">Phân biệt Hoa/thường</span>
+          </label>
+          <button id="infoToggleBtn-case" class="info-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex items-center">
+          <label for="ignoreWhitespaceToggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="ignoreWhitespaceToggle" class="sr-only peer">
+            <div
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-blue-600">
+            </div>
+            <span class="ml-3 font-medium text-gray-900 dark:text-gray-300">Bỏ qua khoảng trắng</span>
+          </label>
+          <button id="infoToggleBtn-whitespace" class="info-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex items-center">
+          <label for="ignoreSpecialCharsToggle" class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="ignoreSpecialCharsToggle" class="sr-only peer">
+            <div
+              class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-blue-600">
+            </div>
+            <span class="ml-3 font-medium text-gray-900 dark:text-gray-300">Bỏ qua ký tự đặc biệt</span>
+          </label>
+          <button id="infoToggleBtn-specialchars" class="info-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4" />
+              <path d="M12 8h.01" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-section">
+      <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">Nhập dữ liệu (<span
+          id="inputLineCount">0</span> dòng):</h3>
+      <div class="relative">
+        <textarea id="textInput"
+          class="data-font w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 dark:border-gray-600"
+          placeholder="Ví dụ:
+太阴幽荧=Thái Âm U Huỳnh
+太阳烛照=Thái Dương Chúc Chiếu"></textarea>
+      </div>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3">
+      <button id="findDuplicatesBtn"
+        class="flex-grow bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 dark:bg-blue-500 dark:hover:bg-blue-600">
+        Tìm & Lọc Trùng Lặp
+      </button>
+      <button id="dollarToggleButton"
+        class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-bold py-3 px-5 rounded-lg shadow-md transition"
+        title="Thêm/Xóa '$' ở đầu mỗi dòng">
+        $
+      </button>
+      <button id="clearInputBtn"
+        class="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-5 rounded-lg shadow-md transition"
+        title="Xóa nội dung nhập liệu và kết quả">
+        <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+          </path>
+        </svg>
+      </button>
+    </div>
+
+
+    <div id="results" class="results-container mt-4">
+    </div>
+
+    <div id="copyMessage" class="copy-message">
+      Đã sao chép!
+    </div>
+  </div>
+
+  <div id="casingConflictModalOverlay"
+    class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+      <h2 id="casingConflictModalTitle" class="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">Chọn phiên bản
+        cho dòng trùng lặp</h2>
+      <ul id="conflictLinesList" class="mb-4 space-y-2 text-gray-800 dark:text-gray-200 max-h-60 overflow-y-auto">
+      </ul>
+      <div class="flex flex-col space-y-2">
+        <button id="autoSelectConflictBtn"
+          class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300">
+          Tự động chọn (ưu tiên dòng nhiều chữ Hoa)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="infoModalOverlay"
+    class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+      <h2 id="infoModalTitle" class="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100"></h2>
+      <div id="infoModalBody" class="text-gray-800 dark:text-gray-200"></div>
+      <div class="mt-6 flex justify-end">
+        <button id="closeInfoModalBtn"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="groupingModalOverlay"
+    class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-lg w-full mx-4">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Các nhóm có tiếng Trung trùng lặp</h2>
+        <button id="copyGroupingBtn"
+          class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002 2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10">
+            </path>
+          </svg>
+          Sao chép
+        </button>
+      </div>
+      <div id="groupingModalBody" class="text-gray-800 dark:text-gray-200 max-h-96 overflow-y-auto"></div>
+      <div class="mt-6 flex justify-end">
+        <button id="closeGroupingModalBtn"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300">Đóng</button>
+      </div>
+    </div>
+  </div>
+  <script src="script.js" defer></script>
+</body>
+
+</html>

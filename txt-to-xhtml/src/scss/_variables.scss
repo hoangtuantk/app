@@ -1,0 +1,44 @@
+// Fonts
+$font-primary: 'Inter', sans-serif;
+$font-monospace: 'Courier New', Courier, monospace;
+
+// Primary Colors
+$primary-blue: #2563eb;
+$primary-blue-dark: #1d4ed8;
+$primary-blue-light: #60a5fa;
+$primary-green: #10b981;
+$primary-green-dark: #059669;
+$primary-red: #ef4444;
+$primary-red-dark: #dc2626;
+$primary-yellow: #f59e0b;
+$primary-yellow-dark: #d97706;
+$primary-indigo: #6366f1;
+$primary-indigo-dark: #4f46e5;
+
+// Grayscale Colors
+$gray-900: #1a202c;
+$gray-800: #1f2937;
+$gray-700: #2d3748;
+$gray-600: #374151;
+$gray-500: #4b5563;
+$gray-400: #4a5568;
+$gray-300: #6b7280;
+$gray-200: #94a3b8;
+$gray-100: #cbd5e0;
+$gray-50: #e5e7eb;
+$white: #ffffff;
+$light-cyan: #e0f2fe;
+
+// Misc Colors
+$switch-off-bg: #ccc;
+$legacy-blue: #2196F3;
+$settings-blue: #3b82f6;
+
+// Transitions
+$transition-fast: all 0.2s ease-in-out;
+$transition-medium: .4s;
+
+// Box Shadows
+$shadow-btn-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+$shadow-focus: 0 0 0 3px rgba(96, 165, 250, 0.5);
+$shadow-notification: 0 8px 16px rgba(0, 0, 0, 0.3);
