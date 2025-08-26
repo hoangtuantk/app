@@ -171,15 +171,12 @@ export const applySortingAndRender = () => {
 
 export const createSortComparator = (listType) => (a, b) => {
   const mode = state.sortModes[listType];
-  // Ưu tiên 1: Sắp xếp theo số lượng chữ Hán (nếu được kích hoạt)
-  if (mode.charCountSortDirection) {
-    const countDiff = (a.chineseCharCount - b.chineseCharCount) * mode.charCountSortDirection;
+  if (mode.chineseCharCountEnabled) {
+    const countDiff = a.chineseCharCount - b.chineseCharCount;
     if (countDiff !== 0) return countDiff;
-    // Ưu tiên phụ: đưa dòng có ký tự đặc biệt xuống dưới
     if (a.hasSpecialChars !== b.hasSpecialChars) return a.hasSpecialChars ? 1 : -1;
   }
 
-  // Ưu tiên 2: Sắp xếp theo tiếng Trung/Việt (A-Z, Z-A)
   if (mode.sortType) {
     const sensitivity = state.comparisonOptions.caseSensitive ? 'variant' : 'base';
     const valA = mode.sortType === 'chinese' ? a.chinesePart : a.vietnamesePart;
@@ -235,7 +232,7 @@ const setupEventListeners = () => {
 
   // START: Thêm Event Listeners cho Modal Nhập File
   let selectedFile = null;
-  let importCharCountDirection = -1; // Mặc định -1 (nhiều nhất trước)
+  let importCharCountEnabled = true; // Mặc định bật
   let importSortType = { type: null, direction: 1 }; // Mặc định không sắp xếp
 
   const fileWorker = new Worker(new URL('./m_file_worker.js', import.meta.url), { type: 'module' });
@@ -338,49 +335,27 @@ const setupEventListeners = () => {
     }
   });
 
+  // Sort options
+  // Thêm DOM element cho công tắc mới
+  dom.importFileModal.groupToggle = document.getElementById('importGroupToggle');
 
-  // Lấy ra hai nhóm nút sắp xếp
-  const charSortButtons = document.querySelectorAll('#importCharSortOptions .sort-option-btn');
-  const azSortButtons = dom.importFileModal.sortOptionsContainer.querySelectorAll('.sort-option-btn');
-
-  // Listener cho các nút NHÓM THEO CHỮ HÁN
-  charSortButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const isActive = button.classList.contains('active');
-
-      // TẮT tất cả các nút sắp xếp A-Z
-      azSortButtons.forEach(btn => btn.classList.remove('active'));
-      importSortType = { type: null, direction: 1 }; // Reset trạng thái sắp xếp A-Z
-
-      // Xử lý bật/tắt cho nút hiện tại
-      if (isActive) {
-        button.classList.remove('active');
-        importCharCountDirection = null; // Tắt chức năng nhóm
-      } else {
-        charSortButtons.forEach(btn => btn.classList.remove('active'));
-        button.classList.add('active');
-        const sortValue = button.dataset.sort;
-        const [, dir] = sortValue.split('-');
-        importCharCountDirection = dir === 'asc' ? 1 : -1;
-      }
-    });
+  // Listener cho công tắc
+  dom.importFileModal.groupToggle.addEventListener('change', (e) => {
+    importCharCountEnabled = e.target.checked;
   });
 
-  // Listener cho các nút SẮP XẾP A-Z
-  azSortButtons.forEach(button => {
+  // Listener cho các nút sắp xếp
+  const sortButtons = dom.importFileModal.sortOptionsContainer.querySelectorAll('.sort-option-btn');
+  sortButtons.forEach(button => {
     button.addEventListener('click', () => {
       const isActive = button.classList.contains('active');
+      sortButtons.forEach(btn => btn.classList.remove('active'));
 
-      // TẮT tất cả các nút nhóm theo chữ Hán
-      charSortButtons.forEach(btn => btn.classList.remove('active'));
-      importCharCountDirection = null; // Reset trạng thái nhóm
-
-      // Xử lý bật/tắt cho nút hiện tại
       if (isActive) {
-        button.classList.remove('active');
-        importSortType = { type: null, direction: 1 }; // Tắt chức năng sắp xếp A-Z
+        // Nếu click lại nút đang active, hủy sắp xếp
+        importSortType = { type: null, direction: 1 };
       } else {
-        azSortButtons.forEach(btn => btn.classList.remove('active'));
+        // Nếu click nút mới
         button.classList.add('active');
         const sortValue = button.dataset.sort;
         const [type, dir] = sortValue.split('-');
@@ -388,7 +363,6 @@ const setupEventListeners = () => {
       }
     });
   });
-
 
   // Process file
   dom.importFileModal.processBtn.addEventListener('click', () => {
@@ -418,7 +392,7 @@ const setupEventListeners = () => {
         fileContent,
         comparisonOptions: currentComparisonOptions,
         sortOptions: {
-          charCountSortDirection: importCharCountDirection,
+          charCountEnabled: importCharCountEnabled,
           sortType: importSortType
         }
       });

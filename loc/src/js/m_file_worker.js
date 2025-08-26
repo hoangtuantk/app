@@ -42,10 +42,11 @@ const getLineWithMostUppercase = (group) => {
   });
 };
 
+// THAY THẾ HÀM CŨ BẰNG HÀM NÀY
 const createSortComparator = (sortOptions, caseSensitive) => (a, b) => {
-  // Ưu tiên 1: Sắp xếp theo số lượng chữ Hán (nếu có chọn)
-  if (sortOptions.charCountSortDirection) {
-    const countDiff = (a.chineseCharCount - b.chineseCharCount) * sortOptions.charCountSortDirection;
+  // Ưu tiên 1: Sắp xếp theo số lượng chữ Hán (nếu bật)
+  if (sortOptions.charCountEnabled) {
+    const countDiff = a.chineseCharCount - b.chineseCharCount;
     if (countDiff !== 0) return countDiff;
     // Ưu tiên phụ: đưa dòng có ký tự đặc biệt xuống dưới
     if (a.hasSpecialChars !== b.hasSpecialChars) return a.hasSpecialChars ? 1 : -1;

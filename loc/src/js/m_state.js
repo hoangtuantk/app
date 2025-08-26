@@ -4,8 +4,8 @@ export const state = {
   displayedUniqueLines: [],
   displayedDuplicateLines: [],
   sortModes: {
-    unique: { sortType: null, sortDirection: 1, charCountSortDirection: -1 }, // Mặc định sắp xếp nhiều chữ Hán nhất lên đầu
-    duplicate: { sortType: null, sortDirection: 1, charCountSortDirection: -1 }, // Mặc định sắp xếp nhiều chữ Hán nhất lên đầu
+    unique: { sortType: null, sortDirection: 1, chineseCharCountEnabled: true },
+    duplicate: { sortType: null, sortDirection: 1, chineseCharCountEnabled: true },
   },
   comparisonOptions: {
     caseSensitive: false,
