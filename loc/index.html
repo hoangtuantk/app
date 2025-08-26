@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="src/scss/style.css">
 </head>
 
 <body class="dark">
@@ -107,6 +107,13 @@
         class="flex-grow bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 dark:bg-blue-500 dark:hover:bg-blue-600">
         Tìm & Lọc Trùng Lặp
       </button>
+
+      <!-- START: Thêm nút Nhập File -->
+      <button id="importFileBtn"
+        class="flex-grow bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1 dark:bg-green-500 dark:hover:bg-green-600">
+        Nhập File & Xử Lý
+      </button>
+      <!-- END: Thêm nút Nhập File -->
       <button id="dollarToggleButton"
         class="w-full sm:w-auto bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-bold py-3 px-5 rounded-lg shadow-md transition"
         title="Thêm/Xóa '$' ở đầu mỗi dòng">
@@ -183,7 +190,71 @@
       </div>
     </div>
   </div>
-  <script src="script.js" defer></script>
+
+  <div id="importFileModalOverlay"
+    class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-2xl w-full mx-4">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Nhập và Xử lý File</h2>
+        <button id="closeImportModalBtn"
+          class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200">&times;</button>
+      </div>
+
+      <div id="dropZone"
+        class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors">
+        <p class="text-gray-500 dark:text-gray-400">Kéo và thả file vào đây, hoặc <label for="fileInput"
+            class="text-blue-600 dark:text-blue-400 font-semibold underline cursor-pointer">chọn file</label> để tải
+          lên.</p>
+        <input type="file" id="fileInput" class="hidden" accept=".txt,.csv">
+      </div>
+      <div id="fileInfo" class="mt-4 text-center text-gray-700 dark:text-gray-300"></div>
+
+      <div class="mt-6">
+        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3">Tùy chọn sắp xếp kết quả</h3>
+        <div class="space-y-4">
+          <div class="flex items-center p-3 border border-gray-300 dark:border-gray-600 rounded-lg">
+            <label for="importGroupToggle" class="relative inline-flex items-center cursor-pointer flex-grow">
+              <input type="checkbox" id="importGroupToggle" class="sr-only peer" checked>
+              <div
+                class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600">
+              </div>
+              <span class="ml-3 font-medium text-gray-900 dark:text-gray-300">Nhóm theo số lượng chữ Hán</span>
+            </label>
+          </div>
+          <div id="importSortOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button data-sort="chinese-asc" class="sort-option-btn">Xếp theo tiếng Trung (A-Z)</button>
+            <button data-sort="chinese-desc" class="sort-option-btn">Xếp theo tiếng Trung (Z-A)</button>
+            <button data-sort="vietnamese-asc" class="sort-option-btn">Xếp theo tiếng Việt (A-Z)</button>
+            <button data-sort="vietnamese-desc" class="sort-option-btn">Xếp theo tiếng Việt (Z-A)</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="progressContainer" class="mt-6 hidden">
+        <div class="flex justify-between mb-1">
+          <span id="progressLabel" class="text-base font-medium text-gray-700 dark:text-gray-300">Đang xử lý...</span>
+          <span id="progressPercentage" class="text-sm font-medium text-gray-700 dark:text-gray-300">0%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
+          <div id="progressBar" class="bg-blue-600 h-4 rounded-full transition-all duration-300 ease-linear"
+            style="width: 0%"></div>
+        </div>
+      </div>
+
+
+      <div class="mt-6 flex justify-end items-center gap-4">
+        <div id="processingSpinner"
+          class="hidden w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <button id="processFileBtn"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled>
+          Xử lý & Tải về
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/js/main.js" defer></script>
 </body>
 
 </html>

@@ -1,0 +1,40 @@
+body {
+  font-family: $font-family-main;
+  background-color: $light-bg;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px;
+  transition: background-color $transition-speed ease;
+  font-size: $font-size-base;
+}
+
+.container {
+  background-color: $light-container-bg;
+  padding: 30px;
+  border-radius: $border-radius-main;
+  box-shadow: $shadow-main;
+  max-width: 1200px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: background-color $transition-speed ease, box-shadow $transition-speed ease;
+}
+
+textarea {
+  min-height: 250px;
+  resize: vertical;
+  transition: background-color $transition-speed ease, color $transition-speed ease, border-color $transition-speed ease;
+}
+
+.data-font {
+  font-size: $font-size-data;
+  line-height: 1.75rem;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

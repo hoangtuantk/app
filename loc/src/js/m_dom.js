@@ -1,0 +1,51 @@
+export const dom = {
+  textInput: document.getElementById('textInput'),
+  findDuplicatesBtn: document.getElementById('findDuplicatesBtn'),
+  importFileBtn: document.getElementById('importFileBtn'),
+  importFileModal: {
+    overlay: document.getElementById('importFileModalOverlay'),
+    closeBtn: document.getElementById('closeImportModalBtn'),
+    dropZone: document.getElementById('dropZone'),
+    fileInput: document.getElementById('fileInput'),
+    fileInfo: document.getElementById('fileInfo'),
+    processBtn: document.getElementById('processFileBtn'),
+    sortOptionsContainer: document.getElementById('importSortOptions'),
+    spinner: document.getElementById('processingSpinner'),
+    progressContainer: document.getElementById('progressContainer'),
+    progressLabel: document.getElementById('progressLabel'),
+    progressPercentage: document.getElementById('progressPercentage'),
+    progressBar: document.getElementById('progressBar'),
+  },
+
+  dollarToggleButton: document.getElementById('dollarToggleButton'),
+  clearInputBtn: document.getElementById('clearInputBtn'),
+  resultsDiv: document.getElementById('results'),
+  copyMessage: document.getElementById('copyMessage'),
+  inputLineCountSpan: document.getElementById('inputLineCount'),
+  caseSensitiveToggle: document.getElementById('caseSensitiveToggle'),
+  ignoreWhitespaceToggle: document.getElementById('ignoreWhitespaceToggle'),
+  ignoreSpecialCharsToggle: document.getElementById('ignoreSpecialCharsToggle'),
+  casingConflictModal: {
+    overlay: document.getElementById('casingConflictModalOverlay'),
+    title: document.getElementById('casingConflictModalTitle'),
+    list: document.getElementById('conflictLinesList'),
+    autoSelectBtn: document.getElementById('autoSelectConflictBtn'),
+  },
+  infoModal: {
+    overlay: document.getElementById('infoModalOverlay'),
+    title: document.getElementById('infoModalTitle'),
+    body: document.getElementById('infoModalBody'),
+    closeBtn: document.getElementById('closeInfoModalBtn'),
+  },
+  groupingModal: {
+    overlay: document.getElementById('groupingModalOverlay'),
+    body: document.getElementById('groupingModalBody'),
+    closeBtn: document.getElementById('closeGroupingModalBtn'),
+    copyBtn: document.getElementById('copyGroupingBtn'),
+  },
+  infoToggleButtons: {
+    case: document.getElementById('infoToggleBtn-case'),
+    whitespace: document.getElementById('infoToggleBtn-whitespace'),
+    specialchars: document.getElementById('infoToggleBtn-specialchars'),
+  }
+};

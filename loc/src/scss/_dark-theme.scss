@@ -1,0 +1,98 @@
+html.dark {
+  body {
+    background-color: $dark-bg;
+  }
+
+  .container {
+    background-color: $dark-container-bg;
+    box-shadow: $shadow-dark;
+  }
+
+  h1,
+  label,
+  span {
+    color: $dark-text;
+  }
+
+  textarea {
+    background-color: $dark-textarea-bg;
+    color: $dark-text;
+    border-color: $dark-border;
+
+    &::placeholder {
+      color: #a0aec0;
+    }
+  }
+
+  .result-section {
+    background-color: $dark-container-bg;
+    border-color: $dark-border;
+
+    h3 {
+      color: $dark-text;
+    }
+
+    li {
+      border-bottom-color: $dark-border;
+    }
+
+    .duplicate-item {
+      color: $dark-duplicate-text;
+    }
+
+    .unique-item {
+      color: $dark-unique-text;
+    }
+  }
+
+  .copy-text-and-icon {
+    color: #6ee7b7;
+
+    &:hover {
+      color: #34d399;
+    }
+  }
+
+  .sort-menu-icon {
+    color: #a78bfa;
+
+    &:hover {
+      color: #c4b5fd;
+    }
+  }
+
+  .sort-dropdown {
+    background-color: #1f2937;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+    button {
+      color: $dark-text;
+
+      &:hover {
+        background-color: #374151;
+      }
+    }
+
+    hr {
+      border-color: $dark-border;
+    }
+  }
+
+  // START: Thêm style Dark Mode cho Modal Nhập File
+  .sort-option-btn {
+    border-color: $dark-border;
+    color: $dark-text;
+
+    &:hover {
+      background-color: #374151;
+    }
+
+    &.active {
+      background-color: rgba(30, 64, 175, 0.5);
+      border-color: #60a5fa; // Một màu xanh sáng hơn cho dễ nhìn trên nền tối
+      box-shadow: 0 0 0 2px #60a5fa;
+    }
+  }
+
+  // END: Thêm style Dark Mode cho Modal Nhập File
+}

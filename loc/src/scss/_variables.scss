@@ -1,0 +1,29 @@
+// Fonts
+$font-family-main: 'Inter', sans-serif;
+$font-size-base: 1rem;
+$font-size-data: 1.25rem;
+
+// Light Theme Colors
+$light-bg: #f0f2f5;
+$light-container-bg: #ffffff;
+$light-text: #374151;
+$light-border: #e5e7eb;
+$light-result-bg: #f9fafb;
+$light-unique-text: #16a34a;
+$light-duplicate-text: #dc2626;
+
+// Dark Theme Colors
+$dark-bg: #1a202c;
+$dark-container-bg: #2d3748;
+$dark-text: #e2e8f0;
+$dark-border: #4a5568;
+$dark-textarea-bg: #4a5568;
+$dark-unique-text: #86efac;
+$dark-duplicate-text: #fca5a5;
+
+// Other
+$border-radius-main: 12px;
+$border-radius-small: 8px;
+$shadow-main: 0 10px 25px rgba(0, 0, 0, 0.1);
+$shadow-dark: 0 10px 25px rgba(0, 0, 0, 0.4);
+$transition-speed: 0.3s;
