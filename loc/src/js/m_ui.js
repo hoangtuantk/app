@@ -79,24 +79,23 @@ const showSortDropdown = (event) => {
   const parentSpan = event.currentTarget.closest('span');
   const dropdown = document.createElement('div');
   dropdown.className = 'sort-dropdown';
-
-  const options = [
+  const azOptions = [
     { text: 'Xếp theo tiếng Trung (A-Z)', action: 'chinese-asc' },
     { text: 'Xếp theo tiếng Trung (Z-A)', action: 'chinese-desc' },
     { text: 'Xếp theo tiếng Việt (A-Z)', action: 'vietnamese-asc' },
     { text: 'Xếp theo tiếng Việt (Z-A)', action: 'vietnamese-desc' }
   ];
 
+  // Thêm class 'active' để làm nổi bật tùy chọn đang được chọn
+  const currentMode = state.sortModes[listType];
+  const isCharDescActive = currentMode.charCountSortDirection === -1 ? 'active' : '';
+  const isCharAscActive = currentMode.charCountSortDirection === 1 ? 'active' : '';
+
   dropdown.innerHTML = `
-      <div class="px-4 py-2 flex items-center justify-between">
-          <span>Nhóm theo số lượng chữ Hán</span>
-          <label class="relative inline-flex items-center cursor-pointer ml-4">
-              <input type="checkbox" id="chineseCountToggle-${listType}" class="sr-only peer" ${state.sortModes[listType].chineseCharCountEnabled ? 'checked' : ''}>
-              <div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-          </label>
-      </div>
+      <button data-action="char-desc" class="sort-option-btn ${isCharDescActive}"><span>Nhóm theo chữ Hán (nhiều nhất)</span></button>
+      <button data-action="char-asc" class="sort-option-btn ${isCharAscActive}"><span>Nhóm theo chữ Hán (ít nhất)</span></button>
       <hr class="border-gray-200 dark:border-gray-600 my-1">
-      ${options.map(o => `<button data-action="${o.action}"><span>${o.text}</span></button>`).join('')}
+      ${azOptions.map(o => `<button data-action="${o.action}"><span>${o.text}</span></button>`).join('')}
       <hr class="border-gray-200 dark:border-gray-600 my-1">
       <div class="px-4 py-2 flex justify-end">
           <button id="resetSort-${listType}" class="text-sm">Hoàn nguyên</button>
@@ -105,21 +104,31 @@ const showSortDropdown = (event) => {
 
   parentSpan.appendChild(dropdown);
 
-  dropdown.querySelector(`#chineseCountToggle-${listType}`).onchange = (e) => {
-    state.sortModes[listType].chineseCharCountEnabled = e.target.checked;
-    applySortingAndRender();
-  };
   dropdown.querySelectorAll('button[data-action]').forEach(btn => {
     btn.onclick = () => {
       const [type, dir] = btn.dataset.action.split('-');
-      state.sortModes[listType].sortType = type;
-      state.sortModes[listType].sortDirection = dir === 'asc' ? 1 : -1;
+      if (type === 'char') {
+        const newDirection = dir === 'asc' ? 1 : -1;
+        // NẾU BẤM VÀO NÚT ĐANG ACTIVE -> TẮT NÓ ĐI (gán là null)
+        if (state.sortModes[listType].charCountSortDirection === newDirection) {
+          state.sortModes[listType].charCountSortDirection = null;
+        } else { // Ngược lại thì BẬT nó lên
+          state.sortModes[listType].charCountSortDirection = newDirection;
+        }
+      } else {
+        state.sortModes[listType].sortType = type;
+        state.sortModes[listType].sortDirection = dir === 'asc' ? 1 : -1;
+      }
       applySortingAndRender();
+      closeAllDropdowns(); // Đóng menu sau khi chọn
     };
   });
+
   dropdown.querySelector(`#resetSort-${listType}`).onclick = () => {
     state.sortModes[listType].sortType = null;
+    state.sortModes[listType].charCountSortDirection = -1; // Quay về mặc định
     applySortingAndRender();
+    closeAllDropdowns(); // Đóng menu sau khi chọn
   };
 
   setTimeout(() => dropdown.classList.add('show'), 10);

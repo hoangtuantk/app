@@ -171,12 +171,15 @@ export const applySortingAndRender = () => {
 
 export const createSortComparator = (listType) => (a, b) => {
   const mode = state.sortModes[listType];
-  if (mode.chineseCharCountEnabled) {
-    const countDiff = a.chineseCharCount - b.chineseCharCount;
+  // Ưu tiên 1: Sắp xếp theo số lượng chữ Hán (nếu được kích hoạt)
+  if (mode.charCountSortDirection) {
+    const countDiff = (a.chineseCharCount - b.chineseCharCount) * mode.charCountSortDirection;
     if (countDiff !== 0) return countDiff;
+    // Ưu tiên phụ: đưa dòng có ký tự đặc biệt xuống dưới
     if (a.hasSpecialChars !== b.hasSpecialChars) return a.hasSpecialChars ? 1 : -1;
   }
 
+  // Ưu tiên 2: Sắp xếp theo tiếng Trung/Việt (A-Z, Z-A)
   if (mode.sortType) {
     const sensitivity = state.comparisonOptions.caseSensitive ? 'variant' : 'base';
     const valA = mode.sortType === 'chinese' ? a.chinesePart : a.vietnamesePart;
@@ -232,7 +235,7 @@ const setupEventListeners = () => {
 
   // START: Thêm Event Listeners cho Modal Nhập File
   let selectedFile = null;
-  let importCharCountEnabled = true; // Mặc định bật
+  let importCharCountDirection = -1; // Mặc định -1 (nhiều nhất trước)
   let importSortType = { type: null, direction: 1 }; // Mặc định không sắp xếp
 
   const fileWorker = new Worker(new URL('./m_file_worker.js', import.meta.url), { type: 'module' });
@@ -336,12 +339,25 @@ const setupEventListeners = () => {
   });
 
   // Sort options
-  // Thêm DOM element cho công tắc mới
-  dom.importFileModal.groupToggle = document.getElementById('importGroupToggle');
+  // Listener cho các nút sắp xếp theo số lượng chữ Hán
+  const charSortButtons = document.querySelectorAll('#importCharSortOptions .sort-option-btn');
+  charSortButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const isActive = button.classList.contains('active');
 
-  // Listener cho công tắc
-  dom.importFileModal.groupToggle.addEventListener('change', (e) => {
-    importCharCountEnabled = e.target.checked;
+      // NẾU NÚT ĐANG ACTIVE MÀ ĐƯỢC BẤM -> TẮT NÓ ĐI
+      if (isActive) {
+        button.classList.remove('active');
+        importCharCountDirection = null; // Gán là null để TẮT
+      } else {
+        // Ngược lại, tắt hết các nút khác và BẬT nút này lên
+        charSortButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+        const sortValue = button.dataset.sort;
+        const [, dir] = sortValue.split('-');
+        importCharCountDirection = dir === 'asc' ? 1 : -1;
+      }
+    });
   });
 
   // Listener cho các nút sắp xếp
@@ -392,7 +408,7 @@ const setupEventListeners = () => {
         fileContent,
         comparisonOptions: currentComparisonOptions,
         sortOptions: {
-          charCountEnabled: importCharCountEnabled,
+          charCountSortDirection: importCharCountDirection,
           sortType: importSortType
         }
       });
