@@ -338,19 +338,25 @@ const setupEventListeners = () => {
     }
   });
 
-  // Sort options
-  // Listener cho các nút sắp xếp theo số lượng chữ Hán
+
+  // Lấy ra hai nhóm nút sắp xếp
   const charSortButtons = document.querySelectorAll('#importCharSortOptions .sort-option-btn');
+  const azSortButtons = dom.importFileModal.sortOptionsContainer.querySelectorAll('.sort-option-btn');
+
+  // Listener cho các nút NHÓM THEO CHỮ HÁN
   charSortButtons.forEach(button => {
     button.addEventListener('click', () => {
       const isActive = button.classList.contains('active');
 
-      // NẾU NÚT ĐANG ACTIVE MÀ ĐƯỢC BẤM -> TẮT NÓ ĐI
+      // TẮT tất cả các nút sắp xếp A-Z
+      azSortButtons.forEach(btn => btn.classList.remove('active'));
+      importSortType = { type: null, direction: 1 }; // Reset trạng thái sắp xếp A-Z
+
+      // Xử lý bật/tắt cho nút hiện tại
       if (isActive) {
         button.classList.remove('active');
-        importCharCountDirection = null; // Gán là null để TẮT
+        importCharCountDirection = null; // Tắt chức năng nhóm
       } else {
-        // Ngược lại, tắt hết các nút khác và BẬT nút này lên
         charSortButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
         const sortValue = button.dataset.sort;
@@ -360,18 +366,21 @@ const setupEventListeners = () => {
     });
   });
 
-  // Listener cho các nút sắp xếp
-  const sortButtons = dom.importFileModal.sortOptionsContainer.querySelectorAll('.sort-option-btn');
-  sortButtons.forEach(button => {
+  // Listener cho các nút SẮP XẾP A-Z
+  azSortButtons.forEach(button => {
     button.addEventListener('click', () => {
       const isActive = button.classList.contains('active');
-      sortButtons.forEach(btn => btn.classList.remove('active'));
 
+      // TẮT tất cả các nút nhóm theo chữ Hán
+      charSortButtons.forEach(btn => btn.classList.remove('active'));
+      importCharCountDirection = null; // Reset trạng thái nhóm
+
+      // Xử lý bật/tắt cho nút hiện tại
       if (isActive) {
-        // Nếu click lại nút đang active, hủy sắp xếp
-        importSortType = { type: null, direction: 1 };
+        button.classList.remove('active');
+        importSortType = { type: null, direction: 1 }; // Tắt chức năng sắp xếp A-Z
       } else {
-        // Nếu click nút mới
+        azSortButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
         const sortValue = button.dataset.sort;
         const [type, dir] = sortValue.split('-');
@@ -379,6 +388,7 @@ const setupEventListeners = () => {
       }
     });
   });
+
 
   // Process file
   dom.importFileModal.processBtn.addEventListener('click', () => {
