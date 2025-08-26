@@ -1,0 +1,35 @@
+@import 'variables';
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: ($spacing-unit * 3);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: ($spacing-unit * 4);
+  font-weight: 400;
+  color: $text-primary;
+}
+
+.processing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ($spacing-unit * 3);
+  min-height: 60vh;
+}
+
+footer {
+  text-align: center;
+  margin-top: ($spacing-unit * 5);
+  padding: ($spacing-unit * 2);
+  color: $text-secondary;
+  font-size: 0.9em;
+}
+
+@media (max-width: 900px) {
+  .processing-grid {
+    grid-template-columns: 1fr;
+  }
+}

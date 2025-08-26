@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hán Việt Processor</title>
+  <link rel="icon" type="image/png" href="/404/logo.png" />
+  <link rel="stylesheet" href="src/scss/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <main class="container">
+    <h1>Công cụ xử lý Hán Việt</h1>
+
+    <div class="processing-grid">
+      <div class="io-box">
+        <div class="box-header">
+          <h2>Đầu vào</h2>
+          <div class="button-group">
+            <button id="btn-paste">Dán</button>
+            <button id="btn-clear">Xóa</button>
+            <button id="btn-open-modal">Nhập file...</button>
+          </div>
+        </div>
+        <textarea id="input-text"
+          placeholder="Nhập dữ liệu của bạn vào đây...&#10;Ví dụ:&#10;光耀=huy hoàng/ánh sáng/vinh dự&#10;很老=rất già"></textarea>
+      </div>
+
+      <div class="io-box">
+        <div class="box-header">
+          <h2>Đầu ra</h2>
+          <div class="button-group">
+            <button id="btn-copy">Sao chép</button>
+          </div>
+        </div>
+        <textarea id="output-text" readonly placeholder="Kết quả sẽ được hiển thị ở đây..."></textarea>
+      </div>
+    </div>
+
+  </main>
+
+  <div id="file-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <button class="modal-close" id="btn-close-modal">&times;</button>
+      <h2>Xử lý file dung lượng lớn</h2>
+      <div id="drop-zone" class="drop-zone">
+        <p>Kéo và thả file của bạn vào đây</p>
+        <p>hoặc</p>
+        <button id="btn-select-file" class="btn-primary">Chọn File</button>
+        <input type="file" id="file-input" style="display: none;">
+      </div>
+      <div id="progress-container" class="progress-container" style="display: none;">
+        <p id="progress-filename"></p>
+        <div class="progress-bar">
+          <div id="progress-bar-fill" class="progress-bar-fill"></div>
+        </div>
+        <p id="progress-percent">0%</p>
+      </div>
+      <p class="modal-note">Lưu ý: File sau khi xử lý sẽ được tự động tải về và không hiển thị kết quả trên trang web để
+        đảm bảo hiệu suất.</p>
+    </div>
+  </div>
+
+  <footer>
+    <p>Copyrights © <span id="current-year"></span> Hoàng Tuân</p>
+  </footer>
+
+  <script type="module" src="src/js/main.js"></script>
+</body>
+
+</html>
