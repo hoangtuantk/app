@@ -134,6 +134,20 @@
     &:hover {
       background-color: #f3f4f6;
     }
+
+    &.char-count-btn {
+      justify-content: center;
+      padding: 6px;
+      border: 1px solid $light-border;
+      border-radius: 6px;
+
+      &.active {
+        background-color: #eff6ff;
+        border-color: #3b82f6;
+        color: #1e40af;
+        font-weight: 600;
+      }
+    }
   }
 
   hr {

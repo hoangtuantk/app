@@ -161,6 +161,18 @@ button:disabled {
 .sort-dropdown button:hover {
   background-color: #f3f4f6;
 }
+.sort-dropdown button.char-count-btn {
+  justify-content: center;
+  padding: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+.sort-dropdown button.char-count-btn.active {
+  background-color: #eff6ff;
+  border-color: #3b82f6;
+  color: #1e40af;
+  font-weight: 600;
+}
 .sort-dropdown hr {
   border-color: #e5e7eb;
   border-style: solid;

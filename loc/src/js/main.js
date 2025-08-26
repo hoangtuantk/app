@@ -171,12 +171,16 @@ export const applySortingAndRender = () => {
 
 export const createSortComparator = (listType) => (a, b) => {
   const mode = state.sortModes[listType];
-  if (mode.chineseCharCountEnabled) {
+
+  // Ưu tiên 1: Sắp xếp theo số lượng chữ Hán nếu được bật (direction khác 0)
+  if (mode.charCountDirection !== 0) {
     const countDiff = a.chineseCharCount - b.chineseCharCount;
-    if (countDiff !== 0) return countDiff;
+    if (countDiff !== 0) return countDiff * mode.charCountDirection; // Nhân với direction để có xuôi/ngược
+    // Ưu tiên phụ: đưa dòng có ký tự đặc biệt xuống dưới
     if (a.hasSpecialChars !== b.hasSpecialChars) return a.hasSpecialChars ? 1 : -1;
   }
 
+  // Ưu tiên 2: Sắp xếp theo A-Z
   if (mode.sortType) {
     const sensitivity = state.comparisonOptions.caseSensitive ? 'variant' : 'base';
     const valA = mode.sortType === 'chinese' ? a.chinesePart : a.vietnamesePart;
@@ -232,8 +236,10 @@ const setupEventListeners = () => {
 
   // START: Thêm Event Listeners cho Modal Nhập File
   let selectedFile = null;
-  let importCharCountEnabled = true; // Mặc định bật
-  let importSortType = { type: null, direction: 1 }; // Mặc định không sắp xếp
+  // Mặc định nhóm xuôi
+  let importCharCountDirection = 1;
+  let importSortType = { type: null, direction: 1 };
+  // Mặc định không sắp xếp
 
   const fileWorker = new Worker(new URL('./m_file_worker.js', import.meta.url), { type: 'module' });
 
@@ -336,12 +342,14 @@ const setupEventListeners = () => {
   });
 
   // Sort options
-  // Thêm DOM element cho công tắc mới
-  dom.importFileModal.groupToggle = document.getElementById('importGroupToggle');
-
-  // Listener cho công tắc
-  dom.importFileModal.groupToggle.addEventListener('change', (e) => {
-    importCharCountEnabled = e.target.checked;
+  // Listener cho các nút nhóm theo số lượng Hán tự trong modal
+  const charCountButtons = dom.importFileModal.charCountContainer.querySelectorAll('.sort-option-btn');
+  charCountButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      charCountButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+      importCharCountDirection = parseInt(button.dataset.direction, 10);
+    });
   });
 
   // Listener cho các nút sắp xếp
@@ -392,7 +400,7 @@ const setupEventListeners = () => {
         fileContent,
         comparisonOptions: currentComparisonOptions,
         sortOptions: {
-          charCountEnabled: importCharCountEnabled,
+          charCountDirection: importCharCountDirection,
           sortType: importSortType
         }
       });

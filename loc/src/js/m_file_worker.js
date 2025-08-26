@@ -42,21 +42,23 @@ const getLineWithMostUppercase = (group) => {
   });
 };
 
-// THAY THẾ HÀM CŨ BẰNG HÀM NÀY
 const createSortComparator = (sortOptions, caseSensitive) => (a, b) => {
-  // Ưu tiên 1: Sắp xếp theo số lượng chữ Hán (nếu bật)
-  if (sortOptions.charCountEnabled) {
+  // Ưu tiên 1: Sắp xếp theo số lượng chữ Hán nếu được bật (direction khác 0)
+  if (sortOptions.charCountDirection !== 0) {
     const countDiff = a.chineseCharCount - b.chineseCharCount;
-    if (countDiff !== 0) return countDiff;
+    if (countDiff !== 0) return countDiff * sortOptions.charCountDirection; // Nhân với direction để có xuôi/ngược
     // Ưu tiên phụ: đưa dòng có ký tự đặc biệt xuống dưới
-    if (a.hasSpecialChars !== b.hasSpecialChars) return a.hasSpecialChars ? 1 : -1;
+    if (a.hasSpecialChars !== b.hasSpecialChars) return a.hasSpecialChars ?
+      1 : -1;
   }
 
   // Ưu tiên 2: Sắp xếp theo A-Z (nếu có chọn)
   if (sortOptions.sortType.type) {
-    const sensitivity = caseSensitive ? 'variant' : 'base';
+    const sensitivity = caseSensitive ?
+      'variant' : 'base';
     const valA = sortOptions.sortType.type === 'chinese' ? a.chinesePart : a.vietnamesePart;
-    const valB = sortOptions.sortType.type === 'chinese' ? b.chinesePart : b.vietnamesePart;
+    const valB = sortOptions.sortType.type === 'chinese' ?
+      b.chinesePart : b.vietnamesePart;
     const locale = sortOptions.sortType.type === 'chinese' ? 'zh' : 'vi';
     return valA.localeCompare(valB, locale, { sensitivity }) * sortOptions.sortType.direction;
   }
@@ -66,7 +68,6 @@ const createSortComparator = (sortOptions, caseSensitive) => (a, b) => {
 
 
 // --- Hàm chính của Worker ---
-// THAY THẾ TOÀN BỘ HÀM self.onmessage BẰNG HÀM MỚI NÀY
 self.onmessage = (event) => {
   const { fileContent, comparisonOptions, sortOptions } = event.data;
   const lines = fileContent.split('\n').filter(line => line.trim() !== '');

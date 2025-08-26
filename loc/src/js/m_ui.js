@@ -79,24 +79,26 @@ const showSortDropdown = (event) => {
   const parentSpan = event.currentTarget.closest('span');
   const dropdown = document.createElement('div');
   dropdown.className = 'sort-dropdown';
-
-  const options = [
+  const sortOptions = [
     { text: 'Xếp theo tiếng Trung (A-Z)', action: 'chinese-asc' },
     { text: 'Xếp theo tiếng Trung (Z-A)', action: 'chinese-desc' },
     { text: 'Xếp theo tiếng Việt (A-Z)', action: 'vietnamese-asc' },
     { text: 'Xếp theo tiếng Việt (Z-A)', action: 'vietnamese-desc' }
   ];
 
+  const currentDirection = state.sortModes[listType].charCountDirection;
+
   dropdown.innerHTML = `
-      <div class="px-4 py-2 flex items-center justify-between">
-          <span>Nhóm theo số lượng chữ Hán</span>
-          <label class="relative inline-flex items-center cursor-pointer ml-4">
-              <input type="checkbox" id="chineseCountToggle-${listType}" class="sr-only peer" ${state.sortModes[listType].chineseCharCountEnabled ? 'checked' : ''}>
-              <div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
-          </label>
+      <div class="px-3 py-2">
+          <span class="text-sm font-medium text-gray-900 dark:text-gray-300">Nhóm theo SL chữ Hán:</span>
+          <div class="grid grid-cols-3 gap-2 mt-2 text-sm">
+              <button data-direction="1" class="char-count-btn ${currentDirection === 1 ? 'active' : ''}">Xuôi</button>
+              <button data-direction="-1" class="char-count-btn ${currentDirection === -1 ? 'active' : ''}">Ngược</button>
+              <button data-direction="0" class="char-count-btn ${currentDirection === 0 ? 'active' : ''}">Tắt</button>
+          </div>
       </div>
       <hr class="border-gray-200 dark:border-gray-600 my-1">
-      ${options.map(o => `<button data-action="${o.action}"><span>${o.text}</span></button>`).join('')}
+      ${sortOptions.map(o => `<button data-action="${o.action}"><span>${o.text}</span></button>`).join('')}
       <hr class="border-gray-200 dark:border-gray-600 my-1">
       <div class="px-4 py-2 flex justify-end">
           <button id="resetSort-${listType}" class="text-sm">Hoàn nguyên</button>
@@ -105,10 +107,16 @@ const showSortDropdown = (event) => {
 
   parentSpan.appendChild(dropdown);
 
-  dropdown.querySelector(`#chineseCountToggle-${listType}`).onchange = (e) => {
-    state.sortModes[listType].chineseCharCountEnabled = e.target.checked;
-    applySortingAndRender();
-  };
+  const charCountButtons = dropdown.querySelectorAll('.char-count-btn');
+  charCountButtons.forEach(btn => {
+    btn.onclick = () => {
+      state.sortModes[listType].charCountDirection = parseInt(btn.dataset.direction, 10);
+      charCountButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applySortingAndRender();
+    };
+  });
+
   dropdown.querySelectorAll('button[data-action]').forEach(btn => {
     btn.onclick = () => {
       const [type, dir] = btn.dataset.action.split('-');
@@ -117,8 +125,10 @@ const showSortDropdown = (event) => {
       applySortingAndRender();
     };
   });
+
   dropdown.querySelector(`#resetSort-${listType}`).onclick = () => {
     state.sortModes[listType].sortType = null;
+    state.sortModes[listType].charCountDirection = 1; // Reset về mặc định là xuôi
     applySortingAndRender();
   };
 

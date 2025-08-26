@@ -4,8 +4,9 @@ export const state = {
   displayedUniqueLines: [],
   displayedDuplicateLines: [],
   sortModes: {
-    unique: { sortType: null, sortDirection: 1, chineseCharCountEnabled: true },
-    duplicate: { sortType: null, sortDirection: 1, chineseCharCountEnabled: true },
+    // Mặc định là nhóm xuôi (số nhỏ đến lớn)
+    unique: { sortType: null, sortDirection: 1, charCountDirection: 1 },
+    duplicate: { sortType: null, sortDirection: 1, charCountDirection: 1 },
   },
   comparisonOptions: {
     caseSensitive: false,

@@ -10,6 +10,7 @@ export const dom = {
     fileInfo: document.getElementById('fileInfo'),
     processBtn: document.getElementById('processFileBtn'),
     sortOptionsContainer: document.getElementById('importSortOptions'),
+    charCountContainer: document.getElementById('importCharCountOptions'),
     spinner: document.getElementById('processingSpinner'),
     progressContainer: document.getElementById('progressContainer'),
     progressLabel: document.getElementById('progressLabel'),
