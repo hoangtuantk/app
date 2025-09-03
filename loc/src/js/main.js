@@ -257,29 +257,36 @@ const setupEventListeners = () => {
         dom.importFileModal.progressLabel.textContent = message;
         break;
 
-      case 'result':
+      case 'result': { // Thêm dấu ngoặc nhọn để tạo scope mới
         const { uniqueData, duplicateData, groupedData } = data;
 
-        downloadFile(uniqueData, `Dữ liệu duy nhất (${uniqueData ? uniqueData.split('\n').length : 0}).txt`);
-        setTimeout(() => {
-          if (duplicateData) {
-            downloadFile(duplicateData, `Dữ liệu bị lọc.txt`);
-          }
-        }, 500);
-        setTimeout(() => {
-          if (groupedData) {
-            downloadFile(groupedData, `Các nhóm có tiếng Trung trùng lặp.txt`);
-          }
-        }, 1000);
+        // Luôn tải file dữ liệu duy nhất, ngay cả khi nó rỗng
+        const uniqueLinesCount = uniqueData ? uniqueData.split('\n').filter(Boolean).length : 0;
+        downloadFile(uniqueData, `Dữ liệu duy nhất (${uniqueLinesCount}).txt`);
 
-        // Ẩn thanh tiến trình và bật lại nút
+        // Chỉ tải file dữ liệu bị lọc nếu có nội dung
+        if (duplicateData && duplicateData.trim() !== '') {
+          setTimeout(() => {
+            downloadFile(duplicateData, `Dữ liệu bị lọc.txt`);
+          }, 500); // Chờ 0.5 giây
+        }
+
+        // Chỉ tải file nhóm trùng lặp nếu có nội dung
+        if (groupedData && groupedData.trim() !== '') {
+          setTimeout(() => {
+            downloadFile(groupedData, `Các nhóm có tiếng Trung trùng lặp.txt`);
+          }, 1000); // Chờ 1 giây
+        }
+
+        // Ẩn thanh tiến trình và bật lại nút sau khi các tác vụ tải đã được kích hoạt
         setTimeout(() => {
           dom.importFileModal.progressContainer.classList.add('hidden');
           dom.importFileModal.processBtn.disabled = false;
           dom.importFileModal.processBtn.textContent = 'Xử lý & Tải về';
           dom.importFileModal.spinner.classList.add('hidden');
-        }, 1500); // Đợi thêm chút nữa rồi mới ẩn
+        }, 1500);
         break;
+      }
     }
   };
 

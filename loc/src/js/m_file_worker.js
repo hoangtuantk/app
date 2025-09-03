@@ -42,6 +42,26 @@ const getLineWithMostUppercase = (group) => {
   });
 };
 
+const chooseBestRepresentative = (group, options) => {
+  let candidates = [...group];
+
+  // Ưu tiên 1: Lọc ra các dòng có ít khoảng trắng nhất
+  if (options.ignoreWhitespace) {
+    const minSpaceCount = Math.min(...candidates.map(line => (line.match(/\s/g) || []).length));
+    candidates = candidates.filter(line => (line.match(/\s/g) || []).length === minSpaceCount);
+    if (candidates.length === 1) return candidates[0];
+  }
+
+  // Ưu tiên 2: Từ các ứng viên còn lại, chọn dòng nhiều chữ hoa nhất
+  if (!options.caseSensitive && candidates.length > 1) {
+    return getLineWithMostUppercase(candidates);
+  }
+
+  // Mặc định: Trả về dòng đầu tiên nếu không có tiêu chí nào khác
+  return candidates[0];
+};
+
+
 const createSortComparator = (sortOptions, caseSensitive) => (a, b) => {
   // Ưu tiên 1: Sắp xếp theo số lượng chữ Hán nếu được bật (direction khác 0)
   if (sortOptions.charCountDirection !== 0) {
@@ -67,76 +87,69 @@ const createSortComparator = (sortOptions, caseSensitive) => (a, b) => {
 };
 
 
-// --- Hàm chính của Worker ---
+// --- Hàm chính của Worker (PHIÊN BẢN SỬA LỖI) ---
 self.onmessage = (event) => {
   const { fileContent, comparisonOptions, sortOptions } = event.data;
   const lines = fileContent.split('\n').filter(line => line.trim() !== '');
   const totalLines = lines.length;
-  // Đặt khoảng thời gian báo cáo tiến trình để tránh gửi quá nhiều tin nhắn
   const reportInterval = Math.max(1000, Math.floor(totalLines / 100));
 
-  // --- Giai đoạn 1: Xử lý xung đột viết hoa/thường ---
-  postMessage({ type: 'status', message: 'Giai đoạn 1/4: Xử lý xung đột viết hoa/thường...' });
-  const resolvedLines = [];
-  const resolvedMap = new Map();
-  if (!comparisonOptions.caseSensitive) {
-    const groups = {};
-    lines.forEach(line => {
-      const key = cleanTextForComparison(line, comparisonOptions);
-      if (!groups[key]) groups[key] = new Set();
-      groups[key].add(line);
-    });
-
-    Object.values(groups).forEach(groupSet => {
-      const group = Array.from(groupSet);
-      resolvedLines.push(group.length > 1 ? getLineWithMostUppercase(group) : group[0]);
-    });
-  } else {
-    resolvedLines.push(...lines);
-  }
-  postMessage({ type: 'progress', value: 15 });
-
-  // --- Giai đoạn 2: Tìm dòng duy nhất và dòng trùng lặp ---
-  postMessage({ type: 'status', message: `Giai đoạn 2/4: Tìm và lọc ${totalLines.toLocaleString('vi-VN')} dòng...` });
+  // --- Giai đoạn 1: Phân tích và gom nhóm TẤT CẢ các dòng tương tự ---
+  postMessage({ type: 'status', message: `Giai đoạn 1/3: Phân tích và gom nhóm ${totalLines.toLocaleString('vi-VN')} dòng...` });
   const lineGroupsMap = new Map();
-  resolvedLines.forEach((originalLine, index) => {
+  lines.forEach((originalLine, index) => {
     const key = cleanTextForComparison(originalLine, comparisonOptions);
     if (!lineGroupsMap.has(key)) {
-      lineGroupsMap.set(key, { originalCounts: new Map() });
+      lineGroupsMap.set(key, new Set());
     }
-    const group = lineGroupsMap.get(key);
-    group.originalCounts.set(originalLine, (group.originalCounts.get(originalLine) || 0) + 1);
+    lineGroupsMap.get(key).add(originalLine);
 
     if ((index + 1) % reportInterval === 0) {
-      const progress = 15 + Math.round(((index + 1) / totalLines) * 60);
+      const progress = 50 + Math.round(((index + 1) / totalLines) * 25); // Progress from 50% to 75%
       postMessage({ type: 'progress', value: progress });
     }
   });
+  postMessage({ type: 'progress', value: 50 });
 
-  let uniqueLines = [];
+  // --- Giai đoạn 2: Chọn dòng đại diện và lọc trùng lặp ---
+  postMessage({ type: 'status', message: 'Giai đoạn 2/3: Chọn dòng đại diện và lọc dữ liệu...' });
+  let uniqueLinesData = [];
   let duplicateLines = [];
-  lineGroupsMap.forEach((group, key) => {
-    const chosenLine = group.originalCounts.keys().next().value;
-    const totalCount = Array.from(group.originalCounts.values()).reduce((sum, count) => sum + count, 0);
+  const lineCounts = new Map();
 
-    uniqueLines.push(parseLineContent(chosenLine, comparisonOptions));
-    if (totalCount > 1) {
-      duplicateLines.push({ ...parseLineContent(chosenLine, comparisonOptions), count: totalCount - 1 });
-    }
+  // Đếm số lần xuất hiện của mỗi dòng
+  lines.forEach(line => {
+    lineCounts.set(line, (lineCounts.get(line) || 0) + 1);
+  });
+
+  lineGroupsMap.forEach((groupSet) => {
+    const group = Array.from(groupSet);
+    const chosenLine = chooseBestRepresentative(group, comparisonOptions);
+    uniqueLinesData.push(parseLineContent(chosenLine, comparisonOptions));
+
+    // Xử lý các dòng trùng lặp
+    group.forEach(lineInGroup => {
+      const count = lineCounts.get(lineInGroup);
+      if (lineInGroup === chosenLine) {
+        if (count > 1) {
+          duplicateLines.push({ ...parseLineContent(lineInGroup, comparisonOptions), count: count - 1 });
+        }
+      } else {
+        duplicateLines.push({ ...parseLineContent(lineInGroup, comparisonOptions), count: count });
+      }
+    });
   });
   postMessage({ type: 'progress', value: 75 });
 
-  // --- Giai đoạn 3: Sắp xếp kết quả ---
-  postMessage({ type: 'status', message: 'Giai đoạn 3/4: Đang sắp xếp kết quả...' });
+  // --- Giai đoạn 3: Sắp xếp, tạo nhóm và hoàn tất ---
+  postMessage({ type: 'status', message: 'Giai đoạn 3/3: Đang sắp xếp và hoàn tất...' });
   const comparator = createSortComparator(sortOptions, comparisonOptions.caseSensitive);
-  uniqueLines.sort(comparator);
+  uniqueLinesData.sort(comparator);
   duplicateLines.sort(comparator);
   postMessage({ type: 'progress', value: 90 });
 
-  // --- Giai đoạn 4: Tạo nhóm tiếng Trung trùng lặp ---
-  postMessage({ type: 'status', message: 'Giai đoạn 4/4: Hoàn tất và tạo nhóm...' });
   const chineseGroups = new Map();
-  uniqueLines.forEach(item => {
+  uniqueLinesData.forEach(item => {
     const key = item.chinesePart;
     if (!chineseGroups.has(key)) {
       chineseGroups.set(key, []);
@@ -145,21 +158,20 @@ self.onmessage = (event) => {
   });
 
   const groupedLinesContent = [];
-  chineseGroups.forEach((lines) => {
-    if (lines.length > 1) {
-      groupedLinesContent.push(lines.join('\n'));
+  chineseGroups.forEach((groupLines) => {
+    if (groupLines.length > 1) {
+      groupedLinesContent.push(groupLines.join('\n'));
     }
   });
+
   postMessage({ type: 'progress', value: 100 });
   postMessage({ type: 'status', message: 'Hoàn thành!' });
 
-  // --- Gửi kết quả cuối cùng ---
-  // Thêm một độ trễ nhỏ để người dùng thấy được 100%
   setTimeout(() => {
     postMessage({
       type: 'result',
       data: {
-        uniqueData: uniqueLines.map(item => item.original).join('\n'),
+        uniqueData: uniqueLinesData.map(item => item.original).join('\n'),
         duplicateData: duplicateLines.map(item => `${item.original} (đã lọc ${item.count} lần)`).join('\n'),
         groupedData: groupedLinesContent.join('\n\n'),
       }
