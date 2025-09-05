@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bộ chuyển đổi chữ Việt thành chữ Rune</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .rune-text {
+            font-family: 'Arial', sans-serif;
+            font-size: 2rem;
+            line-height: 2.5rem;
+            word-break: break-all;
+            hyphens: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
+
+<div class="bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-2xl text-center border border-gray-700">
+    <!-- Tiêu đề và mô tả -->
+    <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-2">Rune Convert</h1>
+    <p class="text-gray-400 mb-6 max-w-md mx-auto">
+        Văn bản Rune chỉ mang tính tượng trưng nên sẽ không chuẩn. Nhưng nó sẽ có tính nhất quán
+    </p>
+
+    <!-- Khu vực nhập liệu -->
+    <div class="mb-6">
+        <textarea id="vietnamese-input" class="w-full h-40 p-4 rounded-lg border-2 border-gray-700 focus:outline-none focus:border-blue-400 text-lg sm:text-xl font-medium resize-none transition-colors duration-200 bg-gray-700 text-white placeholder-gray-400" placeholder="Nhập văn bản ở đây..."></textarea>
+    </div>
+
+    <hr class="my-8 border-gray-700">
+
+    <!-- Khu vực hiển thị kết quả -->
+    <div class="mb-4 text-left">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold text-white">Văn bản Rune của bạn</h2>
+            <button id="copy-button" class="px-4 py-2 bg-green-600 text-white font-bold text-base rounded-lg shadow-lg hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-transform transform hover:scale-105">
+                Sao chép Rune
+            </button>
+        </div>
+        <div id="rune-output" class="bg-gray-700 p-6 rounded-lg border-2 border-dashed border-gray-600 rune-text min-h-[10rem] overflow-auto text-gray-300">
+            Kết quả sẽ hiển thị ở đây.
+        </div>
+    </div>
+</div>
+
+<script>
+    // Ánh xạ ký tự tiếng Việt (không dấu và có dấu) sang ký tự Rune
+    const runeMap = {
+        'a': 'ᚨ', 'ă': 'ᚪ', 'â': 'ᚩ', 'á': 'ᚫ', 'à': 'ᛃ', 'ả': 'ᛇ', 'ã': 'ᛟ', 'ạ': 'ᛠ',
+        'b': 'ᛒ',
+        'c': 'ᚳ',
+        'd': 'ᛞ', 'đ': 'ᛝ',
+        'e': 'ᛖ', 'ê': 'ᛇ', 'é': 'ᛠ', 'è': 'ᚣ', 'ẻ': 'ᚴ', 'ẽ': 'ᚱ', 'ẹ': 'ᚹ',
+        'g': 'ᚷ',
+        'h': 'ᚺ',
+        'i': 'ᛁ', 'í': 'ᛡ', 'ì': 'ᛉ', 'ỉ': 'ᛏ', 'ĩ': 'ᛈ', 'ị': 'ᚫ',
+        'k': 'ᚦ',
+        'l': 'ᛚ',
+        'm': 'ᛗ',
+        'n': 'ᚾ',
+        'o': 'ᛟ', 'ô': 'ᚩ', 'ơ': 'ᚫ', 'ó': 'ᛡ', 'ò': 'ᛉ', 'ỏ': 'ᛏ', 'õ': 'ᛈ', 'ọ': 'ᚫ',
+        'p': 'ᛈ',
+        'q': 'ᛠ',
+        'r': 'ᚱ',
+        's': 'ᛋ',
+        't': 'ᛏ',
+        'u': 'ᚢ', 'ư': 'ᛣ', 'ú': 'ᛡ', 'ù': 'ᛉ', 'ủ': 'ᛏ', 'ũ': 'ᛈ', 'ụ': 'ᚫ',
+        'v': 'ᚹ',
+        'x': 'ᛟ',
+        'y': 'ᚣ', 'ý': 'ᛡ', 'ỳ': 'ᛉ', 'ỷ': 'ᛏ', 'ỹ': 'ᛈ', 'ỵ': 'ᚫ',
+        ' ': ' ',
+        // Bổ sung các ký tự có dấu và có móc
+        'ắ': 'ᚪᛡ', 'ằ': 'ᚪᛉ', 'ẳ': 'ᚪᛏ', 'ẵ': 'ᚪᛈ', 'ặ': 'ᚪᚫ',
+        'ấ': 'ᚩᛡ', 'ầ': 'ᚩᛉ', 'ẩ': 'ᚩᛏ', 'ẫ': 'ᚩᛈ', 'ậ': 'ᚩᚫ',
+        'ế': 'ᛇᛡ', 'ề': 'ᛇᛉ', 'ể': 'ᛇᛏ', 'ễ': 'ᛇᛈ', 'ệ': 'ᛇᚫ',
+        'ố': 'ᚩᛡ', 'ồ': 'ᚩᛉ', 'ổ': 'ᚩᛏ', 'ỗ': 'ᚩᛈ', 'ộ': 'ᚩᚫ',
+        'ớ': 'ᚫᛡ', 'ờ': 'ᚫᛉ', 'ở': 'ᚫᛏ', 'ỡ': 'ᚫᛈ', 'ợ': 'ᚫᚫ',
+        'ứ': 'ᛣᛡ', 'ừ': 'ᛣᛉ', 'ử': 'ᛣᛏ', 'ữ': 'ᛣᛈ', 'ự': 'ᛣᚫ'
+    };
+
+    const vietnameseInput = document.getElementById('vietnamese-input');
+    const runeOutput = document.getElementById('rune-output');
+    const copyButton = document.getElementById('copy-button');
+
+    // Hàm chuyển đổi văn bản
+    function convertText() {
+        let inputText = vietnameseInput.value.toLowerCase();
+        let convertedText = '';
+
+        for (let i = 0; i < inputText.length; i++) {
+            let char = inputText[i];
+            convertedText += runeMap[char] || char;
+        }
+
+        runeOutput.textContent = convertedText.trim() === '' ? 'Kết quả sẽ hiển thị ở đây.' : convertedText;
+    }
+
+    // Lắng nghe sự kiện "input" để tự động chuyển đổi
+    vietnameseInput.addEventListener('input', convertText);
+
+    // Lắng nghe sự kiện "click" trên nút sao chép
+    copyButton.addEventListener('click', () => {
+        const textToCopy = runeOutput.textContent;
+        if (textToCopy && textToCopy !== 'Kết quả sẽ hiển thị ở đây.') {
+            // Sử dụng một textarea tạm thời để sao chép
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            
+            // Cập nhật giao diện để báo hiệu đã sao chép thành công
+            copyButton.textContent = 'Đã sao chép!';
+            setTimeout(() => {
+                copyButton.textContent = 'Sao chép Rune';
+            }, 2000);
+        }
+    });
+
+    // Chuyển đổi lần đầu khi tải trang
+    convertText();
+</script>
+
+</body>
+</html>
