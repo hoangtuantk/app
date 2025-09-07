@@ -1,6 +1,7 @@
 
 export function _setBusyState(isBusy) {
   this.dom.convertBtn.disabled = isBusy;
+  this.dom.pasteBtn.disabled = isBusy;
   this.dom.copyBtn.disabled = isBusy;
   this.dom.clearBtn.disabled = isBusy;
   if (isBusy) {

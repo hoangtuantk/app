@@ -40,6 +40,7 @@ const App = {
     this.dom.convertBtn = document.getElementById('convertBtn');
     this.dom.pasteAndDownloadBtn = document.getElementById('pasteAndDownloadBtn');
     this.dom.progressBar = document.getElementById('progressBar');
+    this.dom.pasteBtn = document.getElementById('pasteBtn');
     this.dom.copyBtn = document.getElementById('copyBtn');
     this.dom.clearBtn = document.getElementById('clearBtn');
     this.dom.copyNotification = document.getElementById('copyNotification');
@@ -284,6 +285,22 @@ const App = {
       console.error('Lỗi khi dán hoặc tải:', err);
       this._showNotification("Lỗi: Không thể đọc nội dung từ clipboard. <br>Hãy chắc chắn bạn đã cấp quyền cho trang web.", 7000, true);
       this._setBusyState(false);
+    }
+  },
+
+  async _pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.trim()) {
+        this.dom.inputText.value = text;
+        this.updateAndPerformConversion();
+        this._showNotification("Đã dán nội dung từ clipboard.", 3000, true);
+      } else {
+        this._showNotification("Không có nội dung văn bản trong clipboard.", 5000, true);
+      }
+    } catch (err) {
+      console.error('Lỗi khi dán:', err);
+      this._showNotification("Lỗi: Không thể đọc nội dung từ clipboard. <br>Hãy chắc chắn bạn đã cấp quyền cho trang web.", 7000, true);
     }
   },
 

@@ -8,6 +8,7 @@ export function _bindEventListeners() {
   // --- CÁC LISTENER CƠ BẢN ---
   this.dom.convertBtn.addEventListener('click', () => this.performConversion());
   this.dom.pasteAndDownloadBtn.addEventListener('click', () => this._pasteAndDownload());
+  this.dom.pasteBtn.addEventListener('click', () => this._pasteFromClipboard());
   this.dom.copyBtn.addEventListener('click', () => this._copyToClipboard());
   this.dom.clearBtn.addEventListener('click', () => this._clearAll());
   this.dom.exportBtn.addEventListener('click', () => this._handleExport());
