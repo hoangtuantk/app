@@ -3,11 +3,15 @@ import * as Actions from './m_actions.js';
 import * as Content from './m_content-processor.js';
 import { updateUI } from './m_ui.js';
 
+const naturalSort = (a, b) => {
+  return a.path.localeCompare(b.path, undefined, { numeric: true, sensitivity: 'base' });
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   let processedFiles = [];
   let removedFiles = [];
 
-  const processAndUpdate = async (files) => {
+  const processAndUpdate = async (files, shouldSort = false) => {
     const result = await Actions.handleFiles(files);
 
     result.accepted.forEach(newFile => {
@@ -22,12 +26,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    if (shouldSort) {
+      processedFiles.sort(naturalSort);
+    }
+
     updateUI(processedFiles, removedFiles);
   };
 
   DOM.browseButton.addEventListener('click', () => DOM.fileInput.click());
 
-  DOM.fileInput.addEventListener('change', (e) => processAndUpdate(e.target.files));
+  DOM.fileInput.addEventListener('change', (e) => {
+    const files = e.target.files;
+    const shouldSort = files.length === 1 && files[0].name.toLowerCase().endsWith('.zip');
+    processAndUpdate(files, shouldSort);
+  });
 
   DOM.dropZone.addEventListener('dragover', (e) => {
     e.preventDefault();
@@ -44,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     DOM.dropZone.classList.remove('drag-over');
     const files = await Actions.getFilesFromDroppedItems(e.dataTransfer.items);
     if (files && files.length > 0) {
-      processAndUpdate(files);
+      processAndUpdate(files, true);
     }
   });
 
