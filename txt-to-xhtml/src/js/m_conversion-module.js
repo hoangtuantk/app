@@ -81,8 +81,12 @@ export function _performReverseConversion() {
     if (node.nodeType === Node.ELEMENT_NODE && (node.tagName.startsWith('H') || node.tagName === 'P')) {
       if (node.textContent.trim()) {
         plainTextLines.push(node.textContent.trim());
-        if (node.tagName.startsWith('H')) {
+        if (this.dom.insertLineBreaksToggle.checked) {
           plainTextLines.push('');
+        } else {
+          if (node.tagName.startsWith('H')) {
+            plainTextLines.push('');
+          }
         }
       }
     }
@@ -100,9 +104,12 @@ export function _htmlToPlainText(htmlContent) {
       if (node.nodeType === Node.ELEMENT_NODE && (node.tagName.startsWith('H') || node.tagName === 'P')) {
         if (node.textContent && node.textContent.trim()) {
           plainTextLines.push(node.textContent.trim());
-          // Thêm một dòng trống sau tiêu đề để dễ đọc hơn
-          if (node.tagName.startsWith('H')) {
+          if (this.dom.insertLineBreaksToggle.checked) {
             plainTextLines.push('');
+          } else {
+            if (node.tagName.startsWith('H')) {
+              plainTextLines.push('');
+            }
           }
         }
       }

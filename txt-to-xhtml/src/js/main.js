@@ -107,6 +107,7 @@ const App = {
     this.dom.subTitle_insertIntoTitleTag = document.getElementById('subTitle_insertIntoTitleTag');
     this.dom.subTitle_headingLevelSelect = document.getElementById('subTitle_headingLevelSelect');
     this.dom.keepOriginalFilenameToggle = document.getElementById('keepOriginalFilenameToggle');
+    this.dom.insertLineBreaksToggle = document.getElementById('insertLineBreaksToggle');
 
     this.dom.batchProcessBtn = document.getElementById('batchProcessBtn');
     this.dom.batchProcessOverlay = document.getElementById('batchProcessOverlay');
@@ -152,6 +153,7 @@ const App = {
       useFilter: this.dom.filterSettingToggle.checked,
       useSyncScroll: this.dom.syncScrollSettingToggle.checked,
       keepOriginalFilename: this.dom.keepOriginalFilenameToggle.checked,
+      insertLineBreaks: this.dom.insertLineBreaksToggle.checked,
       nameFormat: document.querySelector('input[name="nameFormat"]:checked').value,
       customNameFormat: this.dom.customNameFormatInput.value,
       fontSize: this.dom.currentFontSizeInput.value,
@@ -200,6 +202,7 @@ const App = {
     this.dom.filterSettingToggle.checked = state.useFilter;
     this.dom.syncScrollSettingToggle.checked = state.useSyncScroll;
     this.dom.keepOriginalFilenameToggle.checked = state.keepOriginalFilename ?? false;
+    this.dom.insertLineBreaksToggle.checked = state.insertLineBreaks ?? true;
     this.dom.exportOptionSelect.value = state.exportOption || 'html';
     this._applyFontSize(parseInt(state.fontSize, 10) || 22);
     this.dom.htmlHeaderInput.value = state.headerContent || this.config.defaultHeader;
@@ -234,6 +237,7 @@ const App = {
       useFilter: false,
       useSyncScroll: false,
       keepOriginalFilename: false,
+      insertLineBreaks: true,
       nameFormat: 'chapter_prefix',
       customNameFormat: '[YYYY-MM-DD_HH-mm-ss]_[CHUONG]',
       fontSize: '22px',

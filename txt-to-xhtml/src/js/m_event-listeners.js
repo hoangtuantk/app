@@ -101,7 +101,8 @@ export function _bindEventListeners() {
     this.dom.includeHeaderFooterToggle,
     this.dom.filterSettingToggle,
     this.dom.syncScrollSettingToggle,
-    this.dom.keepOriginalFilenameToggle
+    this.dom.keepOriginalFilenameToggle,
+    this.dom.insertLineBreaksToggle
   ];
   simpleToggles.forEach(toggle => {
     if (toggle) toggle.addEventListener('change', debouncedUpdateAndSave);
