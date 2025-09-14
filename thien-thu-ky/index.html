@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thiên Thư Ký - Sáng Tác Offline & Online</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #161b22; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #58a6ff; }
+        .active-chapter { background-color: #1f6feb; color: white; }
+        details > summary { cursor: pointer; list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        .collapsible-icon { transition: transform 0.3s; }
+        .reading-highlight { background-color: rgba(98, 166, 255, 0.4); border-radius: 3px; box-shadow: 0 0 5px rgba(98, 166, 255, 0.5); }
+        .modal-backdrop {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #161b22; padding: 2rem; border-radius: 0.5rem;
+            border: 1px solid #30363d;
+            max-width: 90%; width: 550px;
+        }
+        .textarea-large { min-height: 120px; }
+        .textarea-small { min-height: 80px; }
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            color: white;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
+        }
+        .toast-notification.show { opacity: 1; bottom: 40px; }
+        .toast-success { background-color: #28a745; }
+        .toast-error { background-color: #dc3545; }
+        .toggle-checkbox:checked { right: 0; border-color: #48bb78; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #48bb78; }
+        #chapter-text { white-space: pre-wrap; }
+        #chapter-text[contenteditable="true"], #character-status-input[contenteditable="true"] {
+            outline: 2px solid #58a6ff;
+            background-color: #1c2128;
+            border-radius: 6px;
+            padding: 8px;
+        }
+        .focus-mode {
+            position: fixed !important;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 999;
+        }
+        .character-card {
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-left: 4px solid #a371f7;
+            padding: 12px;
+            border-radius: 6px;
+        }
+        .mode-btn.active {
+            background-color: #1f6feb;
+            color: white;
+            font-weight: bold;
+        }
+        textarea:read-only {
+            background-color: #010409 !important;
+            cursor: default;
+        }
+        #chapter-title-wrapper {
+            transition: height 0.8s ease-in-out, margin 0.8s ease-in-out, opacity 0.8s ease-in-out;
+            overflow: hidden;
+        }
+        #chapter-title {
+            transition: opacity 0.8s ease-in-out;
+        }
+        #chapter-title-wrapper.hidden-title {
+            height: 0 !important;
+            margin-bottom: 0 !important;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-900">
+    <div id="app-container" class="flex flex-col h-screen">
+        <!-- Header -->
+        <header class="bg-[#161b22] border-b border-[#30363d] px-4 sm:px-6 py-3 flex items-center justify-between shadow-md flex-shrink-0 z-20">
+            <div class="flex items-center gap-3">
+                <button id="open-sidebar-btn" class="lg:hidden p-2 -ml-2"><i data-lucide="menu" class="w-6 h-6 text-white"></i></button>
+                <i data-lucide="bot" class="text-blue-500 w-7 h-7 hidden sm:block"></i>
+                <h1 class="text-lg sm:text-xl font-bold text-white"><span class="text-[#58a6ff]">Thiên Thư </span> Ký </h1>
+            </div>
+            <button id="fullscreen-btn" class="p-2 text-white hover:text-blue-400" title="Chế độ tập trung">
+                <i data-lucide="maximize" class="w-5 h-5"></i>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <div class="relative flex-grow flex min-h-0">
+            <!-- Backdrop (for mobile) -->
+            <div id="sidebar-backdrop" class="fixed inset-0 bg-black/60 z-30 hidden lg:hidden"></div>
+
+            <!-- Left Sidebar (Control Panel) -->
+            <aside id="control-panel" class="fixed inset-y-0 left-0 lg:static lg:w-5/12 xl:w-4/12 h-full bg-[#161b22] p-4 overflow-y-auto border-r border-[#30363d] transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out z-40 flex-shrink-0">
+                <!-- Sidebar Header for Mobile -->
+                <div class="flex justify-between items-center pb-4 lg:hidden">
+                    <h2 class="text-lg font-bold text-white">Bảng Điều Khiển</h2>
+                    <button id="close-sidebar-btn" class="p-2 -mr-2">
+                        <i data-lucide="x" class="w-6 h-6 text-white"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Operating Mode Section -->
+                    <div class="space-y-2 bg-[#0d1117] p-4 rounded-lg border border-green-500">
+                        <h3 class="font-semibold text-md text-white text-center">Chế độ Vận hành</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="mode-online-btn" class="mode-btn p-2 rounded-md bg-gray-700 hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"><i data-lucide="cloud"></i> Online</button>
+                            <button id="mode-offline-btn" class="mode-btn p-2 rounded-md bg-gray-700 hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"><i data-lucide="hard-drive"></i> Offline</button>
+                        </div>
+                    </div>
+
+                    <!-- Firebase Connection Section (Online Mode) -->
+                    <div id="online-mode-container">
+                        <div class="space-y-3 bg-[#0d1117] p-4 rounded-lg border border-blue-500">
+                            <div class="flex justify-between items-center text-center">
+                               <span class="flex-grow font-semibold text-md text-white">Cấu hình Kết nối Online</span>
+                               <button id="connection-help-btn" class="text-gray-400 hover:text-blue-400" title="Trợ giúp Kết nối">
+                                   <i data-lucide="help-circle" class="w-5 h-5"></i>
+                               </button>
+                            </div>
+                            
+                            <label for="firebase-config-input" class="font-semibold text-sm text-gray-300 pt-2 block">Cấu hình Firebase</label>
+                            <textarea id="firebase-config-input" placeholder='const firebaseConfig = { ... };' class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm font-mono h-24"></textarea>
+                            
+                            <label for="gemini-api-key-input" class="font-semibold text-sm text-gray-300 pt-2 block">Gemini API Key (Tùy chọn)</label>
+                            <input type="password" id="gemini-api-key-input" placeholder="Để trống nếu dùng khóa mặc định" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm font-mono">
+
+                            <label for="story-key-input" class="font-semibold text-sm text-gray-300 pt-2 block">Mã Truyện</label>
+                            <input type="text" id="story-key-input" placeholder="ví dụ: truyen-cua-toi-123" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm font-mono">
+
+                            <button id="connect-firebase-btn" title="Kết nối và Tải Truyện" class="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg flex items-center justify-center gap-2">
+                                <i data-lucide="plug-zap"></i> Kết nối & Tải Truyện
+                            </button>
+                            
+                            <div class="text-center">
+                                <p class="font-semibold text-sm text-gray-400 mt-2">Trạng thái:</p>
+                                <p id="connection-status" class="font-mono break-all p-2 bg-[#010409] rounded text-xs text-gray-500">Chưa kết nối</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <details class="bg-red-900/30 border border-red-700 rounded-md">
+                            <summary class="p-3 font-bold text-red-300 flex justify-between items-center" title="Chỉnh sửa luật lệ và triết lý sáng tác cốt lõi của AI. Thay đổi ở đây sẽ ảnh hưởng sâu sắc đến cách AI kể chuyện.">
+                                <span>-1. Quy Tắc Lõi Của AI (Triết lý Sáng tác)</span><i data-lucide="chevron-down" class="collapsible-icon"></i>
+                            </summary>
+                            <div class="p-3 border-t border-red-700 space-y-2">
+                                <textarea id="ai-core-rules-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm font-mono hidden" style="min-height: 300px;"></textarea>
+                                <div class="flex items-center gap-2 mt-2">
+                                    <input type="password" id="core-rules-password" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm font-mono" placeholder="Nhập mật khẩu để sửa">
+                                    <button id="toggle-rules-lock-btn" class="p-2 bg-gray-600 hover:bg-gray-500 rounded-md text-white" title="Mở khóa">
+                                        <i data-lucide="lock" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                                <button id="reset-core-rules-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2 hidden">
+                                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Khôi phục Mặc định
+                                </button>
+                            </div>
+                        </details>
+
+                        <details open class="bg-yellow-900/30 border border-yellow-700 rounded-md">
+                            <summary class="p-3 font-bold text-yellow-300 flex justify-between items-center" title="Đây là SỰ THẬT NGẦM ĐỊNH của thế giới. AI sẽ không bao giờ nhắc đến hay trích dẫn những điều này, mà sẽ dùng chúng làm nền tảng để kể chuyện.">
+                                <span>0. Trụ Cột Cốt Truyện (Sự Thật Ngầm Định)</span><i data-lucide="chevron-down" class="collapsible-icon"></i>
+                            </summary>
+                            <div class="p-3 border-t border-yellow-700 space-y-4">
+                                <div>
+                                    <label class="font-semibold text-sm text-yellow-200">Thể loại</label>
+                                    <div class="flex items-center gap-2 flex-wrap bg-[#010409] border border-[#30363d] rounded-md p-2 mt-1 min-h-[40px]">
+                                        <div id="selected-genres-container" class="flex items-center gap-2 flex-wrap"></div>
+                                        <button id="add-genre-btn" title="Thêm thể loại" class="ml-auto p-1 bg-blue-600 hover:bg-blue-700 rounded-full text-white flex-shrink-0"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>
+                                <div id="dong-nhan-input-container" class="hidden">
+                                    <label for="original-story-input" class="font-semibold text-sm text-yellow-200">Tên truyện gốc (Đồng nhân)</label>
+                                    <input type="text" id="original-story-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm mt-1" placeholder="Ví dụ: Phàm Nhân Tu Tiên - Vong Ngữ">
+                                </div>
+                                <div>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label for="world-input" class="font-semibold text-sm text-yellow-200">Thế Giới & Lịch Sử</label>
+                                        <div class="flex items-center gap-2">
+                                            <button id="expand-world-btn" title="Dùng AI để mở rộng ý tưởng thế giới của bạn" class="flex items-center gap-1 text-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1 px-2 rounded-md">
+                                                <i data-lucide="sparkles" class="w-3 h-3"></i> AI Mở Rộng
+                                            </button>
+                                            <button id="import-world-btn" title="Tải lên dữ liệu Thế Giới từ tệp văn bản" class="flex items-center gap-1 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-2 rounded-md">
+                                                <i data-lucide="upload-cloud" class="w-3 h-3"></i> Tải Lên
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <textarea id="world-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm textarea-large" placeholder="Nhập ý tưởng cơ bản (ví dụ: 'Thế giới tu tiên') rồi nhấn 'AI Mở Rộng'"></textarea>
+                                    <input type="file" id="import-world-file-input" class="hidden" accept=".txt,text/plain,.json,application/json">
+                                </div>
+                                <div>
+                                    <label class="font-semibold text-sm text-yellow-200">Nhân Vật Chính</label>
+                                    <textarea id="character-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm textarea-large" placeholder="Ví dụ: Một kẻ lang thang cộc cằn, có quá khứ bi thảm, nhưng luôn giữ một la bàn cũ."></textarea>
+                                </div>
+                                <div>
+                                    <label class="font-semibold text-sm text-yellow-200">Kim Thủ Chỉ / Hệ Thống</label>
+                                    <textarea id="system-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm textarea-large" placeholder="Ví dụ: Có khả năng cảm nhận được nguồn nước ở gần. Năng lực yếu đi khi mất nước."></textarea>
+                                </div>
+                                <div>
+                                    <label class="font-semibold text-sm text-yellow-200">Cốt Truyện Chính (Hướng đi chung)</label>
+                                    <textarea id="plot-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm textarea-large" placeholder="Ví dụ: Hành trình từ sa mạc đến ốc đảo cuối cùng được đồn đại."></textarea>
+                                </div>
+                                <button id="save-settings-btn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2">
+                                    <i data-lucide="save" class="w-4 h-4"></i> Lưu tất cả cài đặt
+                                </button>
+                            </div>
+                        </details>
+                        
+                        <details class="bg-purple-900/30 border border-purple-700 rounded-md">
+                            <summary class="p-3 font-bold text-purple-300 flex justify-between items-center" title="AI sẽ tự động phân tích và cập nhật danh sách nhân vật phụ từ nội dung truyện.">
+                                <span>0.5. Quản Lý Nhân Vật Phụ (Tự động)</span><i data-lucide="chevron-down" class="collapsible-icon"></i>
+                            </summary>
+                            <div class="p-3 border-t border-purple-700 space-y-3">
+                                <div id="supporting-character-list" class="space-y-3 max-h-96 overflow-y-auto"></div>
+                                <button id="update-npc-list-btn" class="w-full mt-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2">
+                                    <i data-lucide="users-round" class="w-4 h-4"></i> Cập nhật DS Nhân vật từ Truyện
+                                </button>
+                            </div>
+                        </details>
+
+                        <details class="bg-blue-900/30 border border-blue-700 rounded-md">
+                            <summary class="p-3 font-bold text-blue-300 flex justify-between items-center" title="Dòng chảy sự kiện chính của toàn bộ câu chuyện. AI sẽ dựa vào đây để đảm bảo tính logic và liên tục. Bạn có thể chỉnh sửa để kiểm soát cốt truyện.">
+                                <span>1. Dòng Chảy Sự Kiện (Trí Nhớ Dài Hạn)</span><i data-lucide="chevron-down" class="collapsible-icon"></i>
+                            </summary>
+                            <div class="p-3 border-t border-blue-700 space-y-2">
+                                <textarea id="event-flow-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm textarea-large" placeholder="AI sẽ tự động cập nhật dòng chảy sự kiện sau mỗi chương được tạo. Bạn cũng có thể tự chỉnh sửa..."></textarea>
+                                <button id="summarize-story-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2">
+                                    <i data-lucide="history" class="w-4 h-4"></i> Cập nhật Dòng Chảy từ Toàn bộ Truyện
+                                </button>
+                            </div>
+                        </details>
+
+                        <details class="bg-green-900/30 border border-green-700 rounded-md">
+                            <summary class="p-3 font-bold text-green-300 flex justify-between items-center" title="Các chỉ thị BẮT BUỘC cho chương tiếp theo. AI phải tuân thủ nghiêm ngặt những gì bạn viết ở đây.">
+                                <span>2. Chỉ Đạo Sáng Tác (Mệnh Lệnh Tuyệt Đối)</span><i data-lucide="chevron-down" class="collapsible-icon"></i>
+                            </summary>
+                            <div class="p-3 border-t border-green-700 space-y-4">
+                                <div>
+                                    <label class="font-semibold text-sm text-green-200">Phong cách hành văn (Mô tả)</label>
+                                     <textarea id="style-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm textarea-large" placeholder="Mô tả ngắn gọn giọng văn bạn muốn. Ví dụ: Giọng văn gai góc, trần trụi. Tập trung vào sự sinh tồn."></textarea>
+                                </div>
+                                <div>
+                                     <label class="font-semibold text-sm text-green-200">Văn Mẫu (Học & Bắt Chước)</label>
+                                     <textarea id="style-example-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm textarea-large" placeholder="Dán hoặc viết một đoạn văn mẫu vào đây. AI sẽ cố gắng bắt chước văn phong, cách dùng từ, và nhịp điệu của bạn trong chương tiếp theo."></textarea>
+                                     <button id="clear-style-example-btn" class="mt-2 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2"><i data-lucide="x-circle" class="w-4 h-4"></i> Xoá Văn Mẫu</button>
+                                </div>
+                                <div class="border-t border-green-800 pt-4">
+                                     <label class="font-semibold text-sm text-green-200">Diễn biến tiếp theo (Góp ý)</label>
+                                     <textarea id="contribution-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm textarea-large" placeholder="Ví dụ: Hắn gặp một người lạ và đối thoại."></textarea>
+                                     <button id="clear-contribution-btn" class="mt-2 w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-sm flex items-center justify-center gap-2"><i data-lucide="x-circle" class="w-4 h-4"></i> Xoá Góp Ý</button>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="bg-[#0d1117] border border-[#30363d] rounded-md"><summary class="p-3 font-semibold text-white flex justify-between items-center" title="Mô tả các thử thách, kẻ thù, âm mưu... nhắm vào nhân vật chính."><span>3. Độ khó của Câu truyện</span><i data-lucide="chevron-down" class="collapsible-icon"></i></summary><div class="p-3 border-t border-[#30363d]"><textarea id="difficulty-input" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm textarea-large" placeholder="Ví dụ: Băng cướp xảo quyệt, có vũ khí tốt hơn. Thời tiết khắc nghiệt."></textarea></div></details>
+                        
+                        <details class="bg-[#0d1117] border border-[#30363d] rounded-md">
+                            <summary class="p-3 font-semibold text-white flex justify-between items-center" title="Cho phép AI sáng tác các nội dung người lớn, nhạy cảm.">
+                                <span>4. Nội dung người lớn (18+)</span>
+                                <i data-lucide="chevron-down" class="collapsible-icon"></i>
+                            </summary>
+                            <div class="p-3 border-t border-[#30363d] flex items-center justify-between">
+                                <label for="nsfw-toggle" class="text-sm text-gray-300">Cho phép nội dung 18+</label>
+                                <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" name="nsfw-toggle" id="nsfw-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                    <label for="nsfw-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                </div>
+                            </div>
+                        </details>
+
+                        <div class="space-y-3 pt-4 border-t border-[#30363d]">
+                            <h3 class="text-md font-semibold text-white text-center">5. Công cụ Sáng Tác & Audio</h3>
+                            <button id="auto-generate-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center gap-2"><i data-lucide="wand-2"></i> Tạo Chương Thủ Công</button>
+                            <div class="flex items-center justify-center gap-4 mt-2 p-2 bg-[#0d1117] rounded-lg">
+                                <label for="auto-gen-toggle" class="text-sm text-gray-300">Tự động tạo chương</label>
+                                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" name="auto-gen-toggle" id="auto-gen-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                    <label for="auto-gen-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                </div>
+                            </div>
+                            <details class="bg-[#0d1117] border border-[#30363d] rounded-md" open>
+                                <summary class="p-3 font-semibold text-white flex justify-between items-center">
+                                    <span>Công Cụ Audio</span>
+                                    <i data-lucide="chevron-down" class="collapsible-icon"></i>
+                                </summary>
+                                <div class="p-3 border-t border-[#30363d] space-y-4">
+                                    <div class="flex justify-between items-center gap-2">
+                                        <label for="voice-select" class="text-sm text-gray-300 flex-shrink-0">Giọng đọc:</label>
+                                        <select id="voice-select" title="Chọn Giọng Đọc" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm"></select>
+                                    </div>
+                                    <div class="flex justify-between items-center gap-2">
+                                        <label for="speed-control" class="text-sm text-gray-300 flex-shrink-0">Tốc độ (0.5-3):</label>
+                                        <input type="number" id="speed-control" title="Tốc độ đọc" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm" min="0.5" max="3" step="0.1" value="1.0">
+                                    </div>
+                                    <div class="flex items-center justify-center gap-6 py-2">
+                                        <button id="prev-chapter-btn" title="Chương trước" class="p-3 bg-gray-700 hover:bg-gray-600 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"><i data-lucide="skip-back"></i></button>
+                                        <button id="play-pause-btn" title="Bắt đầu đọc" class="p-4 bg-blue-600 hover:bg-blue-500 rounded-full text-white shadow-lg"><i data-lucide="play" class="w-6 h-6"></i></button>
+                                        <button id="next-chapter-btn" title="Chương sau" class="p-3 bg-gray-700 hover:bg-gray-600 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"><i data-lucide="skip-forward"></i></button>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+
+                    </div>
+
+                    <div class="pt-4 border-t border-[#30363d] space-y-3">
+                         <h3 class="text-md font-semibold text-white text-center">6. Quản lý Dữ liệu</h3>
+                        <div class="grid grid-cols-2 gap-2 mb-3">
+                            <button id="import-data-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 text-sm"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Tải Lên (.json)</button>
+                            <button id="export-data-btn" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 text-sm"><i data-lucide="download-cloud" class="w-4 h-4"></i> Tải Xuống (.json)</button>
+                        </div>
+                        <input type="file" id="import-file-input" class="hidden" accept=".json,application/json">
+                        <details class="bg-[#0d1117] border border-[#30363d] rounded-md"><summary class="p-3 font-semibold text-white flex justify-between items-center"><span>Công cụ Xóa Chương</span><i data-lucide="chevron-down" class="collapsible-icon"></i></summary><div class="p-3 border-t border-[#30363d] space-y-3"><select id="delete-chapter-select" class="w-full bg-[#010409] border border-[#30363d] rounded-md p-2 text-sm"></select><button id="delete-chapters-btn" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg">Xóa từ chương này</button></div></details>
+                        <button id="delete-data-btn" class="w-full bg-red-800 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center gap-2"><i data-lucide="trash-2"></i> Xoá Toàn Bộ Truyện</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Reader Panel -->
+            <main class="w-full flex-grow p-6 flex flex-col bg-[#0d1117] overflow-hidden">
+                <div id="chapter-title-wrapper" class="flex-shrink-0 mb-4 flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-white" id="chapter-title">Chào mừng!</h2>
+                    <div id="edit-controls" class="flex items-center gap-2">
+                        <button id="edit-chapter-btn" title="Chỉnh sửa chương" class="p-2 text-gray-400 hover:text-white"><i data-lucide="edit"></i></button>
+                        <button id="save-chapter-btn" title="Lưu thay đổi" class="p-2 text-green-400 hover:text-green-300 hidden"><i data-lucide="save"></i></button>
+                        <button id="cancel-edit-btn" title="Hủy bỏ" class="p-2 text-red-400 hover:text-red-300 hidden"><i data-lucide="x-circle"></i></button>
+                    </div>
+                </div>
+
+                <details id="character-status-panel" open class="bg-[#161b22] border-l-4 border-purple-500 rounded-md mb-4 flex-shrink-0">
+                    <summary class="p-3 font-semibold text-white flex justify-between items-center cursor-pointer">
+                        <span>Trạng Thái Nhân Vật Chính</span>
+                        <div id="status-edit-controls" class="flex items-center gap-2">
+                            <button id="edit-status-btn" title="Chỉnh sửa trạng thái" class="p-1 text-gray-400 hover:text-white"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button id="save-status-btn" title="Lưu thay đổi" class="p-1 text-green-400 hover:text-green-300 hidden"><i data-lucide="save" class="w-4 h-4"></i></button>
+                            <button id="cancel-status-btn" title="Hủy bỏ" class="p-1 text-red-400 hover:text-red-300 hidden"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
+                        </div>
+                    </summary>
+                    <div class="p-3 border-t border-[#30363d]">
+                        <textarea id="character-status-input" readonly class="w-full bg-[#010409] border border-transparent rounded-md p-2 text-sm font-mono" style="min-height: 150px;" placeholder="Trạng thái nhân vật sẽ được AI tự động cập nhật sau mỗi chương..."></textarea>
+                    </div>
+                </details>
+                
+                <details open class="bg-[#161b22] border border-[#30363d] rounded-md mb-4 flex-shrink-0">
+                    <summary class="p-3 font-semibold text-white flex justify-between items-center">
+                        <span>Danh Sách Chương</span>
+                        <i data-lucide="chevron-down" class="collapsible-icon"></i>
+                    </summary>
+                    <div class="p-3 border-t border-[#30363d]">
+                        <ul id="chapter-list" class="space-y-1 max-h-48 overflow-y-auto"></ul>
+                    </div>
+                </details>
+                
+                <div class="flex-grow overflow-y-auto" id="chapter-text-wrapper"><div id="chapter-text" class="text-base leading-relaxed" contenteditable="false"><p>Vui lòng chọn **Chế độ Vận hành** ở bảng điều khiển bên trái để bắt đầu.</p></div></div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="confirmation-modal" class="modal-backdrop hidden"><div class="modal-content" id="modal-content"></div></div>
+    <div id="genre-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+             <h3 class="text-xl text-white font-bold text-center mb-4">Chọn Thể Loại</h3>
+             <div id="genre-list-modal" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[50vh] overflow-y-auto p-2"></div>
+             <div class="flex justify-center mt-6"><button id="close-genre-modal-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Đóng</button></div>
+        </div>
+    </div>
+    <div id="toast" class="toast-notification"></div>
+
+    <script type="module">
+        import { initializeApp, deleteApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, onSnapshot, collection, query, getDocs, writeBatch, deleteDoc, orderBy, where, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const OFFLINE_STORAGE_KEY = 'thien-thu-ky-offline-story';
+
+        const dom = {
+            appContainer: document.getElementById('app-container'),
+            modeOnlineBtn: document.getElementById('mode-online-btn'),
+            modeOfflineBtn: document.getElementById('mode-offline-btn'),
+            onlineModeContainer: document.getElementById('online-mode-container'),
+            chapterList: document.getElementById('chapter-list'),
+            chapterTitle: document.getElementById('chapter-title'),
+            chapterTitleWrapper: document.getElementById('chapter-title-wrapper'),
+            chapterText: document.getElementById('chapter-text'),
+            chapterTextWrapper: document.getElementById('chapter-text-wrapper'),
+            playPauseBtn: document.getElementById('play-pause-btn'),
+            speedControl: document.getElementById('speed-control'),
+            voiceSelect: document.getElementById('voice-select'),
+            nextChapterBtn: document.getElementById('next-chapter-btn'),
+            prevChapterBtn: document.getElementById('prev-chapter-btn'),
+            autoGenerateBtn: document.getElementById('auto-generate-btn'),
+            autoGenToggle: document.getElementById('auto-gen-toggle'),
+            deleteDataBtn: document.getElementById('delete-data-btn'),
+            deleteChaptersBtn: document.getElementById('delete-chapters-btn'),
+            deleteChapterSelect: document.getElementById('delete-chapter-select'),
+            clearContributionBtn: document.getElementById('clear-contribution-btn'),
+            clearStyleExampleBtn: document.getElementById('clear-style-example-btn'),
+            firebaseConfigInput: document.getElementById('firebase-config-input'),
+            geminiApiKeyInput: document.getElementById('gemini-api-key-input'),
+            storyKeyInput: document.getElementById('story-key-input'),
+            connectFirebaseBtn: document.getElementById('connect-firebase-btn'),
+            connectionStatus: document.getElementById('connection-status'),
+            connectionHelpBtn: document.getElementById('connection-help-btn'),
+            importDataBtn: document.getElementById('import-data-btn'),
+            exportDataBtn: document.getElementById('export-data-btn'),
+            importFileInput: document.getElementById('import-file-input'),
+            fullscreenBtn: document.getElementById('fullscreen-btn'),
+            importWorldBtn: document.getElementById('import-world-btn'),
+            importWorldFileInput: document.getElementById('import-world-file-input'),
+            expandWorldBtn: document.getElementById('expand-world-btn'), // <-- Mới
+            resetCoreRulesBtn: document.getElementById('reset-core-rules-btn'),
+            coreRulesPasswordInput: document.getElementById('core-rules-password'),
+            toggleRulesLockBtn: document.getElementById('toggle-rules-lock-btn'),
+            editControls: {
+                container: document.getElementById('edit-controls'),
+                edit: document.getElementById('edit-chapter-btn'),
+                save: document.getElementById('save-chapter-btn'),
+                cancel: document.getElementById('cancel-edit-btn'),
+            },
+            statusEditControls: {
+                edit: document.getElementById('edit-status-btn'),
+                save: document.getElementById('save-status-btn'),
+                cancel: document.getElementById('cancel-status-btn'),
+            },
+            genreControls: {
+                addBtn: document.getElementById('add-genre-btn'),
+                container: document.getElementById('selected-genres-container'),
+                modal: document.getElementById('genre-modal'),
+                modalList: document.getElementById('genre-list-modal'),
+                closeModalBtn: document.getElementById('close-genre-modal-btn'),
+            },
+            modal: {
+                backdrop: document.getElementById('confirmation-modal'),
+                content: document.getElementById('modal-content'),
+            },
+            inputs: {
+                world: document.getElementById('world-input'),
+                style: document.getElementById('style-input'),
+                styleExample: document.getElementById('style-example-input'),
+                character: document.getElementById('character-input'),
+                system: document.getElementById('system-input'),
+                plot: document.getElementById('plot-input'),
+                difficulty: document.getElementById('difficulty-input'),
+                nsfwToggle: document.getElementById('nsfw-toggle'), 
+                contribution: document.getElementById('contribution-input'),
+                eventFlow: document.getElementById('event-flow-input'),
+                originalStory: document.getElementById('original-story-input'),
+                dongNhanContainer: document.getElementById('dong-nhan-input-container'),
+                aiCoreRules: document.getElementById('ai-core-rules-input'),
+                characterStatus: document.getElementById('character-status-input'),
+            },
+            saveSettingsBtn: document.getElementById('save-settings-btn'),
+            summarizeStoryBtn: document.getElementById('summarize-story-btn'),
+            toast: document.getElementById('toast'),
+            sidebar: {
+                openBtn: document.getElementById('open-sidebar-btn'),
+                closeBtn: document.getElementById('close-sidebar-btn'),
+                backdrop: document.getElementById('sidebar-backdrop'),
+                panel: document.getElementById('control-panel')
+            },
+            characterManagement: {
+                list: document.getElementById('supporting-character-list'),
+                updateBtn: document.getElementById('update-npc-list-btn'),
+            }
+        };
+
+        const ALL_GENRES = {
+            'ngon_tinh': "Ngôn Tình", 'cot_nha': "cợt nhả", 'tien_hiep': "Tiên Hiệp",  'huyen_huyen': "Huyền Huyễn", 'kiem_hiep': "Kiếm Hiệp", 'do_thi': "Đô Thị", 'khoa_huyen': "Khoa Huyễn (Sci-Fi)", 'vong_du': "Võng Du (Game)", 'di_nang': "Dị Năng (Superpower)", 'mat_the': "Mạt Thế (Apocalypse)", 'linh_di': "Linh Dị (Horror)", 'lich_su': "Lịch Sử", 'quan_su': "Quân Sự", 'trinh_tham': "Trinh Thám", 'dong_nhan': "Đồng Nhân (Fan-fic)", 'sac_18_plus': "Sắc 18+",
+        };
+
+        const DEFAULT_AI_CORE_RULES = `Bạn là một tiểu thuyết gia bậc thầy, một đạo diễn của ngôn từ, một bậc thầy logic . Vai trò của bạn là viết chương tiếp theo,và bạn luôn biết mọi câu đều làm cho truyện tiếp diễn.không viết ra những câu có nội dung sáo rỗng hay những ý nghĩ hão huyền của nhân vật chính v.v.v. luôn tuân thủ tuyệt đối triết lý và quy tắc dưới đây.
+
+###  LUẬT LỆ TỐI THƯỢNG & TRIẾT LÝ SÁNG TÁC (KHÔNG THỂ VI PHẠM NHƯNG LUÔN TUÂN THỦ nếu có xung đột thì ưu tiên : Thế Giới & Lịch Sử , Phong cách hành văn (Mô tả) , Diễn biến tiếp theo (Góp ý))
+*1. QUY TẮC VỀ TÍNH CÁCH & LOGIC & PHONG CÁCH DIỄN ĐẠT(ƯU TIÊN #1):*
+- *Quy tắc viết truyện :* mọi câu đều làm cho truyện tiếp diễn.không viết ra những câu có nội dung sáo rỗng hay những ý nghĩ hão huyền của nhân vật chính v.v.v.
+- *NHẬP VAI (EMBODY THE CHARACTER):* Nhiệm vụ quan trọng nhất của bạn là phải "nhập vai" vào nhân vật chính được mô tả trong phần "SỰ THẬT NGẦM ĐỊNH". Mọi hành động, lời nói, quyết định và suy nghĩ của nhân vật phải là hệ quả trực tiếp từ những đặc điểm tính cách mà người dùng đã định nghĩa, hoặc là tính cách đặc điểm tự do mà ai tự thêm vào khi người dùng không thêm gì cả, nhưng phải phù hợp với thể loại , phong cách viết.
+- *Quy tắc khám phá :* Không nêu toàn bộ chi tiết ngay khi giới thiệu (tên, công dụng, cấp bậc…).Chỉ gợi ý vài đặc điểm hoặc tác dụng sơ bộ.Mô tả bằng ngôn từ mơ hồ, khơi gợi tò mò thay vì giải thích rõ ràng.Dùng các từ: “có vẻ”, “tựa như”, “ẩn chứa”, “cảm giác”…tránh liệt kê hết các công dụng hoặc giới hạn. Áp dụng cho tất cả yếu tố quan trọng : Thiên phú, pháp bảo, công pháp, cảnh giới, bí kỹ, truyền thừa... Mỗi lần chỉ tiết lộ 20–30% thông tin.Để phần lớn thông tin xuất hiện sau này qua thử nghiệm hoặc tình huống.Không mô tả quá cụ thể về hình thức xếp hạng hoặc so sánh sức mạnh ngay lúc giới thiệu.
+- *PHÁT TRIỂN HỢP LÝ :* Mọi sự tiến bộ của nhân vật (về sức mạnh, kỹ năng, kiến thức, địa vị) PHẢI được lý giải một cách logic. *TUYỆT ĐỐI KHÔNG* tạo ra các bước nhảy vọt kiến thức, trí tuệ , sức mạnh vô lý, không có nền tảng, ngay cả những thứ đơn giản nhất khi ở thế giới mới hoặc một phạm trù mới thì cxung phải tự tìm hiểu không thể nào có thể biết tuốt ngay cả là cảnh giới của tu tiên giới , hay từng cấp độ học tập của thế giới đô thị bình thường.
+- *Không toàn tri :* Nhân vật chính không tự nhiên biết về thế giới, cảnh giới, công pháp nếu chưa được ai dạy, chưa đọc sách hoặc chưa trải qua. Ví dụ đúng: Hắn nghe lão giả kể về cảnh giới đầu tiên, nhưng chỉ nhớ loáng thoáng vài từ. Ví dụ sai: Hắn vừa xuyên việt đã nắm rõ toàn bộ hệ thống cảnh giới và bí pháp.
+- *Sự phát triển của Nhân vật chính (NVC):* Nhân vật chính phải có sự phát triển một cách chậm rãi , không nhảy cóc ( ngoại trừ trường hợp, kim thủ chỉ hoặc nhân vật chính trời sinh đã có nhưng vẫn cần tìm tòi moi móc , chứ không thể nào biết ngay lập tức. cần phải học hỏi từ sai lầm, thay đổi quan điểm, và mạnh mẽ hơn (cả về sức mạnh và tính cách) một cách hợp lý, không phải chỉ sau một đêm.
+- *NPC CÓ SỰ SỐNG RIÊNG :* Nhân vật phụ phải có cuộc sống riêng cần đặt tên cho tất cả nhân vật phụ. Họ có mục tiêu, kế hoạch và sẽ hành động để đạt được chúng, ngay cả khi nhân vật chính (NVC) không có mặt. Hành động của NVC sẽ ảnh hưởng đến kế hoạch của NPC, và ngược lại. NPC có thể thay đổi (trở nên mạnh hơn, thay đổi lòng trung thành, v.v.) theo thời gian một cách logic.
+- **Nhịp độ & Kịch tính :**Điều khiển nhịp độ câu chuyện. Xây dựng sự căng thẳng trước các sự kiện cao trào. Tạo ra những khoảng lặng cần thiết để phát triển nhân vật và thế giới. Đảm bảo các tình tiết được giải quyết một cách thỏa đáng, tránh kết thúc đột ngột.
+- *Mô tả hành động (Tuần tự A-Z):* Mô tả hành động của nhân vật một cách chi tiết, tuần tự từ A đến Z. Không được bỏ qua các bước quan trọng. Chỉ được phép tóm tắt các hành động lặp đi lặp lại trong một khoảng thời gian dài. Ví dụ tóm tắt hợp lệ: '...hắn luyện đan trong mười ngày liên tục...' thay vì mô tả từng ngày. Đối với các hành động đơn lẻ, phải mô tả đầy đủ các bước.
+- *Quy tắc xưng hô:* Cách xưng hô giữa các nhân vật phải thống nhất và phù hợp với bối cảnh, địa vị, và mối quan hệ. Không dùng lẫn lộn xưng hô hiện đại (anh – tôi, bạn – tôi) trong thế giới tu tiên trừ khi có lý do hợp lý. Ưu tiên dùng các cặp: “ngươi – ta”, “ngươi – bổn tọa”, “ngươi – lão phu”, “ngươi – bần đạo”, “ta – các hạ”, “tại hạ – tiền bối”, “đồ nhi – sư phụ”, “ngươi – tiểu gia”,… Ví dụ đúng: Đồ nhi: “Sư phụ, đồ nhi đã hoàn thành nhiệm vụ.” Sư phụ: “Ừ, ngươi làm tốt lắm.” Ví dụ sai: Đồ nhi: “Anh ơi, em xong việc rồi.” Sư phụ: “Ừ, tôi biết rồi.”
+- *Tính nhất quán của Thế giới :* Thế giới phải 'sống'. Các sự kiện lớn (chiến tranh, thiên tai) phải có tác động lâu dài đến kinh tế, chính trị, xã hội. Các phe phái sẽ tự phát triển hoặc suy tàn dựa trên các sự kiện trong truyện.
+- *SỰ HOẠT ĐỘNG VỀ HỆ THỐNG VÀ THANH MÁU TRONG TRUYỆN mà ở đó nhân vật chính được cung cấp hệ thống hoặc trong trong thể loại võng du :* khi có vật phẩm mới cần mô tả bề ngoài và mô tả thông tin của vật phẩm đó Ví dụ ( thiên hoàng kiếm , phẩm chất : thượng đăng , công kích 1.120 vạn.v.v.v ) . nếu nhân vật chính có hệ thống nhìn thấy thanh máu và truyện võng du nhìn thấy thanh máu đối thủ cần miêu tả rõ ràng logic ví dụ ( thanh viêm phá kích , một tia sáng 10 trường va chạm mạnh vào con quái vật thanh không thanh máu của nó , một phát miểu sát ; nham chính chém mạnh vào con quái tuy máu con quái chỉ có 100 nhưng đòn công kích của nhân nhật chính chỉ 3 , hắn chém liên tục -3,-3,-3 ... một hồi chém giết mới hạ sát được con này).
+- *diễn đạt không gian :* chỉ miêu tả những  công trình đối với nhân vậch chính cảm thấy đặc biệt và chỉ cần miêu tả 1 lần duy nhất ( cần lưu những không gian đã mô tả trong dòng chảy sự kiện để tránh lặp lại), tránh miêu tả những thứ đời thường .
+- *QUY TẮC MIÊU TẢ TRANG BỊ , PHÉP THUẬT KHI KHÔNG CÓ HỆ THỐNG VÀ THỂ LOẠI VÕNG DU:* Khi nhân vật chính lần đầu nhìn thấy hoặc lĩnh ngộ vật phẩm/kỹ năng mới, chỉ cần miêu tả sơ qua, không cần đi vào chi tiết. 2. Khi chiến đấu, các kỹ năng có hiệu ứng phải được miêu tả một cách hoành tráng, thể hiện rõ sức mạnh và tác động của nó lên môi trường và đối thủ, đặc biệt khi vượt cấp chiến đấu. Ví dụ: '...một bàn tay che trời rộng hàng triệu dặm đập xuống cả toà thành, hàng trăm vạn người mệnh tang hoàng tuyền.'Khi nhân vật chính lần đầu nhìn thấy hoặc lĩnh ngộ vật phẩm/kỹ năng mới, chỉ cần miêu tả sơ qua, không cần đi vào chi tiết. 2. Khi chiến đấu, các kỹ năng có hiệu ứng phải được miêu tả một cách hoành tráng, thể hiện rõ sức mạnh và tác động của nó lên môi trường và đối thủ, đặc biệt khi vượt cấp chiến đấu. Ví dụ: '...một bàn tay che trời rộng hàng triệu dặm đập xuống cả toà thành, hàng trăm vạn người mệnh tang hoàng tuyền.
+- *Quy tắc miêu tả thể loại sắc 18+ :* cần chuyển đổi những từ ngữ né trách sự trần tục thành những từ ngữ thô nhất , trần tục nhất ví dụ (bầu ngực = hai cặp vú , âm đạp = lồn , dương vật = cặc v.v.v ).
+- *Quy tắc về những truyện nhân vật chính là người xuyên khống , xuyên việt , sinh ra ở thế giới khác nhưng vẫn giữ kí ức thế giới cũ : * hãy chú ý thế giới đó có người canh gác luân hồi, ý chí nào đó chú ý đến sự xâm nhập ở thế giới khác hay không , nếu có thì phản ứng với nhân vật chính như thế nào v,v,v... tùy vào truyện có thể có có thể không ... .cần mô tả khung cảnh , cảm giác , kí ức ... lúc vừa mới xuyên qua, sau đó cần nhớ lại nguyên nhân mình xuyên qua , chết đi, tiền kiếp có những người thân nào , họ sống ra sao , suy nghĩ khi mình chết đi họ sóng như thế nào. xem còn giữ được kí ức không , kí ức có hoàn chỉnh không , hiện nhớ được những gì, nguyên nhân mà mình có thể xuyên vào thân thể này ,v,v,v... .khi thấy một khung cảnh hoàn cảnh gần tương đồn với thế giới cũ thì cần nhớ lại so sánh. đa phần những tâm ma ,huyễn cảnh nhắn vào nơi chứa tiềm thức của nhân vật  xuyên qua thì thường liên quan đến thế giới cũ (chỉ ở truyện tiên hiệp, huyền huyễn)
+- *Quy tắc về khỏi đầu chuyện :* khỏi đầu chuyện cần dựa vào bối cảnh,xuất thân, nơi đang sinh hoạt thì mới sửa dụng từ ngữ để miêu tả hoàn cảnh đó ví dụ ( khi khỏi đầu ở hoàng cung không thể nào miêu tả hoàn cảnh là : hắn mở mắt thấy mình đang khoác lên chiếc long bào rách nát ... , mà cần viết tôn lên sự quý phái giống với hoàn ảnh :hắn mở mắt đập vào mắt là khung giường trang trọng được khắc hoa văn rồng phượng , một cảm giác  lạ đến từ tay hắn  , không phải cảm giác từ bộ long bào tơ tàm thượng hạng , mà là từ một viên ngọc hắn đang cầm trên tay.)
+- *quy tắc về sự sáng tạo :* tạo ra những  thứ mới mẻ cho câu truyện , tránh lặp đi lặp lại vòng lặp như ( tu luyện - đi bí cảnh sau đó lại tu luyện - đi bí cảnh .... vòng lặp như vậy) mà cần phải sáng tạo nhiều tình tiết đặc sắc hơn trong truyện.
+- *quy tắc về phát triển và sử dụng tài nguyên:* nhân vật chính trong truyên luôn cần được phảt triển tới đỉnh phong của thế giới đó . nhân vật chính cần sử dụng tài nguyên đang có , sẽ có ( đã có kế hoạch để lấy) một cách thông minh , triệt để nhất ví dụ ( nhân vật chính có một kim đan hậu kì khôi lỗi trong vòng 15 phút thì thay vì đi đánh cướp nhiều tu sĩ dưới kim đan thì 15 phút ấy cần săn giết nhiều tu sĩ kim đan nhất . nếu có 100 linh thạch nhưng cần mua đồ 120 linh thạch thì cò kè mặc cả xuống thấp hơn 100 linh thạch nếu không được cần phải bán ra đồ vật thì cũng cần có kè mặc cả để được tối đa hóa nhất tài nguyên.,v,v,v,.... ).
+- *Quy tắc loại bỏ câu chương thừa trong văn:* không sáo ngữ rỗng (Đúng: “Muốn sống sót, hắn cần mạnh hơn kẻ khác.” Sai: “Trong thế giới này, thực lực vi tôn, kẻ mạnh làm vua.”), không ngôn tình hóa ánh mắt khí chất (Đúng: “Hắn nhìn về phía trước, ánh mắt kiên định.” Sai: “Một tia sáng lấp lánh trong đôi mắt hắn, phản chiếu khát vọng vĩnh hằng.”), mỗi câu = một ý rõ ràng (Đúng: “Hắn đạt tới Luyện Khí tầng tám. Tài nguyên ít ỏi. Nhưng hắn có Cảm Ứng Cổ Vận.” Sai: “Sức mạnh Luyện Khí tầng tám tuy không quá kinh người, nhưng đó vẫn là chỗ dựa duy nhất của hắn…”), tránh lặp ý đã nói (Đúng: nói một lần duy nhất Sai: lặp lại mỗi đoạn), tập trung vào hành động và lựa chọn (Đúng: “Hắn thu dọn túi, bước về hướng núi phủ sương.” Sai: “Trong lòng hắn dấy lên một cảm giác mơ hồ, nửa khao khát, nửa chờ mong.”), thông tin phải cụ thể (Đúng: “Trong túi có 5 viên Bồi Nguyên Đan, 2 viên Tị Độc Đan.” Sai: “Trong túi hắn có một vài đan dược linh tinh.”).
+- *Tính cách nhất quán:* Tất cả các nhân vật phải hành động nhất quán với tính cách đã được xây dựng. Một nhân vật cẩn thận sẽ không hành động liều lĩnh vô cớ. Một kẻ tàn nhẫn sẽ không đột nhiên trở nên nhân từ nếu không có sự kiện tác động mạnh mẽ.
+*2. QUY TẮC VỀ NHỊP ĐỘ & TƯỜNG THUẬT:*
+- *KỂ CHUYỆN CHẬM LẠI:* Không được viết vội. Hãy "kéo dãn" thời gian. Thêm vào các hành động phụ, chi tiết môi trường, và cảm nhận của ngũ quan để làm cho cảnh truyện "dày" và chân thực.
+- *"TẢ, KHÔNG KỂ" (SHOW, DON'T TELL):* Không giải thích, hãy thể hiện, Không dùng các mẫu câu mơ hồ, sáo rỗng như “là một sinh viên bạn biết mình nên làm gì”.
+*3. QUY TẮC VỀ NGÔN TỪ & ĐỊNH DẠNG( tuân thủ nghiêm ngặt):*
+- *BẠN LÀ NGƯỜI VIẾT CHUYỆN, KHÔNG PHẢI NGƯỜI BÌNH LUẬN,KHÔNG VIẾT LẠI SUY NGHĨ CỦA NHÂN VẬT CHÍNH HOẶC CHỈ VIẾT  KHI ĐƯỢC YÊU CẦU:* Chỉ kể lại sự kiện.
+- *Quy Tắc Chung :*Quy tắc 1: Nguồn gốc kiến thức phải rõ ràng, luôn chỉ ra thông tin đến từ ký ức nguyên chủ, kinh nghiệm kiếp trước hoặc quan sát hiện tại. Ví dụ đúng: “Trong ký ức mơ hồ của nguyên chủ, hắn từng thấy loại ngọc giản này.” Ví dụ sai: “Hắn đã thấy vật phẩm này trong các câu chuyện tu tiên ở kiếp trước” (nếu truyện không thiết lập nhân vật có ký ức kiếp trước).Quy tắc 2: Ưu tiên sinh tồn trước, nhân vật mới tới phải kiểm tra thân thể, cảnh giới, hoàn cảnh và tài nguyên trước khi tìm hiểu thông tin khác. Ví dụ đúng: “Hắn ngồi xuống, tập trung cảm nhận khí tức trong cơ thể.” Ví dụ sai: “Hắn lập tức mở ngọc giản đọc công pháp” (chưa biết mình ở tình trạng nào).Quy tắc 3: Mô tả và nhận thức chỉ được xuất phát từ góc nhìn của nhân vật, tránh bình luận kiểu tác giả xen vào. Ví dụ đúng: “Hắn cảm thấy linh lực yếu ớt trôi qua kinh mạch.” Ví dụ sai: “Lúc này, theo mô tả của túi trữ vật và ngọc giản, hắn đang ở Luyện Khí tầng một” (có thông tin không thể nhân vật biết ngay).Quy tắc 4: Mô tả chi tiết phải có mục đích rõ ràng, nếu không ảnh hưởng đến tiến triển hoặc bầu không khí thì rút gọn. Ví dụ đúng: “Trong kinh mạch, hai luồng khí vàng và xanh quấn lấy nhau” (nếu đây là thông tin quan trọng). Ví dụ sai: “Một cỗ linh khí màu vàng nhạt cùng một cỗ linh khí màu xanh biếc đang chậm rãi vận chuyển, không nhanh không chậm…” (nếu không phục vụ cốt truyện).Quy tắc 5: Giữ độ mù hợp lý, để nhân vật khám phá dần luật lệ và bí ẩn của thế giới thay vì biết hết từ đầu. Ví dụ đúng: “Hắn chỉ đoán đây là công pháp dành cho hệ Kim hoặc Mộc, nhưng không dám chắc.” Ví dụ sai: “Hắn biết rõ đây là công pháp tán tu hệ Kim và Mộc, phù hợp hoàn toàn với mình” (quá chắc chắn khi chưa kiểm chứng).Quy tắc 6: Trước khi cho nhân vật “biết” điều gì, tự kiểm tra: nguồn kiến thức, tính hợp lý, thời điểm tiết lộ và sự cần thiết. Ví dụ đúng: “Có lẽ công pháp này sẽ hữu dụng, nhưng hắn quyết định kiểm tra thân thể trước.” Ví dụ sai: “Hắn biết ngay công pháp này sẽ giúp mình đột phá” (thông tin không hợp lý tại thời điểm).
+- *THOẠI:* Lời thoại phải tự nhiên, phù hợp với tính cách và trình độ của nhân vật. Sử dụng thoại để bộc lộ nội tâm, thúc đẩy cốt truyện và xây dựng mối quan hệ, thay vì chỉ để giải thích thông tin (exposition dump). Mọi câu thoại phải bắt đầu bằng \`- \` và kết thúc bằng \`.\`.
+- *SUY NGHĨ NỘI TÂM:**KHÔNG ĐƯỢC NÓI LÊN SUY NGHĨ,HOÀI BÃO, ẢO TƯỞNG, MƠ MỘNG, THỨ CẦN CÓ V.V.V CỦA NHÂN VẬT CHÍNH ,CHỈ ĐƯỢC PHÉP VIẾT RA SUY NGHĨ NỘI TÂM KHI ĐƯỢC CHO PHÉP  **cấm* lạm dụng cấu trúc () \`[Câu ngắn]. Hắn nghĩ .... \`,\`[Câu ngắn]. Hắn cần ...\`,\`[Câu ngắn]. Hắn muốn ...\`.
+- *CẤM:* Viết những thứ không làm cho câu truyện phát triển , những thứ vô bổ ( thường hay ở cuối chương , đầu chương ví dụ : Ngày mai. Ưu tiên vẫn là sống sót và thu thập thông tin. Nhưng giờ đây, hắn có thêm một mục tiêu tiềm năng: tìm hiểu về thằn lằn bóng tối sống dưới sàn nhà.Đêm vẫn còn dài. Thành phố sương mù vẫn chìm trong bóng tối và những bí ẩn.Và trong căn phòng tồi tàn, một hạt Bào Tử đang âm thầm chờ đợi. Chờ đợi ánh sáng ban mai, chờ đợi cơ hội, chờ đợi thời khắc để bén rễ và phát triển .Hắn nghĩ."). cầm đề cập tới thường thức của tất cả thể loại qua tất cả hình thức nào , mà chỉ qua hành động lời nói của mọi người xung quanh.
+- *chú ý :* cấm Lối hành văn lặp cấu trúc và hơi gượng Ví dụ: “Tuy cũ kỹ, song…”, “Tuy thô ráp, song…” → lặp lại cấu trúc tuy... song... khiến câu văn bị sáo rỗng. cấm viết những câu vô bổ ở cuối chương và đầu chương , mọi ngôn từ trong chương đều là nội dung của câu truyện .cấm lặp chương , lặp nội dung chương cũ .
+- *Cấm :*  viết truyện bằng cách liệt kê suy nghĩ/ý định của nhân vật một cách máy móc ,Không thêm phân tích, giải thích, hoặc bình luận nội tâm trừ khi tôi yêu cầu rõ. Cấm dùng các cụm: “Điều đó phù hợp với…”, “Có lẽ…”, “Như thể…”, “Giống như…”, hoặc bất kỳ câu tổng kết suy diễn nào.Cấm bịa đặt quá khứ hoặc động cơ nhân vật nếu tôi chưa cung cấp.Câu văn ngắn gọn, mạch lạc, không vòng vo hoặc sa đà vào chi tiết phụ.Hạn chế các cụm như:“Y cần… Y phải… Y muốn…” (dùng quá nhiều).“Y quyết định không vội…”, “Y biết mình phải mạnh lên…”.Thay vào đó, hãy mô tả cảm xúc, hành động, hoặc hoàn cảnh thực tế để thể hiện quyết tâm nhân vật. Ví dụ nên viết:“Mồ hôi nhỏ giọt từ trán, hắn ngước nhìn bầu trời đen kịt — con đường phía trước không cho hắn quyền lùi bước.” .Ví dụ không nên:“Y biết mình phải mạnh lên để bảo vệ bản thân, để tiếp tục giấc mộng…”
+- *CẤM dùng dư thừa tính từ, lặp nghĩa, khiến đoạn văn bị "dở", sáo rỗng và thiếu tinh tế.:*cấm dùng từ thừa như :(hắn mặc lên chiếc áo mỏng manh thì viết thằng là hắn mậc áo ) Dùng các từ ngữ làm trầm trọng vấn đề như : đặc quánh, mục ruỗng ,v.v.v. cấm dùng từ tăng tiến mức độ trầm trọng vấn trừ khi có nhân vật phụ châm chọc , để ý ví dụ ( thay vì gọi chiếc áo trắng toát thì chỉ gọi chiếc áo trắng , thay vì nói rèm cửa cũ kĩ chỉ cần nói rèm cửa , không cần nói  cửa sổ mục nát chỉ cần nói là cửa sổ v,v,v,v....)
+- *Ngắt theo nhịp cảm xúc*:** Cảm xúc tăng → dòng ngắn, gấp gáp. Cảm xúc chậm → đoạn dài, sâu lắng.Ngắt sau cú chuyển cảnh (không gian, thời gian, tâm trạng).Ngắt sau một câu nội tâm mạnh để nổi bật.Không để đoạn văn quá dài (4-5 câu).Mỗi người nói một dòng riêng trong đối thoại.
+- *Tránh dùng từ ngữ mang tính khái quát hoặc trừu tượng sai ngữ cảnh.:* cần xét về sắc thái văn phong và quy chuẩn ngôn ngữ cần viết đúng hơn về mặt ngữ nghĩa , cảm xúc ,bối cảnh, không gian v.v.v. ví dụ :( Chủ nhân cũ của nhục thân này, một kẻ tu vi Luyện Khí Sơ Kỳ, đã chết trong một trận tranh đoạt linh thảo nhỏ bé, bị phàm nhân ám toán. Một sự chết chóc trớ trêu.  Một sự chết chóc trớ trêu” → là sai, vì “chết chóc” là danh từ tập thể, không phù hợp để chỉ một người chết. Một cái chết trớ trêu” → đúng cần thêm Thật là một cái chết trớ trêu và nhục nhã.).
+- *Quy tắc chuyển đổi :* tự động chuyển những kí tự đặc biệt "/\`#[]*^&" thành dấu - .
+- *Quy tắc miêu tả:*  Ưu tiên thị giác (cảnh vật, ánh sáng, màu sắc, hình dạng).Chỉ miêu tả mùi nếu mùi đó đóng vai trò trong diễn biến truyện (ví dụ: mùi máu báo hiệu chiến đấu, mùi khói báo cháy…).Không dùng mùi hương chỉ để “trang trí” câu văn.Mô tả ngắn gọn, rõ ràng, tránh kéo dài quá 2 câu cho một chi tiết.Mọi câu miêu tả phải hỗ trợ tâm trạng nhân vật, tình huống hoặc không khí câu chuyện.Ví dụ đúng:(Mạc Khắc bước vào cửa hàng. Bụi phủ dày trên quầy, những thanh kiếm rỉ sét xếp lộn xộn). Ví dụ sai:( Mạc Khắc bước vào cửa hàng. Một mùi ẩm mốc, mùi gỗ cũ, mùi sơn bong tróc hòa vào nhau len lỏi trong từng kẽ tường… (quá nhiều mùi, không cần cho tình huống).
+- *Quy tắc viết về nhân vật:* không được viết ra bất cứ điều gì liên quan đến dữ liệu mà người dùng điền vào ở mục nhân vật chính vào trong truyện từ tích cách , cách làm việc ra sao , cách hành sử ra sao . Mà cần thay vào đó là hành động của nhân vật chính .
+- *SỬ DỤNG ĐA DẠNG TỪ NGỮ:* Tránh lặp lại từ. Sử dụng từ đồng nghĩa và các cách diễn đạt sáng tạo, giàu hình ảnh để làm cho văn phong phong phú hơn. Thay thế các cụm từ thông thường bằng những cách nói văn hoa, phù hợp với ngữ cảnh. Ví dụ: ( thay vì Sống: hữu sinh, tồn tại nhân gian, lưu mệnh, hồi dương, tái sinh luân hồi, thọ nguyên chưa tận, còn hít thở nhân gian, trở lại hồng trần, hóa sinh lần nữa... .Chết: băng hà, vãng sinh, quy tiên, mệnh đoạn hoàng tuyền, hồn phi phách tán, tiêu hồn diệt cốt, ngủ giấc ngàn thu, hóa hạc quy thiên, tạ thế, vong thân, lạc vào luân hồi, hóa thành khói sương, mệnh ô hô, đột tử, chết không kịp ngáp.... .Đánh: giao thủ, kịch chiến, trảm sát, long tranh hổ đấu, tương giao binh khí, huyết chiến, song phương ác đấu, đao quang kiếm ảnh, kình phong cuốn tới, lưỡng bại câu thương.... .Thua trận: bại lui, bại vong, hồn vía lên mây, thân bại danh liệt, bại bởi một chiêu, bị ép đến đường cùng, vong thân tại chỗ.... .Thắng trận: toàn thắng, thắng như chẻ tre, ép đối thủ không còn đường lùi, trận thắng huy hoàng, chiến thắng áp đảo... .đi : hành tẩu, cất bước, lững thững, bước thong dong, tiến bước, lưu ảnh thoắt mất, phi hành, tung thân, nhẹ bước như mèo... .Đến: giáng lâm, hạ thân, giá lâm, ngự không hạ xuống, đáo lai, bước vào, thình lình xuất hiện... .Chạy: bôn tẩu, bạo tẩu, kinh hoảng đào mệnh, phi thân, đào vong, tẩu vi thượng sách, tiệp hành như điện... .Nói: ngôn xuất, khẩu xuất cuồng ngôn, trầm ngâm mở lời, thanh âm vang vọng, ngữ khí nghiêm nghị, thanh âm khản đặc, ngữ điệu chế giễu, lạnh nhạt nói, thốt ra từng chữ... .Im lặng: trầm mặc, giữ yên lặng, không đáp lời, im thin thít, thâm trầm không nói, nín bặt... .Cười: tiếu tiếu sinh phong, mỉm tiếu bất ngôn, cười ha hả, tiếu ý ẩn hiện, tiếu trung hữu đao, cười khẩy, tiếu dung như hoa, cười đến run vai... .Khóc: lệ tràn khóe mắt, khóc nức nở, lệ châu rơi xuống, khóc rống, nghẹn ngào, thút thít, lệ như mưa rơi, lệ quang lấp lánh... .Nhìn: mục quang lạnh lẽo, nhãn thần sáng rực, liếc xéo, ánh mắt như dao, nhãn quang thâm thúy, mắt nhìn xa xăm, nhãn tình sáng như sao, mục quang bàng hoàng... .Nhìn lướt qua: đảo mắt, liếc nhìn, lướt mắt, nhìn thoáng qua... .Sống: thoi thóp như cá mắc cạn, sống lay lắt, níu váy Diêm Vương, giãy đạp giữa lưỡi hái tử thần, còn thở tức là còn gỡ, chưa kịp xuống sổ sinh tử, ăn gian thêm chút tuổi thọ, sống nhăn như nhộng, thoát chết trong gang tấc... Chết: mệnh ô hô, tắt thở cái bụp, ngủ luôn không báo thức, về gặp tổ tiên chơi cờ, xuất vé khứ hồi sang suối vàng, chết bất đắc kỳ tử, toi mạng, ngỏm củ tỏi, quy tiên express, lên đường không vali, chết không kịp ngáp, logout khỏi nhân gian... Đánh: đấm như mưa rào, phát liên hoàn bạt tai, quăng skill như hack, đập cho ăn hành, tát bay hộ khẩu, cho uống nước luộc hành, bón cơm tát liên tục, đánh rụng hàm dưới, combo tiễn lên nóc tủ... Thua trận: bại sml, ăn hành ngập mồm, thua trắng răng, vỡ mồm tập thể, đo ván, bại như chó cụp đuôi, bị hành như con ở, nằm ngửa đếm mây, thất bại toàn tập... Thắng trận: win easy, vả sấp mặt, thắng như chẻ tre, cho đối thủ bay màu, dạy cho bài học nhớ đời, solo clear, cân team, đánh cho khóc tiếng Mán... Đi: lết như rùa bò, lê dép sồn sột, bước như múa, lò dò như mèo rình chuột, đi như thể đất phỏng mông, cà khệnh cà khạng, bơi trong không khí, bước mà như bay showbiz... Đến: phi như ma đuổi, đáp xuống như thiên thạch, xuất hiện như từ dưới đất chui lên, bật mode ninja, ghé chơi không báo trước, spawn giữa bản đồ, chui từ hư không ra, drop hàng bất ngờ... Chạy: cắm đầu cắm cổ, chạy bán sống bán chết, bốc khói dưới chân, phi như gió cuốn, quăng dép chạy, bẻ lái sang kiếp khác, cắm số max speed, chạy không ngoái đầu... Nói: xổ ra một tràng như súng liên thanh, phun châu nhả ngọc phiên bản lầy, mở miệng ra là drama, vãi ra bí mật, chém gió như thần, nói như hát rap, buông một câu nghe muốn phun cơm, gào như bán hàng livestream... Im lặng: ngậm như hến, tắt tiếng, bị mute, im thin thít như đang nín xì hơi, khóa họng, đứng hình mất 5s, câm nín như tượng đá... Cười: cười rụng răng, cười muốn tắc thở, cười banh họng, cười khùng khục như trộm chó, cười gian như cáo, cười ha hả muốn lòi cuống phổi, cười khẩy kiểu tao biết mà, cười toe như đứa vừa trúng số, cười khà khà như phim chưởng... Khóc: khóc như mưa rào, khóc như đám ma gà, khóc nức nở như bị cắt Wi-Fi, khóc muốn lòi tròng mắt, khóc ròng như mất sổ đỏ, rưng rưng như phim Ấn Độ, khóc sml, khóc như tiếng ve kêu mùa hè... Nhìn: nhìn như muốn ăn tươi nuốt sống, trừng mắt như cá rô phi, liếc như bắn tia laser, liếc xéo full HD, nhìn chằm chằm như camera an ninh, nhìn kiểu tui biết hết nha, nhìn ngu ngơ như bò đội nón, liếc qua rồi phán như thánh... Nhìn lướt qua: đảo mắt 360°, lia mắt như radar, lướt mắt một vòng, liếc cái rồi quay đi như chưa từng quen, ngó qua cho có lệ, nhìn thoáng như gió thoảng..., và nhiều từ theo nhiều thể loại khác nhau như : ocd chứng , không lấn thiếu niên nghèo , não mạch chứng, càm ơn hân hạnh chiếu cố ,  nói ngoa, tiện tay , không gì không thể tếp nhận ....) . tùy theo sắc thái biểu cảm, tiết tấu của câu truyện,nội dung của câu truyện.
+---
+###HỆ THỐNG QUY TẮC (Theo thứ tự ưu tiên)
+
+*ƯU TIÊN 1: DÒNG CHẢY SỰ KIỆN (BẮT BUỘC TUÂN THỦ)*
+Đây là dòng chảy của toàn bộ câu chuyện đã diễn ra. Bạn phải đọc, hiểu và viết chương tiếp theo một cách liền mạch, tôn trọng mọi tình tiết đã được thiết lập dưới đây.
+<dòng_chảy_sự_kiện>
+\${eventFlow}
+</dòng_chảy_sự_kiện>
+
+*ƯU TIÊN 2: SỰ THẬT NGẦM ĐỊNH (Nền tảng của thế giới - KHÔNG ĐƯỢC ĐỀ CẬP TỚI TRONG TRUYỆN nhất là tính cách của nhân vật chính càng không được viết vào trong truyện mà chỉ được viết ra bởi người khác bàn luận , nhưng không được nói quá nhiều lần. )*
+- *Nhân Vật Chính:* \${character}\${npcInstructions}
+- *Thế Giới:* \${world}
+- *Kim Thủ Chỉ:* \${system}
+- *Cốt Truyện Chính:* \${plot}
+- *Nội dung 18+:* \${nsfwRule}
+
+*ƯU TIÊN 3: MỆNH LỆNH CHO CHƯƠNG NÀY (BẮT BUỘC THỰC HIỆN)*
+\${genreInstructions}
+\${explicitRule}
+- *Phong cách hành văn (Mô tả):* \${style}
+\${styleExamplePrompt}
+- *Diễn biến tiếp theo (Góp ý):* \${contribution}
+- *Độ khó:* \${difficulty}
+            
+---
+### YÊU CẦU ĐẦU RA
+1.  *Tiêu đề:* Ngắn gọn, hấp dẫn khoảng từ 3 đến 10 chữ, phù hợp với phong cách hành văn và nội dùng của chương.
+2.  *Nội dung:* Khoảng 2000 từ, tuân thủ mọi quy tắc và triết lý trên .
+3.  *Định dạng:*
+    Dòng 1: [Tiêu đề chương]
+    Dòng 2: ---
+    Phần còn lại: [Nội dung tiếp tục liền mạch của chương trước đó]`;
+        let db, auth, app;
+        let operatingMode = 'online'; // 'online' or 'offline'
+        let storyKey = null;
+        let storySettings = { genres: [], supportingCharacters: [], characterStatus: '' };
+        let storyChapters = [];
+        let currentChapterId = null;
+        let unsubscribeSettings = null;
+        let unsubscribeChapters = null;
+        let isGenerating = false;
+        let isSaving = false;
+        let isChapterEditMode = false;
+        let isStatusEditMode = false;
+        let isAuthReady = false;
+        let autoGenerateInterval = null;
+        let isCoreRulesLocked = true;
+        let chapterTitleTimeout = null;
+        
+        const speechApi = window.speechSynthesis;
+        let speechState = { reading: false, paused: false, charIndexOffset: 0, currentChunkStartIndex: 0, voices: [], speechQueue: [], currentUtterance: null, fullText: '' };
+
+        function showToast(message, type = 'success', duration = 3000) { dom.toast.textContent = message; dom.toast.className = `toast-notification ${type === 'success' ? 'toast-success' : 'toast-error'}`; dom.toast.classList.add('show'); setTimeout(() => { dom.toast.classList.remove('show'); }, duration); }
+        function showConfirmationModal(title, text, confirmCallback) { dom.modal.content.innerHTML = `<h3 class="text-xl text-white font-bold text-center mb-4">${title}</h3><p class="text-gray-400 text-center mb-6">${text}</p><div class="flex justify-center gap-4"><button id="modal-confirm-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Xác nhận</button><button id="modal-cancel-btn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Hủy</button></div>`; dom.modal.backdrop.classList.remove('hidden'); document.getElementById('modal-confirm-btn').onclick = () => { confirmCallback(); dom.modal.backdrop.classList.add('hidden'); }; document.getElementById('modal-cancel-btn').onclick = () => { dom.modal.backdrop.classList.add('hidden'); }; }
+        function showInfoModal(title, contentHtml) { dom.modal.content.innerHTML = `<div class="flex justify-between items-center mb-4"><h3 class="text-xl text-white font-bold">${title}</h3><button id="modal-close-btn" class="p-1 rounded-full hover:bg-gray-700"><i data-lucide="x" class="w-5 h-5 text-gray-400"></i></button></div><div class="text-left text-gray-300 max-h-[70vh] overflow-y-auto">${contentHtml}</div>`; lucide.createIcons(); dom.modal.backdrop.classList.remove('hidden'); document.getElementById('modal-close-btn').onclick = () => { dom.modal.backdrop.classList.add('hidden'); }; }
+        function showConnectionHelpModal() { const title = "Trợ giúp Kết nối & Cấu hình"; const content = `<p class="mb-4">Nếu bạn gặp lỗi kết nối hoặc không tải được dữ liệu, vui lòng kiểm tra các mục sau trong dự án Firebase của bạn:</p><h4 class="font-bold text-lg text-yellow-300 mt-4 mb-2">1. Xác thực (Authentication)</h4><p class="mb-2">Lỗi <strong>auth/network-request-failed</strong> thường do tên miền của ứng dụng chưa được cho phép.</p><ul class="list-disc list-inside space-y-1"><li>Đi tới <strong>Build ➞ Authentication ➞ Settings ➞ Authorized domains</strong>.</li><li>Nhấn <strong>Add domain</strong> và thêm tên miền bạn thấy trên thanh địa chỉ của trình duyệt.</li></ul><h4 class="font-bold text-lg text-yellow-300 mt-4 mb-2">2. Cơ sở dữ liệu Firestore</h4><p class="mb-2">Lỗi không tải được chương thường do thiếu <strong>Quy tắc (Rules)</strong> và <strong>Chỉ mục (Index)</strong>.</p><ul class="list-disc list-inside space-y-1"><li><strong>Quy tắc:</strong> Vào <strong>Build ➞ Firestore Database ➞ Rules</strong>, và dán vào:<pre class="bg-[#010409] p-2 rounded-md text-xs text-yellow-300 overflow-x-auto my-2"><code>rules_version = '2';\nservice cloud.firestore {\n  match /databases/{database}/documents {\n    match /{document=**} {\n      allow read, write: if request.auth != null;\n    }\n  }\n}</code></pre></li><li><strong>Chỉ mục:</strong> Nếu gặp lỗi "failed-precondition", Firebase sẽ cung cấp một link trong Console (F12) để tạo chỉ mục tự động. Hãy nhấn vào đó để tạo. Chỉ mục cần thiết là cho collection <strong>'chapters'</strong>, trường <strong>'createdAt'</strong>, sắp xếp <strong>tăng dần (Ascending)</strong>.</li></ul><h4 class="font-bold text-lg text-yellow-300 mt-4 mb-2">3. Gemini API Key</h4><p class="mb-2">Lỗi khi tạo chương thường liên quan đến API Key hoặc cấu hình dự án Google Cloud của bạn.</p><ul class="list-disc list-inside space-y-2"><li><strong>Lỗi 403 (Forbidden / Bị cấm):</strong> Lỗi này thường có nghĩa là API Key của bạn hợp lệ, nhưng không có quyền truy cập.<ul class="list-disc list-inside ml-4 mt-1"><li>Hãy chắc chắn rằng bạn đã bật <strong>"Generative Language API"</strong> (hoặc <strong>Vertex AI API</strong>) trong Google Cloud Console cho dự án tương ứng.</li><li>Kiểm tra xem dự án của bạn có yêu cầu bật thanh toán (Billing) không.</li><li>Kiểm tra các giới hạn của API Key (ví dụ: giới hạn tên miền HTTP).</li></ul></li><li><strong>Lỗi 401 (Unauthorized / Không được phép):</strong> Lỗi này thường có nghĩa là API Key bạn cung cấp không hợp lệ hoặc đã hết hạn.</li></ul><p class="mt-2">Bạn có thể lấy khóa API miễn phí từ <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-400 hover:underline">Google AI Studio</a> và dán vào ô "Gemini API Key".</p>`; showInfoModal(title, content); }
+        
+        function switchToOnlineMode() { operatingMode = 'online'; localStorage.setItem('operatingMode', 'online'); dom.modeOnlineBtn.classList.add('active'); dom.modeOfflineBtn.classList.remove('active'); dom.onlineModeContainer.classList.remove('hidden'); dom.autoGenerateBtn.disabled = true; resetStoryState(); dom.connectionStatus.textContent = "Chưa kết nối"; dom.connectionStatus.classList.add('text-gray-500'); dom.connectionStatus.classList.remove('text-green-400', 'text-red-500'); showToast("Đã chuyển sang chế độ Online. Vui lòng kết nối.", "success"); }
+        function switchToOfflineMode() { operatingMode = 'offline'; localStorage.setItem('operatingMode', 'offline'); dom.modeOfflineBtn.classList.add('active'); dom.modeOnlineBtn.classList.remove('active'); dom.onlineModeContainer.classList.add('hidden'); dom.autoGenerateBtn.disabled = false; if (unsubscribeSettings) unsubscribeSettings(); if (unsubscribeChapters) unsubscribeChapters(); unsubscribeSettings = null; unsubscribeChapters = null; isAuthReady = false; storyKey = 'offline-story'; loadOfflineStory(); showToast("Đã chuyển sang chế độ Offline. Dữ liệu được lưu tại trình duyệt.", "success"); }
+
+        function loadOfflineStory() {
+            resetStoryState();
+            const data = localStorage.getItem(OFFLINE_STORAGE_KEY);
+            if (data) {
+                const parsedData = JSON.parse(data);
+                storySettings = parsedData.settings || { genres: [], supportingCharacters: [], characterStatus: '' };
+                storyChapters = parsedData.chapters || [];
+                currentChapterId = storySettings.readingChapterId || (storyChapters.length > 0 ? storyChapters[storyChapters.length - 1].id : null);
+            }
+            updateUIFromState(true);
+        }
+
+        function saveOfflineStory() { if (operatingMode !== 'offline') return; const dataToSave = { settings: storySettings, chapters: storyChapters, }; localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(dataToSave)); }
+        function updateUIFromState(isFullReload = false) { updateSettingsUI(storySettings); renderChapterList(); updateDeleteChapterSelect(); displayCurrentChapter(isFullReload); }
+
+        async function connectAndLoad() {
+            if (operatingMode !== 'online') return;
+            const configRaw = dom.firebaseConfigInput.value; const geminiKey = dom.geminiApiKeyInput.value.trim(); const newStoryKey = dom.storyKeyInput.value.trim().replace(/[^a-zA-Z0-9-]/g, '');
+            if (!configRaw.trim() || !newStoryKey) { showToast("Vui lòng nhập Cấu hình Firebase và Mã Truyện.", "error"); return; }
+            let firebaseConfig;
+            try { const startIndex = configRaw.indexOf('{'); const endIndex = configRaw.lastIndexOf('}'); if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) throw new Error("Không tìm thấy đối tượng JSON/Object hợp lệ."); const objectString = configRaw.substring(startIndex, endIndex + 1); firebaseConfig = new Function(`return ${objectString}`)(); if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId) throw new Error("Cấu hình Firebase thiếu trường bắt buộc."); } catch (e) { showToast(`Lỗi phân tích Cấu hình: ${e.message}`, "error", 6000); console.error(e); return; }
+            try { if (unsubscribeSettings) unsubscribeSettings(); if (unsubscribeChapters) unsubscribeChapters(); const existingApp = getApps().find(app => app.name === newStoryKey); if (existingApp) await deleteApp(existingApp); app = initializeApp(firebaseConfig, newStoryKey); db = getFirestore(app); auth = getAuth(app); await signInAnonymously(auth); isAuthReady = true; storyKey = newStoryKey; localStorage.setItem('userFirebaseConfig', configRaw); localStorage.setItem('userStoryKey', storyKey); if (geminiKey) localStorage.setItem('userGeminiApiKey', geminiKey); dom.connectionStatus.textContent = `Đã kết nối: ${firebaseConfig.projectId}`; dom.connectionStatus.classList.remove('text-gray-500', 'text-red-500'); dom.connectionStatus.classList.add('text-green-400'); showToast(`Kết nối thành công tới dự án: ${firebaseConfig.projectId}`, 'success'); resetStoryState(); setupListeners(); dom.autoGenerateBtn.disabled = false; } catch (error) { isAuthReady = false; console.error("Firebase initialization failed:", error); if (error.code === 'auth/network-request-failed') { showToast("Lỗi mạng khi xác thực. Kiểm tra cài đặt Firebase.", "error", 8000); showConnectionHelpModal(); } else { showToast(`Lỗi kết nối Firebase: ${error.message}`, "error", 6000); } dom.connectionStatus.textContent = "Kết nối thất bại"; dom.connectionStatus.classList.add('text-red-500'); dom.connectionStatus.classList.remove('text-green-400', 'text-gray-500'); }
+        }
+        
+        function resetStoryState() { storySettings = { genres: [], supportingCharacters: [], characterStatus: '' }; storyChapters = []; currentChapterId = null; updateSettingsUI({}); renderChapterList(); displayCurrentChapter(true); }
+        function getStoryDocRef() { return (db && storyKey && operatingMode === 'online') ? doc(db, `stories/${storyKey}`) : null; }
+        function getChaptersCollectionRef() { const storyDocRef = getStoryDocRef(); return storyDocRef ? collection(storyDocRef, 'chapters') : null; }
+
+        function setupListeners() { if (operatingMode !== 'online' || !isAuthReady || !storyKey) return; setupSettingsListener(); setupChaptersListener(); }
+
+        function setupSettingsListener() {
+            const storyDocRef = getStoryDocRef(); if (!storyDocRef) return; if (unsubscribeSettings) unsubscribeSettings();
+            unsubscribeSettings = onSnapshot(storyDocRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data(); storySettings = data;
+                    if (!Array.isArray(storySettings.genres)) storySettings.genres = [];
+                    if (!Array.isArray(storySettings.supportingCharacters)) storySettings.supportingCharacters = [];
+                    if (!storySettings.characterStatus) storySettings.characterStatus = '';
+                    if (!speechState.reading && !isGenerating) { currentChapterId = data.readingChapterId || currentChapterId; speechState.charIndexOffset = data.readingCharIndex || 0; }
+                    dom.speedControl.value = data.readingSpeed || '1.0';
+                    if (data.readingVoiceName && speechState.voices.length > 0) dom.voiceSelect.value = data.readingVoiceName;
+                    updateSettingsUI(storySettings);
+                    if (!storyChapters.length) displayCurrentChapter(true);
+                } else { storySettings = { genres: [], supportingCharacters: [], characterStatus: '' }; updateSettingsUI({}); }
+            }, (error) => { console.error("Firestore settings listener error:", error); showToast("Lỗi khi tải cài đặt truyện. Kiểm tra lại Quy tắc Bảo mật.", "error"); });
+        }
+
+        function setupChaptersListener() {
+            const chaptersRef = getChaptersCollectionRef(); if (!chaptersRef) return; if (unsubscribeChapters) unsubscribeChapters();
+            const q = query(chaptersRef, orderBy("createdAt", "asc"));
+            unsubscribeChapters = onSnapshot(q, (snapshot) => {
+                storyChapters = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderChapterList(); updateDeleteChapterSelect(); updateNavButtons();
+                const chapterExists = storyChapters.some(c => c.id === currentChapterId);
+                if (!chapterExists) {
+                    const savedChapterId = storySettings.readingChapterId;
+                    const savedChapterExists = storyChapters.some(c => c.id === savedChapterId);
+                    if (savedChapterExists) { currentChapterId = savedChapterId; } 
+                    else if (storyChapters.length > 0) { currentChapterId = storyChapters[storyChapters.length - 1].id; } 
+                    else { currentChapterId = null; }
+                    displayCurrentChapter(true);
+                }
+            }, (error) => { console.error("Firestore chapters listener error:", error); if (error.code === 'failed-precondition') { showToast("Lỗi: Cần tạo Index trong Firestore. Bảng trợ giúp sẽ hiện lên.", "error", 10000); showConnectionHelpModal(); } else { showToast(`Lỗi tải chương: ${error.message}`, "error", 6000); } });
+        }
+        
+        async function saveReadingState() {
+             if (operatingMode === 'offline') { storySettings.readingChapterId = currentChapterId; storySettings.readingCharIndex = speechState.charIndexOffset; storySettings.readingSpeed = dom.speedControl.value; storySettings.readingVoiceName = dom.voiceSelect.value; saveOfflineStory(); } 
+             else { if (!isAuthReady || !storyKey) return; const storyDocRef = getStoryDocRef(); if (!storyDocRef) return; const stateToSave = { readingChapterId: currentChapterId, readingCharIndex: speechState.charIndexOffset, readingSpeed: dom.speedControl.value, readingVoiceName: dom.voiceSelect.value }; try { await setDoc(storyDocRef, stateToSave, { merge: true }); } catch (error) { console.error("Error saving reading state:", error); } }
+        }
+
+        function updateSettingsUI(settings) {
+            const activeEl = document.activeElement; const isTyping = Array.from(document.querySelectorAll('textarea, input')).includes(activeEl);
+            if (!isTyping) {
+                dom.inputs.aiCoreRules.value = settings.aiCoreRules || DEFAULT_AI_CORE_RULES;
+                dom.inputs.world.value = settings.world || ''; dom.inputs.style.value = settings.style || ''; dom.inputs.styleExample.value = settings.styleExample || ''; dom.inputs.character.value = settings.character || ''; dom.inputs.system.value = settings.system || ''; dom.inputs.plot.value = settings.plot || ''; dom.inputs.difficulty.value = settings.difficulty || ''; dom.inputs.contribution.value = settings.contribution || ''; dom.inputs.eventFlow.value = settings.eventFlow || ''; dom.inputs.originalStory.value = settings.originalStory || '';
+            }
+            if (activeEl !== dom.inputs.characterStatus) { dom.inputs.characterStatus.value = settings.characterStatus || ''; }
+            storySettings.genres = settings.genres || []; storySettings.supportingCharacters = settings.supportingCharacters || [];
+            renderSelectedGenres(); renderSupportingCharacters();
+            dom.inputs.nsfwToggle.checked = !!settings.nsfw;
+        }
+        
+        function updateDeleteChapterSelect() { dom.deleteChapterSelect.innerHTML = storyChapters.map((ch, index) => `<option value="${ch.id}">${index + 1}: ${ch.title}</option>`).join(''); }
+        function renderChapterList() { dom.chapterList.innerHTML = ''; storyChapters.forEach(chapter => appendChapterToUI(chapter)); }
+        function appendChapterToUI(chapter) { const chapterIndex = storyChapters.findIndex(c => c.id === chapter.id); const li = document.createElement('li'); li.className = `text-sm text-gray-300 hover:bg-[#1f6feb] hover:text-white p-2 rounded-md cursor-pointer transition-colors duration-200`; li.textContent = `Chương ${chapterIndex + 1}: ${chapter.title}`; li.dataset.chapterId = chapter.id; li.addEventListener('click', () => { navigateChapter(0, false); }); dom.chapterList.appendChild(li); }
+        
+        function displayCurrentChapter(isUserNavigation = false) {
+            if (isChapterEditMode) exitChapterEditMode(true);
+            if (isUserNavigation) dom.chapterTextWrapper.scrollTop = 0;
+            if (chapterTitleTimeout) clearTimeout(chapterTitleTimeout);
+
+            document.querySelectorAll('#chapter-list li').forEach(li => {
+                li.classList.toggle('active-chapter', li.dataset.chapterId === currentChapterId);
+            });
+            
+            const chapter = storyChapters.find(c => c.id === currentChapterId);
+            
+            if (chapter) {
+                const chapterIndex = storyChapters.findIndex(c => c.id === currentChapterId);
+                dom.chapterTitle.textContent = `Chương ${chapterIndex + 1}: ${chapter.title}`;
+                
+                if (!speechState.reading) {
+                    dom.chapterText.textContent = chapter.content;
+                    speechState.fullText = chapter.content;
+                }
+                
+                dom.editControls.container.classList.remove('hidden');
+                
+                dom.chapterTitleWrapper.classList.remove('hidden-title');
+                dom.chapterTitle.className = 'font-black text-white text-center text-5xl leading-tight py-4';
+                chapterTitleTimeout = setTimeout(() => {
+                    dom.chapterTitleWrapper.classList.add('hidden-title');
+                }, 5000);
+                
+            } else {
+                dom.chapterTitle.textContent = 'Chào mừng!';
+                dom.chapterTitle.className = 'text-2xl font-bold text-white';
+                dom.chapterTitleWrapper.classList.remove('hidden-title');
+                dom.chapterText.innerHTML = (operatingMode === 'offline') ? '<p>Truyện offline của bạn chưa có nội dung. Hãy điền các Trụ Cột Cốt Truyện và bắt đầu sáng tác!</p>' : '<p>Vui lòng chọn **Chế độ Vận hành** ở bảng điều khiển bên trái để bắt đầu.</p>';
+                speechState.fullText = '';
+                dom.editControls.container.classList.add('hidden');
+            }
+            updateNavButtons();
+        }
+
+        function updateNavButtons() { const currentIndex = storyChapters.findIndex(c => c.id === currentChapterId); dom.prevChapterBtn.disabled = currentIndex <= 0; dom.nextChapterBtn.disabled = currentIndex >= storyChapters.length - 1 || currentIndex === -1; }
+        
+        async function postDeletionUpdate(startIndex) {
+            if (startIndex === 0) {
+                storySettings.characterStatus = '';
+                dom.inputs.characterStatus.value = '';
+                await saveStorySettings(true);
+                showToast("Đã xóa toàn bộ trạng thái nhân vật.", "success");
+            } else {
+                await updateCharacterStatusFromStory(true);
+            }
+            await updateNpcListFromStory(true);
+        }
+
+        async function deleteAllData() { const confirmAction = async () => { if (operatingMode === 'offline') { localStorage.removeItem(OFFLINE_STORAGE_KEY); resetStoryState(); updateUIFromState(true); showToast(`Toàn bộ dữ liệu truyện offline đã được xóa.`); } else { if (!isAuthReady || !storyKey) return showToast("Vui lòng kết nối Firebase và tải truyện trước.", "error"); const chaptersRef = getChaptersCollectionRef(); const storyDocRef = getStoryDocRef(); if (!chaptersRef || !storyDocRef) return; const allChaptersSnapshot = await getDocs(chaptersRef); const batch = writeBatch(db); allChaptersSnapshot.forEach((doc) => batch.delete(doc.ref)); await batch.commit(); await deleteDoc(storyDocRef); dom.inputs.eventFlow.value = ''; await saveStorySettings(true); showToast(`Toàn bộ dữ liệu của truyện "${storyKey}" đã được xóa.`); } stopReading(); if (autoGenerateInterval) clearInterval(autoGenerateInterval); dom.autoGenToggle.checked = false; }; showConfirmationModal('Xác nhận Xóa Toàn Bộ Truyện', `Hành động này sẽ xóa vĩnh viễn toàn bộ dữ liệu của truyện trong chế độ **${operatingMode.toUpperCase()}**. Bạn không thể hoàn tác.`, confirmAction); }
+        async function deleteChaptersFrom(startChapterId) { const startChapter = storyChapters.find(ch => ch.id === startChapterId); if (!startChapter) return showToast("Không tìm thấy chương để xóa.", 'error'); const confirmAction = async () => { stopReading(); const startIndex = storyChapters.findIndex(c => c.id === startChapterId); const chaptersToDeleteCount = storyChapters.length - startIndex; if (operatingMode === 'offline') { storyChapters.splice(startIndex); saveOfflineStory(); loadOfflineStory(); showToast(`Đã xóa thành công ${chaptersToDeleteCount} chương.`); postDeletionUpdate(startIndex); } else { if (!isAuthReady || !storyKey) return showToast("Vui lòng kết nối Firebase và tải truyện trước.", "error"); try { const chaptersRef = getChaptersCollectionRef(); const q = query(chaptersRef, where("createdAt", ">=", startChapter.createdAt)); const snapshot = await getDocs(q); const batch = writeBatch(db); snapshot.forEach(doc => batch.delete(doc.ref)); await batch.commit(); showToast(`Đã xóa thành công ${snapshot.size} chương.`); postDeletionUpdate(startIndex); } catch (error) { console.error("Error deleting chapters:", error); if (error.code === 'failed-precondition') { showToast("Lỗi xóa chương: Cần tạo Index trong Firestore. Bảng trợ giúp sẽ hiện lên.", "error", 10000); showConnectionHelpModal(); } else { showToast(`Lỗi xóa chương: ${error.message}`, "error", 6000); } } } }; showConfirmationModal( `Xác nhận Xóa Chương`, `Bạn có chắc muốn xóa vĩnh viễn từ Chương ${storyChapters.findIndex(c => c.id === startChapterId) + 1} đến cuối? Hành động này không thể hoàn tác.`, confirmAction); }
+        async function exportStoryData() {
+            await saveStorySettings(true);
+            showToast("Đang chuẩn bị dữ liệu để xuất...", "success");
+            const dataToExport = {
+                storyKey: storyKey || 'offline-story',
+                firebaseConfig: dom.firebaseConfigInput.value || '',
+                exportDate: new Date().toISOString(),
+                settings: storySettings,
+                chapters: storyChapters
+            };
+            const jsonString = JSON.stringify(dataToExport, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${storyKey || 'offline-story'}_backup.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("Đã bắt đầu tải tệp truyện xuống.", "success");
+        }
+        function handleFileImport(event) {
+            const file = event.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (!importedData.settings || !Array.isArray(importedData.chapters)) { throw new Error("Tệp không hợp lệ hoặc bị hỏng."); }
+                    
+                    if (importedData.firebaseConfig && importedData.storyKey) {
+                        dom.firebaseConfigInput.value = importedData.firebaseConfig;
+                        dom.storyKeyInput.value = importedData.storyKey;
+                        showToast("Đã điền Cấu hình & Mã Truyện từ tệp. Nhấn 'Kết nối' nếu muốn tải truyện online đó.", "success", 6000);
+                    }
+
+                    const confirmMessage = operatingMode === 'offline' ? `Hành động này sẽ **xóa sạch** truyện offline hiện tại và thay thế bằng dữ liệu từ tệp "${file.name}". Bạn chắc chứ?` : `Hành động này sẽ **xóa sạch** truyện online "${storyKey || ''}" và thay thế bằng dữ liệu từ tệp "${file.name}". Bạn chắc chứ?`;
+                    
+                    showConfirmationModal('Xác nhận Tải Lên & Ghi Đè', confirmMessage, async () => {
+                        showToast("Đang xóa dữ liệu cũ và nhập dữ liệu mới...", "success");
+                        await processImport(importedData);
+                    });
+                } catch (error) { console.error("Lỗi khi đọc tệp:", error); showToast(`Lỗi đọc tệp: ${error.message}`, "error"); }
+                finally { event.target.value = null; }
+            };
+            reader.readAsText(file);
+        }
+        async function processImport(data) { if (operatingMode === 'offline') { localStorage.setItem(OFFLINE_STORAGE_KEY, JSON.stringify(data)); loadOfflineStory(); showToast("Tải lên và ghi đè dữ liệu offline thành công!", "success"); } else { if (!isAuthReady || !storyKey) return showToast("Lỗi: Không có truyện nào được kết nối.", "error"); const storyDocRef = getStoryDocRef(); const chaptersRef = getChaptersCollectionRef(); if (!storyDocRef || !chaptersRef) return; try { const oldSnapshot = await getDocs(chaptersRef); let deleteBatch = writeBatch(db); oldSnapshot.forEach(doc => deleteBatch.delete(doc.ref)); await deleteBatch.commit(); await setDoc(storyDocRef, data.settings); const chapterChunks = []; for (let i = 0; i < data.chapters.length; i += 400) { chapterChunks.push(data.chapters.slice(i, i + 400)); } for (const chunk of chapterChunks) { let addBatch = writeBatch(db); chunk.forEach(chapter => { const { id, ...chapterData } = chapter; const newChapterRef = doc(chaptersRef); addBatch.set(newChapterRef, chapterData); }); await addBatch.commit(); } showToast("Tải lên và ghi đè dữ liệu online thành công! Dữ liệu sẽ sớm được đồng bộ.", "success"); } catch (error) { console.error("Lỗi trong quá trình tải lên:", error); showToast("Đã xảy ra lỗi nghiêm trọng khi ghi dữ liệu.", "error"); } } }
+        
+        async function saveStorySettings(silent = false) {
+            if (isSaving) return; isSaving = true;
+            const settings = {
+                aiCoreRules: dom.inputs.aiCoreRules.value, genres: storySettings.genres || [], supportingCharacters: storySettings.supportingCharacters || [], originalStory: dom.inputs.originalStory.value, world: dom.inputs.world.value, style: dom.inputs.style.value, styleExample: dom.inputs.styleExample.value, character: dom.inputs.character.value, system: dom.inputs.system.value, plot: dom.inputs.plot.value, difficulty: dom.inputs.difficulty.value, nsfw: dom.inputs.nsfwToggle.checked, contribution: dom.inputs.contribution.value, eventFlow: dom.inputs.eventFlow.value, characterStatus: dom.inputs.characterStatus.value,
+            };
+            storySettings = { ...storySettings, ...settings };
+            if (operatingMode === 'offline') { saveOfflineStory(); if (!silent) showToast("Đã lưu cài đặt (Offline)!", "success"); } 
+            else { if (!isAuthReady || !storyKey) { isSaving = false; return; } const storyDocRef = getStoryDocRef(); if (!storyDocRef) { isSaving = false; return; } try { await setDoc(storyDocRef, settings, { merge: true }); if (!silent) showToast("Đã lưu cài đặt (Online)!", "success"); } catch (error) { console.error("Error saving settings: ", error); if (!silent) showToast("Lỗi lưu cài đặt: " + error.message, "error"); } }
+            isSaving = false;
+        }
+
+        function getGenreInstructions(genreKey, originalStoryName) {
+            const baseInstructions = {
+             'ngon_tinh': "Mệnh lệnh thể loại: Đây là truyện NGÔN TÌNH. Tập trung sâu vào sự phát triển tình cảm giữa các nhân vật, các tương tác lãng mạn, diễn biến tâm lý phức tạp và những trở ngại trong tình yêu. Ưu tiên xây dựng không khí lãng mạn và những khoảnh khắc rung động.",
+             'cot_nha': "Mệnh lệnh thể loại: Đây là truyện có ngôn từ hệ cợt nhả Ngôn từ khoa trương phóng đại nhưng không làm loạn mạch truyện (đúng: “một cái hắt xì long trời lở đất”, sai: “một hắt xì nổ tung cả vũ trụ”)... tình huống nguy hiểm biến thành trò cười nhưng không phá hỏng sự hợp lý (đúng: “rơi xuống vực còn lo mất dép”, sai: “rơi xuống vực mà vẫn livestream tám chuyện”)... có thể dùng thành ngữ bóp méo để gây cười nhưng không quá lạc quẻ (đúng: “mưu sự tại nhân, thành bại tại... ông hàng xóm”, sai: “mưu sự tại nhân, thành bại tại Pikachu”)... nhân vật tự giễu bản thân nhưng vẫn giữ cá tính (đúng: “ta tu tiên mấy trăm năm, vẫn nghèo như chó”, sai: “ta tu tiên mấy trăm năm, nay đi bán bảo hiểm”)... tình tiết có thể vô lý nhưng phải vô lý một cách hợp lý, khiến người đọc cười mà vẫn chấp nhận được....",
+             'tien_hiep': `Mệnh lệnh thể loại: Đây là truyện TIÊN HIỆP. BẠN PHẢI TUÂN THỦ TUYỆT ĐỐI CÁC QUY TẮC BẤT BIẾN CỦA THẾ GIỚI TU TIÊN DƯỚI ĐÂY. Mọi sự vi phạm sẽ phá vỡ logic của câu chuyện.
+--- QUY TẮC THẾ GIỚI TU TIÊN (BẮT BUỘC ÁP DỤNG) ---
+0.  **Chú ý:** Người tu tiên → “siêu phàm thoát tục”, “khí chất thanh trần”, “y phục sạch sẽ”, “cảnh vật hài hòa linh khí”, “môi trường tương xứng cảnh giới” Không xuất hiện từ khóa: “rách rưới”, “tồi tàn”, “bẩn thỉu” ... (trừ khi có lý do rõ ràng).
+1.  **Cảnh Giới Tu Luyện:** Cần phải quy chuẩn tất cả cảnh giới của tất cả chủng tộc về Nhân tộc (Luyện Khí, Trúc Cơ, Kim Đan...) từ những cảnh giới của chủng tộc khác chỉ 1 lần duy nhất khi lần đầu gặp. Ví dụ: '...hắn ngước nhìn lên một tôn Yêu Vương, tương đương với một tu sĩ Hóa Thần của Nhân tộc...'.
+2.  **Chênh lệch Thiên Phú:** Luôn tồn tại sự khác biệt, chênh lệch và sự nghiêng tài nguyên cực lớn giữa các thiên phú khác nhau, tùy từng khu vực, tùy từng người quản sự.
+3.  **Phàm Nhân và Tu Sĩ:** Đa phần trong thế giới là phàm nhân. Thế giới cấp thấp (ví dụ: Kim Đan là đỉnh) thì tu sĩ chiếm ~1%. Thế giới cấp cao (có Đại Thừa) thì tu sĩ chiếm ~20%. Phàm nhân không thể tự dùng pháp bảo cần linh lực, nhưng có thể dùng các vật phẩm đã được kích hoạt sẵn (ví dụ: phù lục đã được nạp một tia linh khí).
+4.  **Công Pháp & Thần Thông:** Công pháp/nghề nghiệp phải phù hợp với bản thân mới phát huy hết tác dụng, và thường thể hiện ra phong cách/ngoại hình của nhân vật. Mọi thần thông đều phải có nguồn gốc rõ ràng (công pháp, huyết mạch, cơ duyên lớn).
+5.  **Thực Lực Vi Tôn (Quy tắc Rừng Rậm):** Nguyên tắc cơ bản nhất là 'kẻ mạnh làm vua'. Đạo lý chỉ tồn tại khi thực lực ngang bằng. Giết người đoạt bảo là chuyện bình thường.
+6.  **Nhân Quả & Dây Dưa Thế Lực ('Giết tiểu nhân, đến lão nhân'):** Mọi hành động đều có thể gây ra hậu quả. Giết một tên tu sĩ trẻ có thể dẫn đến sự truy sát của cả gia tộc, tông môn của hắn.
+7.  **Sự Quý Giá Của Thông Tin & 'Thiên Cơ Bất Khả Lộ':** Thông tin là một loại tài nguyên, lưu trữ trong 'ngọc giản'. Thông tin về vận mệnh, tương lai (Thiên Cơ) không thể tùy tiện dò xét, nếu không sẽ bị trời phạt (thiên khiển).
+8.  **Tuổi Thọ (Thọ Nguyên) Là Động Lực:** Mỗi cảnh giới có giới hạn tuổi thọ. Nếu thọ nguyên cạn kiệt mà không đột phá, tu sĩ sẽ chết. Đây là động lực lớn nhất để tranh đoạt cơ duyên.
+9.  **Bản Chất Của Cơ Duyên:** Nguy hiểm luôn đi cùng lợi ích ('Trong nguy có cơ'). Hang động của tiền nhân luôn có cạm bẫy. Thiên tài địa bảo luôn có yêu thú mạnh canh giữ. Không có chuyện bảo vật tự rơi vào tay.
+10. **Tâm Cảnh Quan Trọng Không Kém Tu Vi:** Tâm cảnh không vững sẽ sinh ra 'tâm ma' khi đột phá, dẫn đến tẩu hỏa nhập ma. Tu sĩ không chỉ 'tu luyện' mà còn phải 'tu tâm'.
+11. **Giao Dịch & Linh Thạch:** Đơn vị tiền tệ chính là Linh Thạch (dùng để mua bán và tu luyện). 'Dĩ vật dịch vật' cũng phổ biến. Đấu giá hội là nơi quan trọng. Tỷ giá quy đổi giữa các cấp linh thạch là 1/100, nhưng có thể chênh lệch.
+12. **Phân Thân và Hóa Thân:** Đối với cường giả, việc có phân thân/hóa thân là chuyện thường tình để xử lý công việc, thám hiểm hoặc làm mồi nhử. Giết một hóa thân không có nhiều ý nghĩa.
+13. **Giá Trị Kinh Tế:** Giá trị của mọi thứ (linh thạch, pháp bảo) phải xoay quanh giá trị của vật phẩm tiêu hao cơ bản nhất (ví dụ: đan dược tu luyện cấp thấp). Khi chiến tranh xảy ra, đan dược trở nên đắt đỏ, giá trị của các vật phẩm khác cũng thay đổi theo. Túi trữ vật phải có giá trị thấp hơn nhiều so với tổng giá trị vật phẩm bên trong nó.
+14. **Chênh Lệch Cảnh Giới:** Phải thể hiện rõ ràng sự chênh lệch và áp chế tuyệt đối giữa các cảnh giới.
+15. **Địa Vị Tu Sĩ:** Dù là Luyện Khí tầng một, cuộc sống cũng phải tốt hơn phàm nhân giàu có nhất. Không thể dùng đồ mẻ, mặc đồ rách (trừ khi là pháp bảo bị hư hại). Đi đến đâu cũng được phàm nhân tôn trọng. Có người hầu hạ là tối thiểu (trừ khi nhân vật muốn ẩn dật).
+16. **Nhu Cầu Sinh Tồn:** Ở cảnh giới thấp, tu sĩ vẫn cần ăn uống để duy trì sinh mệnh nếu không hấp thụ đủ linh khí.
+17. **Thiên Đạo và Quy Tắc:** Mỗi thế giới có Thiên Đạo vận hành quy luật. Công pháp nghịch thiên sẽ bị Thiên Đạo áp chế.
+18. **Chủng Tộc:** Các chủng tộc khác nhau có giới hạn và thiên phú riêng.
+19. **Khế Ước:** Khế ước (linh thú, huyết mạch, nô dịch...) là yếu tố quan trọng và luôn cần điều kiện để thực hiện.
+20. **Điều Kiện Sử Dụng:** Cần tu vi/vị thế tương ứng để sử dụng vật phẩm. Người Luyện Khí không thể kích phát Linh Bảo.
+21. **quy tắc tối thượng:**Cấu trúc cảnh giới nên chia thành đại cảnh giới (ví dụ: Luyện Khí từ tầng 1 đến tần 10 mỗi tầng là một tiểu cảnh giớii– Trúc Cơ – Kim Đan – Nguyên Anh – Hóa Thần – Hợp Thể – Độ Kiếp – Đại Thừa – Chân Tiên) và tiểu cảnh giới hoặc tầng (ví dụ: sơ kỳ, trung kỳ, hậu kỳ, đỉnh phong). Ví dụ đúng: “Luyện Khí chia thành mười tầng, sau khi đạt đỉnh mới có thể Trúc Cơ.” Ví dụ sai: “Từ Luyện Khí có thể trực tiếp lên Nguyên Anh” (không qua trung gian, phá vỡ logic sức mạnh).Quy tắc 2: Mỗi cảnh giới cần có yêu cầu rõ ràng để đột phá, có thể là lượng linh lực, hiểu ngộ pháp tắc, công pháp phù hợp hoặc điều kiện ngoại cảnh. Ví dụ đúng: “Để Trúc Cơ, hắn cần đủ mười hai giọt Linh Dịch.” Ví dụ sai: “Hắn đột nhiên cảm giác mình mạnh lên và vào Trúc Cơ” (thiếu điều kiện hợp lý).Quy tắc 3: Khoảng cách sức mạnh giữa các cảnh giới phải rõ ràng, tuyệt đối không để cảnh giới thấp dễ dàng thắng cảnh giới cao nếu không có lý do đặc biệt (thiên phú, cơ duyên, pháp bảo nghịch thiên). Ví dụ đúng: “Dù hắn dốc toàn lực, trước Kim Đan hậu kỳ vẫn như con kiến.” Ví dụ sai: “Hắn luyện khí tầng ba nhưng đánh bại Nguyên Anh trung kỳ” (không có cơ sở).Quy tắc 4: Hệ thống cảnh giới có thể tùy chỉnh để phù hợp thế giới riêng, nhưng phải nhất quán từ đầu tới cuối. Nếu có nhiều loại cảnh giới (tu chân, luyện thể, luyện thần…) phải giải thích mối liên hệ và sức mạnh tương đối. Ví dụ đúng: “Tu luyện chia làm ba nhánh: Linh Lực, Thể Tu, Thần Niệm. Mỗi nhánh có cấp bậc riêng nhưng tổng thể sức mạnh tương đương.” Ví dụ sai: “Hắn đồng thời là Kim Đan và Luyện Thể tầng hai nhưng sức mạnh ngang Hóa Thần” (không rõ cơ chế).
+22. **Quy tắc tài nguyên:** quy tắc 1 tài nguyên quý hiếm không thể lộ thiên nếu không có lý do đặc biệt. Đúng: “Linh thảo ẩn dưới khe đá, được kết giới ẩn giấu của tông môn bảo vệ.” Sai: “Bên đường, hắn thấy một gốc Linh Chi vạn năm lấp lánh giữa đồng cỏ.” quy tắc 2 tài nguyên phải có sự tranh đoạt, bảo vệ hoặc nguy hiểm tương ứng. Đúng: “Quanh cây Băng Ngọc Thụ có bầy Yêu Thú cấp cao canh giữ.” Sai: “Hắn nhặt được một khối Huyết Ngọc quý giá trên bãi cát, không ai đoái hoài.” quy tắc 3 phân tầng tài nguyên theo cảnh giới người có thể khai thác. Đúng: “Khoáng mạch linh thạch chỉ mở ra ở độ sâu mà tu sĩ Trúc Cơ mới chịu nổi áp lực linh khí.” Sai: “Phàm nhân tình cờ đào đất cũng thấy mỏ linh thạch cực phẩm.” quy tắc 4 giải thích nguồn gốc và chu kỳ xuất hiện. Đúng: “Cứ ba trăm năm, khi sao Huyền Nguyệt chiếu xuống, hoa Linh Tinh mới nở.” Sai: “Hoa Linh Tinh mọc đầy rừng quanh năm.” quy tắc 5 tài nguyên nên gắn liền với hệ sinh thái hoặc thế lực chiếm giữ. Đúng: “Mạch khoáng nằm trong lãnh thổ Yêu Vương, muốn lấy phải đàm phán hoặc chiến đấu.” Sai: “Cả mạch khoáng linh thạch cứ thế nằm trơ trọi trên mặt đất.”
+23. **Quy tắc giới hạn:** Hiểu rõ giới hạn: nhân vật luôn biết tài nguyên, pháp bảo, cảnh giới nào tương ứng với mức độ nào. Không mơ tưởng “mộ Luyện Khí → đột phá Trúc Cơ”, “cỏ dại ven đường → luyện thành Kim Đan”.Thực lực đi đôi với tham vọng: nhân vật chỉ dám mơ tới cơ duyên cao hơn một bậc so với mình (Luyện Khí mơ Trúc Cơ, Trúc Cơ mơ Kim Đan) Không được nhảy cách vô lý trừ khi có năng lực , có sức mạnh ... . Ý thức về sự nguy hiểm: cơ duyên lớn thường đi kèm nguy cơ lớn, nhân vật không thể coi nhẹ, phải vừa tham vừa sợ.
+--- KẾT THÚC QUY TẮC BẮT BUỘC ---`,
+             'huyen_huyen': "Mệnh lệnh thể loại: Đây là truyện HUYỀN HUYỄN. Thế giới có thể có các quy tắc độc đáo (ma pháp, đấu khí, hồn lực). Khuyến khích sự sáng tạo không giới hạn về chủng tộc, hệ thống sức mạnh và bối cảnh.", 
+             'kiem_hiep': "Mệnh lệnh thể loại: Đây là truyện KIẾM HIỆP (Võ Hiệp). Tập trung vào võ công, nội lực, các môn phái trong giang hồ, và tinh thần 'hiệp nghĩa'. Các trận đấu chủ yếu là võ thuật và binh khí, ít yếu tố siêu nhiên.",
+             'do_thi': "Mệnh lệnh thể loại: Đây là truyện ĐÔ THỊ. Bối cảnh là thành phố hiện đại. Có thể kết hợp các yếu tố như dị năng, tu chân, trọng sinh. Tập trung vào các mối quan hệ xã hội, kinh doanh, và xung đột trong môi trường hiện đại.",
+             'khoa_huyen': "Mệnh lệnh thể loại: Đây là truyện KHOA HUYỄN (Sci-Fi). Tập trung vào công nghệ tương lai, du hành vũ trụ, người ngoài hành tinh, cơ giáp. Các khái niệm khoa học, dù là giả tưởng, cần có sự logic nhất định.",
+             'vong_du': "Mệnh lệnh thể loại: Đây là truyện VÕNG DU (Game). Cần có các yếu tố của game như 'bảng thuộc tính', 'vật phẩm', 'kỹ năng', 'cấp độ', 'nhiệm vụ'. Mô tả rõ ràng thế giới trong game và sự tương tác của nhân vật.",
+             'di_nang': "Mệnh lệnh thể loại: Đây là truyện DỊ NĂNG. Tập trung vào các nhân vật sở hữu siêu năng lực. Cần mô tả rõ nguồn gốc, cách sử dụng và giới hạn của các năng lực đó.",
+             'mat_the': "Mệnh lệnh thể loại: Đây là truyện MẠT THẾ. Tập trung vào không khí sinh tồn, sự khan hiếm tài nguyên, mối nguy từ zombie/quái vật/thiên tai và sự sụp đổ của trật tự xã hội. Ngôn ngữ trần trụi, gai góc.",
+             'linh_di': "Mệnh lệnh thể loại: Đây là truyện LINH DỊ. Tập trung vào việc tạo ra không khí rùng rợn, kinh dị. Sử dụng các yếu tố ma quỷ, tâm linh, các sự kiện siêu nhiên khó giải thích để gây sợ hãi.",
+             'lich_su': "Mệnh lệnh thể loại: Đây là truyện LỊCH SỬ. Bối cảnh dựa trên một giai đoạn lịch sử có thật. Cần tôn trọng các sự kiện, nhân vật và bối cảnh văn hóa-xã hội của thời đại đó.",
+             'quan_su': "Mệnh lệnh thể loại: Đây là truyện QUÂN SỰ. Tập trung vào các yếu tố quân đội, chiến tranh, chiến thuật, vũ khí. Cần có sự chính xác nhất định về mặt quân sự.", 
+             'trinh_tham': "Mệnh lệnh thể loại: Đây là truyện TRINH THÁM. Cốt truyện xoay quanh việc điều tra, phá án. Cần xây dựng các tình tiết, manh mối một cách logic, hợp lý để dẫn đến kết luận cuối cùng.", 
+             'dong_nhan': `Mệnh lệnh thể loại: Đây là truyện ĐỒNG NHÂN (Fan-fiction) của tác phẩm "${originalStoryName || 'chưa xác định'}". Bạn phải hành động như một chuyên gia tuyệt đối về thế giới này. Coi diễn biến gốc là "dòng thời gian mặc định". Khi nhân vật chính can thiệp, bạn phải mô phỏng "hiệu ứng cánh bướm" một cách logic. QUY TẮC BỔ SUNG: Nếu nhân vật chính ở xa trung tâm cốt truyện gốc, bạn phải tự mình tạo ra những sự kiện, biến cố, hành động mới một cách hợp lý để phát triển nhân vật và thế giới, sau đó tìm cách kết nối các sự kiện này trở lại với dòng thời gian của mạch truyện chính.`,
+              'sac_18_plus': "Mệnh lệnh thể loại: Đây là truyện SẮC 18+. Tập trung vào các mối quan hệ tình dục và các cảnh thân mật của nhân vật. Yêu cầu mô tả chi tiết, gợi cảm và táo bạo, tập trung vào cảm xúc, sự gần gũi và đam mê.cần so sự giao tiếp giữ nhanh vật chính và nhân vật phụ ở thời điểm bình thường và thời điểm khi đang chuẩn bị và đang quan hệ tình dục . khi quan hệ tình dục cần tiếng rên một cách trực tiếp vĩ dụ a, a,a em thích quá ,em chuẩn bị ra ...sướng quã anh ơi v.v.vv, tùy vào tích cách của nhân vật sẽ có tiếng kêu và cách giao tiếp khác nhau . viết cách mượt mà hơn , nhiều tình tiết hơn , không tập trung vào chuyện giường chiếu hơn ( trì khi cốt truyện , thể loại yêu cầu )",
+             }; 
+             let instruction = baseInstructions[genreKey] || ''; 
+             if (['tien_hiep', 'kiem_hiep', 'huyen_huyen'].includes(genreKey)) { 
+                 instruction += " QUY TẮC BỔ SUNG VỀ MIÊU TẢ: 1. Khi nhân vật chính lần đầu nhìn thấy hoặc lĩnh ngộ vật phẩm/kỹ năng mới, chỉ cần miêu tả sơ qua, không cần đi vào chi tiết. 2. Khi chiến đấu, các kỹ năng có hiệu ứng phải được miêu tả một cách hoành tráng, thể hiện rõ sức mạnh và tác động của nó lên môi trường và đối thủ, đặc biệt khi vượt cấp chiến đấu. Ví dụ: '...một bàn tay che trời rộng hàng triệu dặm đập xuống cả toà thành, hàng trăm vạn người mệnh tang hoàng tuyền.'"; 
+             } 
+             return instruction; 
+        }
+        
+        async function generateStorySummary(isInternalCall = false) {
+            await saveStorySettings(true);
+            if (storyChapters.length === 0) { dom.inputs.eventFlow.value = ''; await saveStorySettings(true); return; } 
+            if (!isInternalCall) { dom.summarizeStoryBtn.disabled = true; dom.summarizeStoryBtn.innerHTML = '<i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> Đang cập nhật...'; lucide.createIcons(); } 
+            const fullStoryText = storyChapters.map((c, i) => `Chương ${i+1}: ${c.title}\n${c.content}`).join('\n\n---\n\n'); 
+            const prompt = `Hãy đọc toàn bộ câu chuyện dưới đây và tạo ra một danh sách gạch đầu dòng (bullet-point) về "Dòng Chảy Sự Kiện & Tình Tiết Quan Trọng". Danh sách này phải bao gồm:\n1.  Các sự kiện chính theo thứ tự thời gian.\n2.  Sự phát triển quan trọng của nhân vật (học kỹ năng mới, thay đổi tính cách).\n3.  Các vật phẩm, nhân vật, hoặc địa điểm quan trọng mới xuất hiện.\n4.  Các quy tắc hoặc bí mật của thế giới được tiết lộ.\n\nGiữ cho mỗi gạch đầu dòng ngắn gọn và đi thẳng vào vấn đề.\n\nDưới đây là toàn bộ câu chuyện:\n${fullStoryText}`; 
+            try { const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] }; const userApiKey = dom.geminiApiKeyInput.value.trim(); const apiKey = userApiKey || ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`; const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) throw new Error(`API call failed with status: ${response.status}`); const result = await response.json(); if (result.candidates?.[0]?.content?.parts?.[0]?.text) { const summary = result.candidates[0].content.parts[0].text; dom.inputs.eventFlow.value = summary; storySettings.eventFlow = summary; await saveStorySettings(true); if (!isInternalCall) showToast("Dòng chảy sự kiện đã được cập nhật.", "success"); } else { throw new Error("Phản hồi từ API không hợp lệ."); } } catch(error) { console.error("Lỗi cập nhật dòng chảy sự kiện:", error); if (!isInternalCall) showToast(`Lỗi cập nhật dòng chảy sự kiện: ${error.message}`, 'error'); } finally { if (!isInternalCall) { dom.summarizeStoryBtn.disabled = false; dom.summarizeStoryBtn.innerHTML = '<i data-lucide="history" class="w-4 h-4"></i> Cập nhật Dòng Chảy từ Toàn bộ Truyện'; lucide.createIcons(); } } 
+        }
+
+        async function updateCharacterStatusFromStory(isInternalCall = false) {
+            if (storyChapters.length === 0) {
+                if (!isInternalCall) showToast("Không có chương nào để phân tích trạng thái.", "error");
+                dom.inputs.characterStatus.value = '';
+                await saveStorySettings(true);
+                return;
+            }
+            if (!isInternalCall) {
+                showToast("Đang phân tích lại trạng thái từ đầu...", "success");
+            }
+            const fullStoryText = storyChapters.map((c, i) => `--- NỘI DUNG CHƯƠNG ${i + 1} ---\n${c.content}`).join('\n\n');
+            const prompt = `Bạn là một quản lý kho và trạng thái nhân vật trong game. Dựa vào TOÀN BỘ nội dung truyện được cung cấp, hãy tạo ra một bảng trạng thái nhân vật tổng hợp.
+
+QUY TẮC:
+1.  Chỉ trả về phần văn bản trạng thái. Không thêm lời chào hay giải thích.
+2.  Tổng hợp tất cả số lượng vật phẩm, kỹ năng, chỉ số... từ đầu truyện đến chương cuối cùng, cần phải tính toán từ số lượng rõ ràng vật phẩm thu chi(thu vào có thể đến từ cướp, đoạt, trộm , kiếm được v.v.v, chi có thể là  ném đi , bị cướp, giao ra ,bị trộm v.v.v), kết toán một cách minh bạch chuẩn xác .
+3.  Đặc biệt chú ý đến các vật phẩm của nhân vật bị nhân vật chính nô dịch vì mọi thứ tài sản của kẻ đó là của nhân vật chính .
+
+TOÀN BỘ NỘI DUNG TRUYỆN:
+---
+${fullStoryText}
+---
+
+BẢNG TRẠNG THÁI TỔNG HỢP:`;
+             try {
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                const userApiKey = dom.geminiApiKeyInput.value.trim(); const apiKey = userApiKey || ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+                const result = await response.json();
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    const newStatus = result.candidates[0].content.parts[0].text;
+                    dom.inputs.characterStatus.value = newStatus;
+                    await saveStorySettings(true);
+                    if (!isInternalCall) showToast("Đã cập nhật lại trạng thái nhân vật thành công!", "success");
+                } else { throw new Error("Phản hồi từ API không hợp lệ."); }
+            } catch(error) {
+                console.error("Lỗi cập nhật trạng thái nhân vật:", error);
+                if (!isInternalCall) showToast(`Lỗi cập nhật trạng thái: ${error.message}`, 'error');
+            }
+        }
+
+        async function generateNextChapter() {
+            if (isGenerating) return;
+            if (operatingMode === 'online' && !isAuthReady) { showToast("Vui lòng kết nối Firebase trước khi tạo chương.", "error"); return; }
+            if (!dom.inputs.character.value || !dom.inputs.world.value) { showToast("Vui lòng điền thông tin Nhân vật chính và Thế giới trước khi tạo chương.", "error"); return; }
+            isGenerating = true; dom.autoGenerateBtn.disabled = true; dom.autoGenerateBtn.innerHTML = '<i data-lucide="loader-2" class="animate-spin"></i> Đang cập nhật & Sáng tạo...'; lucide.createIcons();
+            await saveStorySettings(true);
+            await generateStorySummary(true); await updateNpcListFromStory(true);
+            let npcInstructions = ''; if (storySettings.supportingCharacters && storySettings.supportingCharacters.length > 0) { npcInstructions = `\n- **Danh sách Nhân Vật Phụ (BẮT BUỘC TUÂN THỦ TÍNH CÁCH):** Đây là các nhân vật phụ đã tồn tại trong thế giới. Khi họ xuất hiện, bạn PHẢI đảm bảo hành động, lời nói và phong cách của họ khớp 100% với mô tả dưới đây. Đây là một mệnh lệnh tuyệt đối để duy trì sự nhất quán.\n${storySettings.supportingCharacters.map(npc => `  - **Tên:** ${npc.name} (Tình trạng: ${npc.status})\n    - **Mô tả:** ${npc.description}`).join('\n')}`; }
+            const nsfwRule = storySettings.nsfw ? "Bạn được phép viết các cảnh dành cho người lớn (bạo lực, tình tiết nhạy cảm) một cách tự nhiên." : "Toàn bộ nội dung phải an toàn cho mọi lứa tuổi."; const explicitRule = storySettings.nsfw ? `- **MỆNH LỆNH VỀ NỘI DUNG 18+ (TUYỆT ĐỐI ƯU TIÊN):** Tập trung vào sự tương tác vật lý và cảm xúc mãnh liệt. Mô tả các hành động, cử chỉ ân ái và sự va chạm cơ thể một cách tinh tế nhưng rõ ràng, đủ để khơi gợi trí tưởng tượng của người đọc về sự gần gũi và đam mê.` : ''; const genreInstructions = (storySettings.genres || []).map(genreKey => getGenreInstructions(genreKey, storySettings.originalStory)).filter(instruction => instruction).join('\n'); const styleExamplePrompt = storySettings.styleExample ? `- **Văn Mẫu (HỌC & BẮT CHƯỚC):** Phân tích kỹ và sao chép chặt chẽ văn phong, nhịp điệu, cách dùng từ và cấu trúc câu từ đoạn văn mẫu dưới đây. Đây là chỉ thị quan trọng nhất về phong cách:\n"""\n${storySettings.styleExample}\n"""` : '';
+            const promptTemplate = storySettings.aiCoreRules || DEFAULT_AI_CORE_RULES;
+            const prompt = promptTemplate.replace(/\$\{eventFlow\}/g, storySettings.eventFlow || "Chưa có dòng chảy sự kiện. Đây là chương đầu tiên.").replace(/\$\{character\}/g, storySettings.character || "Chưa xác định.").replace(/\$\{npcInstructions\}/g, npcInstructions).replace(/\$\{world\}/g, storySettings.world || "Chưa xác định.").replace(/\$\{system\}/g, storySettings.system || "Không có.").replace(/\$\{plot\}/g, storySettings.plot || "Chưa xác định.").replace(/\$\{nsfwRule\}/g, nsfwRule).replace(/\$\{genreInstructions\}/g, genreInstructions).replace(/\$\{explicitRule\}/g, explicitRule).replace(/\$\{style\}/g, storySettings.style || "Tự do.").replace(/\$\{styleExamplePrompt\}/g, styleExamplePrompt).replace(/\$\{contribution\}/g, storySettings.contribution || "Viết tiếp một cách liền mạch theo các quy tắc trên.").replace(/\$\{difficulty\}/g, storySettings.difficulty || "Bình thường.");
+            try {
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] }; const userApiKey = dom.geminiApiKeyInput.value.trim(); const apiKey = userApiKey || ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+                const result = await response.json();
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    const rawText = result.candidates[0].content.parts[0].text; const parts = rawText.split('\n---\n'); const title = parts.length >= 2 ? parts[0].trim().replace(/^Tiêu đề: /i, '') : `Chương Lỗi (Cần Sửa Lại)`; const content = parts.length >= 2 ? parts.slice(1).join('\n---\n').trim() : rawText;
+                    if (operatingMode === 'offline') { const newChapter = { title, content, createdAt: Date.now(), id: Date.now().toString() }; storyChapters.push(newChapter); saveOfflineStory(); renderChapterList(); updateDeleteChapterSelect(); updateNavButtons(); showToast(`Đã tạo chương mới (Offline)!`); await updateCharacterStatusFromStory(true); } 
+                    else { const newChapterData = { title, content, createdAt: Date.now() }; await addDoc(getChaptersCollectionRef(), newChapterData); showToast(`Đã gửi yêu cầu tạo chương (Online)!`); await updateCharacterStatusFromStory(true); }
+                    dom.inputs.contribution.value = ''; await saveStorySettings(true);
+                } else { const errorInfo = result.promptFeedback ? `Lỗi từ AI: ${result.promptFeedback.blockReason}` : "Phản hồi từ AI không hợp lệ."; throw new Error(errorInfo); }
+            } catch (error) { console.error("Lỗi tạo chương:", error); if (error.message && error.message.includes('403')) { showToast('Lỗi 403: Từ chối truy cập. Kiểm tra API Key và cài đặt dự án Google Cloud.', 'error', 8000); showConnectionHelpModal(); } else { showToast(`Đã có lỗi xảy ra: ${error.message}`, 'error', 6000); } } 
+            finally { isGenerating = false; dom.autoGenerateBtn.disabled = false; dom.autoGenerateBtn.innerHTML = '<i data-lucide="wand-2"></i> Tạo Chương Thủ Công'; lucide.createIcons(); }
+        }
+
+        function populateVoiceList() { speechState.voices = speechApi.getVoices(); dom.voiceSelect.innerHTML = ''; const viVoices = speechState.voices.filter(v => v.lang.startsWith('vi')); const otherVoices = speechState.voices.filter(v => !v.lang.startsWith('vi')); const createOption = (voice) => { const option = document.createElement('option'); option.textContent = `${voice.name} (${voice.lang})`; option.value = voice.name; return option; }; viVoices.forEach(voice => dom.voiceSelect.appendChild(createOption(voice))); if (viVoices.length > 0 && otherVoices.length > 0) { const separator = document.createElement('option'); separator.disabled = true; separator.textContent = '──────────'; dom.voiceSelect.appendChild(separator); } otherVoices.forEach(voice => dom.voiceSelect.appendChild(createOption(voice))); if (storySettings.readingVoiceName) dom.voiceSelect.value = storySettings.readingVoiceName; else if (viVoices.length > 0) dom.voiceSelect.value = viVoices[0].name; }
+        function playNextChunk() { if (speechState.speechQueue.length === 0 || !speechState.reading) { stopReading(true); return; } const chunk = speechState.speechQueue.shift(); speechState.currentChunkStartIndex = chunk.startIndex; const utterance = new SpeechSynthesisUtterance(chunk.text); speechState.currentUtterance = utterance; const selectedVoice = speechState.voices.find(v => v.name === dom.voiceSelect.value); if (selectedVoice) utterance.voice = selectedVoice; utterance.rate = parseFloat(dom.speedControl.value) || 1.0; utterance.onboundary = (e) => { if (e.name === 'word') { const globalCharIndex = speechState.currentChunkStartIndex + e.charIndex; highlightText(speechState.fullText, globalCharIndex, globalCharIndex + e.charLength); speechState.charIndexOffset = globalCharIndex; } }; utterance.onend = () => { speechState.charIndexOffset = speechState.currentChunkStartIndex + chunk.text.length; playNextChunk(); }; utterance.onerror = (e) => { console.error("SpeechSynthesisUtterance.onerror", e); showToast(`Lỗi đọc: ${e.error || 'Lỗi không xác định từ trình duyệt.'}`, 'error'); stopReading(); }; speechApi.speak(utterance); }
+        function handlePlayPause() { if (isChapterEditMode || isStatusEditMode) { showToast("Vui lòng lưu hoặc hủy chỉnh sửa trước khi đọc.", "error"); return; } if (speechApi.speaking && speechState.reading) { speechApi.pause(); speechState.paused = true; updatePlayPauseIcon(false); } else if (speechState.paused) { speechApi.resume(); speechState.paused = false; updatePlayPauseIcon(true); } else { const chapter = storyChapters.find(c => c.id === currentChapterId); if (!chapter || !chapter.content) return; stopReading(); speechState.fullText = chapter.content; const textToRead = speechState.fullText.substring(speechState.charIndexOffset); const sentences = textToRead.match(/[^.!?]+[.!?]*|[^.!?]+$/g) || []; let currentIndex = speechState.charIndexOffset; speechState.speechQueue = sentences.map(s => { const chunk = { text: s.trim(), startIndex: currentIndex }; currentIndex += s.length; return chunk; }).filter(c => c.text.length > 0); if (speechState.speechQueue.length === 0) return; speechState.reading = true; updatePlayPauseIcon(true); playNextChunk(); } }
+        
+        function stopReading(finishedNaturally = false) {
+            const wasReading = speechState.reading;
+            speechApi.cancel();
+            speechState.reading = false;
+            speechState.paused = false;
+            speechState.speechQueue = [];
+            speechState.currentUtterance = null;
+
+            if (finishedNaturally && wasReading) {
+                speechState.charIndexOffset = 0;
+                const currentIndex = storyChapters.findIndex(c => c.id === currentChapterId);
+                const hasNext = currentIndex !== -1 && currentIndex < storyChapters.length - 1;
+                
+                if (hasNext) {
+                    navigateChapter(1, true); // autoPlay = true
+                    return; 
+                }
+            }
+
+            if (wasReading) saveReadingState();
+            updatePlayPauseIcon(false);
+            highlightText(speechState.fullText, -1, -1);
+        }
+
+        function updatePlayPauseIcon(isPlaying) { dom.playPauseBtn.innerHTML = `<i data-lucide="${isPlaying ? 'pause' : 'play'}" class="w-6 h-6"></i>`; lucide.createIcons(); }
+        function highlightText(fullText, start, end) { if (!fullText || start < 0) { dom.chapterText.textContent = fullText || ''; return; } const before = fullText.substring(0, start); const highlighted = fullText.substring(start, end); const after = fullText.substring(end); dom.chapterText.innerHTML = `<p>${before}<span class="reading-highlight">${highlighted}</span>${after}</p>`; }
+        
+        function toggleFocusMode() { dom.appContainer.classList.toggle('focus-mode'); updateFullscreenIcon(); }
+        function updateFullscreenIcon() { if (dom.appContainer.classList.contains('focus-mode')) { dom.fullscreenBtn.innerHTML = `<i data-lucide="minimize" class="w-5 h-5"></i>`; dom.fullscreenBtn.title = "Thoát chế độ tập trung"; } else { dom.fullscreenBtn.innerHTML = `<i data-lucide="maximize" class="w-5 h-5"></i>`; dom.fullscreenBtn.title = "Chế độ tập trung"; } lucide.createIcons(); }
+        
+        function enterChapterEditMode() { if (speechState.reading) { showToast("Vui lòng dừng đọc trước khi chỉnh sửa.", "error"); return; } isChapterEditMode = true; dom.chapterText.contentEditable = 'true'; dom.chapterText.focus(); dom.editControls.edit.classList.add('hidden'); dom.editControls.save.classList.remove('hidden'); dom.editControls.cancel.classList.remove('hidden'); }
+        function exitChapterEditMode(revert = false) { isChapterEditMode = false; dom.chapterText.contentEditable = 'false'; dom.editControls.edit.classList.remove('hidden'); dom.editControls.save.classList.add('hidden'); dom.editControls.cancel.classList.add('hidden'); if (revert) { const chapter = storyChapters.find(c => c.id === currentChapterId); if (chapter) dom.chapterText.textContent = chapter.content; } }
+        async function saveChapterChanges() { if (!isChapterEditMode || !currentChapterId) return; const newContent = dom.chapterText.innerText; const chapterIndex = storyChapters.findIndex(c => c.id === currentChapterId); if (chapterIndex === -1) return; if (operatingMode === 'offline') { storyChapters[chapterIndex].content = newContent; saveOfflineStory(); showToast("Đã lưu thay đổi (Offline)!", "success"); exitChapterEditMode(false); } else { if (!isAuthReady) return; const chapterRef = doc(db, `stories/${storyKey}/chapters/${currentChapterId}`); try { await updateDoc(chapterRef, { content: newContent }); showToast("Đã lưu thay đổi (Online)!", "success"); exitChapterEditMode(false); } catch (error) { console.error("Error saving chapter:", error); showToast("Lỗi: Không thể lưu thay đổi.", "error"); } } }
+        
+        function enterStatusEditMode() { isStatusEditMode = true; dom.inputs.characterStatus.readOnly = false; dom.inputs.characterStatus.setAttribute('contenteditable', 'true'); dom.inputs.characterStatus.focus(); dom.statusEditControls.edit.classList.add('hidden'); dom.statusEditControls.save.classList.remove('hidden'); dom.statusEditControls.cancel.classList.remove('hidden'); }
+        function exitStatusEditMode(revert = false) { isStatusEditMode = false; dom.inputs.characterStatus.readOnly = true; dom.inputs.characterStatus.setAttribute('contenteditable', 'false'); dom.statusEditControls.edit.classList.remove('hidden'); dom.statusEditControls.save.classList.add('hidden'); dom.statusEditControls.cancel.classList.add('hidden'); if (revert) { dom.inputs.characterStatus.value = storySettings.characterStatus || ''; } }
+        async function saveStatusChanges() { if (!isStatusEditMode) return; dom.inputs.characterStatus.value = dom.inputs.characterStatus.value; await saveStorySettings(); exitStatusEditMode(false); }
+
+        function openGenreModal() { dom.genreControls.modalList.innerHTML = ''; for (const key in ALL_GENRES) { const btn = document.createElement('button'); btn.className = "w-full text-left p-2 rounded-md hover:bg-blue-600 transition-colors"; btn.textContent = ALL_GENRES[key]; btn.dataset.genreKey = key; if (storySettings.genres.includes(key)) { btn.disabled = true; btn.classList.add('opacity-50', 'cursor-not-allowed'); } else { btn.onclick = () => addGenre(key); } dom.genreControls.modalList.appendChild(btn); } dom.genreControls.modal.classList.remove('hidden'); }
+        function closeGenreModal() { dom.genreControls.modal.classList.add('hidden'); }
+        function addGenre(genreKey) { if (!storySettings.genres.includes(genreKey)) { storySettings.genres.push(genreKey); renderSelectedGenres(); closeGenreModal(); } }
+        function removeGenre(genreKey) { storySettings.genres = storySettings.genres.filter(g => g !== genreKey); renderSelectedGenres(); }
+        function renderSelectedGenres() { dom.genreControls.container.innerHTML = ''; const hasDongNhan = storySettings.genres && storySettings.genres.includes('dong_nhan'); dom.inputs.dongNhanContainer.classList.toggle('hidden', !hasDongNhan); if (!storySettings.genres || storySettings.genres.length === 0) { dom.genreControls.container.innerHTML = '<span class="text-xs text-gray-500">Chưa chọn thể loại</span>'; return; } storySettings.genres.forEach(genreKey => { const genreName = ALL_GENRES[genreKey]; const tag = document.createElement('span'); tag.className = "flex items-center gap-1 bg-blue-600 text-white text-xs font-semibold px-2 py-1 rounded-full"; tag.innerHTML = `<span>${genreName}</span><button class="p-0.5 rounded-full hover:bg-blue-800"><i data-lucide="x" class="w-3 h-3"></i></button>`; tag.querySelector('button').onclick = () => removeGenre(genreKey); dom.genreControls.container.appendChild(tag); }); lucide.createIcons(); }
+        
+        function renderSupportingCharacters() { const listEl = dom.characterManagement.list; listEl.innerHTML = ''; if (!storySettings.supportingCharacters || storySettings.supportingCharacters.length === 0) { listEl.innerHTML = '<p class="text-sm text-gray-500 text-center italic">Chưa có nhân vật phụ nào. Hãy nhấn nút bên dưới để AI phân tích truyện.</p>'; return; } storySettings.supportingCharacters.forEach(npc => { const card = document.createElement('div'); card.className = 'character-card space-y-2'; const statusColor = npc.status === 'Sống' ? 'text-green-400' : npc.status === 'Chết' ? 'text-red-500' : 'text-gray-400'; card.innerHTML = ` <div class="flex justify-between items-start"> <h4 class="font-bold text-purple-300">${npc.name}</h4> <span class="text-xs font-semibold ${statusColor}">${npc.status}</span> </div> <p class="text-xs text-gray-400"><strong class="font-semibold text-gray-300">Mô tả:</strong> ${npc.description || 'Chưa có mô tả.'}</p> <p class="text-xs text-gray-500">Xuất hiện lần cuối: Chương ${npc.lastMentionChapter || 'N/A'}</p> `; listEl.appendChild(card); }); lucide.createIcons(); }
+        async function updateNpcListFromStory(isInternalCall = false) { if (storyChapters.length === 0) { if (!isInternalCall) showToast("Không có chương nào để phân tích.", "error"); storySettings.supportingCharacters = []; renderSupportingCharacters(); await saveStorySettings(); return; } const btn = dom.characterManagement.updateBtn; if (!isInternalCall) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> Đang phân tích...'; lucide.createIcons(); } const fullStoryText = storyChapters.map((c, i) => `--- BẮT ĐẦU CHƯƠNG ${i + 1} ---\n${c.content}\n--- KẾT THÚC CHƯƠNG ${i + 1} ---`).join('\n\n'); const prompt = `Bạn là một nhà phân tích cốt truyện chuyên nghiệp. Nhiệm vụ của bạn là đọc toàn bộ văn bản dưới đây, xác định tất cả các nhân vật phụ (NPC) quan trọng (không bao gồm nhân vật chính) và trả về một danh sách dưới dạng JSON. QUY TẮC: 1.  Chỉ liệt kê các nhân vật có vai trò, có đối thoại hoặc có ảnh hưởng đến cốt truyện. Bỏ qua các nhân vật chỉ được nhắc tên thoáng qua. 2.  Với mỗi nhân vật, hãy tổng hợp thông tin từ tất cả các lần xuất hiện để đưa ra mô tả và trạng thái mới nhất. 3.  "status": Phải là một trong ba giá trị: "Sống", "Chết", hoặc "Không rõ". 4.  "description": Tóm tắt ngắn gọn về ngoại hình, tính cách, và vai trò của họ dựa trên thông tin mới nhất. 5.  "lastMentionChapter": Ghi lại số thứ tự của chương cuối cùng mà nhân vật này được nhắc đến hoặc xuất hiện. VĂN BẢN TRUYỆN:\n${fullStoryText}`; const npcSchema = { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, status: { type: "STRING", enum: ["Sống", "Chết", "Không rõ"] }, description: { type: "STRING" }, lastMentionChapter: { type: "NUMBER" }, }, required: ["name", "status", "description", "lastMentionChapter"] } }; try { const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json", responseSchema: npcSchema } }; const userApiKey = dom.geminiApiKeyInput.value.trim(); const apiKey = userApiKey || ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`; const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) throw new Error(`API call failed with status: ${response.status}`); const result = await response.json(); if (result.candidates?.[0]?.content?.parts?.[0]?.text) { const jsonText = result.candidates[0].content.parts[0].text; const newNpcList = JSON.parse(jsonText); storySettings.supportingCharacters = newNpcList; renderSupportingCharacters(); await saveStorySettings(); if (!isInternalCall) showToast(`Đã cập nhật thành công ${newNpcList.length} nhân vật phụ!`, "success"); } else { throw new Error("Phản hồi từ API không chứa dữ liệu JSON hợp lệ."); } } catch (error) { console.error("Lỗi cập nhật danh sách NPC:", error); if (!isInternalCall) showToast(`Lỗi phân tích nhân vật: ${error.message}`, 'error', 6000); } finally { if (!isInternalCall) { btn.disabled = false; btn.innerHTML = '<i data-lucide="users-round" class="w-4 h-4"></i> Cập nhật DS Nhân vật từ Truyện'; lucide.createIcons(); } } }
+        function handleWorldImport(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const worldContent = e.target.result; if (typeof worldContent === 'string') { dom.inputs.world.value = worldContent; showToast("Đã tải dữ liệu Thế Giới thành công!", "success"); saveStorySettings(); } else { throw new Error("Không thể đọc nội dung tệp."); } } catch (error) { console.error("Lỗi khi đọc tệp Thế Giới:", error); showToast(`Lỗi đọc tệp: ${error.message}`, "error"); } finally { event.target.value = null; } }; reader.readAsText(file); }
+        function toggleCoreRulesLock() { if (isCoreRulesLocked) { const password = dom.coreRulesPasswordInput.value; if (password === 'khaidepzai123') { isCoreRulesLocked = false; dom.inputs.aiCoreRules.readOnly = false; dom.inputs.aiCoreRules.classList.remove('hidden'); dom.resetCoreRulesBtn.classList.remove('hidden'); dom.toggleRulesLockBtn.innerHTML = '<i data-lucide="unlock" class="w-4 h-4"></i>'; lucide.createIcons(); dom.toggleRulesLockBtn.title = "Khóa"; dom.inputs.aiCoreRules.focus(); showToast("Đã mở khóa Quy Tắc Lõi.", "success"); } else { showToast("Mật khẩu không đúng.", "error"); } dom.coreRulesPasswordInput.value = ''; } else { isCoreRulesLocked = true; dom.inputs.aiCoreRules.readOnly = true; dom.inputs.aiCoreRules.classList.add('hidden'); dom.resetCoreRulesBtn.classList.add('hidden'); dom.toggleRulesLockBtn.innerHTML = '<i data-lucide="lock" class="w-4 h-4"></i>'; lucide.createIcons(); dom.toggleRulesLockBtn.title = "Mở khóa"; showToast("Đã khóa Quy Tắc Lõi.", "success"); } }
+        
+        async function expandWorldWithAI() {
+            const basePrompt = dom.inputs.world.value.trim();
+            if (!basePrompt) {
+                showToast("Vui lòng nhập một ý tưởng cơ bản cho thế giới trước.", "error");
+                return;
+            }
+            const btn = dom.expandWorldBtn;
+            btn.disabled = true;
+            btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-3 h-3"></i> Đang mở rộng...`;
+            lucide.createIcons();
+
+            const prompt = `Bạn là một chuyên gia xây dựng thế giới (World-Builder) cho tiểu thuyết. Dựa trên ý tưởng cốt lõi dưới đây, hãy phát triển nó thành một bối cảnh thế giới chi tiết, hấp dẫn và logic.
+
+Ý TƯỞNG CỐT LÕI:
+"${basePrompt}"
+
+YÊU CẦU BẮT BUỘC:
+1.  **Lịch Sử & Nguồn Gốc:** Tạo ra một dòng lịch sử ngắn gọn, giải thích nguồn gốc của thế giới này, các sự kiện lớn đã định hình nó (ví dụ: chiến tranh cổ đại, đại kiếp nạn, sự trỗi dậy/suy tàn của các đế chế).
+2.  **Các Thế Lực Chính:** Mô tả ít nhất 3-5 thế lực/phe phái chính (ví dụ: tông môn, quốc gia, gia tộc, tổ chức hắc ám). Nêu rõ mục tiêu, hệ tư tưởng và mối quan hệ của họ với nhau.
+3.  **Địa Lý & Các Khu Vực Quan Trọng:** Phác thảo các vùng đất chính (ví dụ: đại lục, quần đảo, cấm địa) và một vài địa điểm đặc biệt có tiềm năng cho cốt truyện (ví dụ: di tích cổ, thành phố trung tâm, vùng đất nguy hiểm).
+4.  **Hệ Thống Tài Nguyên (QUAN TRỌNG):** Liệt kê một danh sách tài nguyên phong phú, đa dạng và có hệ thống phân cấp rõ ràng. Cụ thể:
+    * **Vật phẩm/Pháp bảo:** Tạo ra ít nhất 20-30 loại vật phẩm hoặc pháp bảo, phân loại theo phẩm cấp (ví dụ: Phàm phẩm, Linh phẩm, Tiên phẩm...) và mô tả ngắn gọn công dụng của một vài món đặc trưng.
+    * **Linh dược/Thảo dược:** Tạo ra ít nhất 20-30 loại linh dược, phân loại theo năm tuổi hoặc phẩm cấp, và công dụng chính.
+    * **Đan dược:** Tạo ra ít nhất 20-30 loại đan dược được luyện từ các linh dược trên, mô tả tác dụng (ví dụ: đột phá cảnh giới, chữa thương, tăng tu vi).
+    * **Vật liệu luyện khí/trận pháp:** Tạo ra ít nhất 20-30 loại khoáng thạch, xương thú, hoặc vật liệu đặc biệt khác.
+5.  **Văn Phong:** Viết một cách mạch lạc, rõ ràng, như đang viết tài liệu tham khảo cho một tiểu thuyết gia. Sử dụng các tiêu đề và gạch đầu dòng để cấu trúc thông tin.
+
+Hãy trả về duy nhất phần văn bản mô tả thế giới, không thêm lời chào hay bình luận.`;
+
+            try {
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+                const userApiKey = dom.geminiApiKeyInput.value.trim();
+                const apiKey = userApiKey || "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API call failed with status: ${response.status}`);
+                const result = await response.json();
+                if (result.candidates?.[0]?.content?.parts?.[0]?.text) {
+                    const expandedWorld = result.candidates[0].content.parts[0].text;
+                    dom.inputs.world.value = expandedWorld;
+                    showToast("AI đã mở rộng thế giới thành công!", "success");
+                    await saveStorySettings(true);
+                } else {
+                    throw new Error("Phản hồi từ API không hợp lệ.");
+                }
+            } catch (error) {
+                console.error("Lỗi mở rộng thế giới:", error);
+                showToast(`Lỗi mở rộng thế giới: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="sparkles" class="w-3 h-3"></i> AI Mở Rộng`;
+                lucide.createIcons();
+            }
+        }
+
+        function setupSaveListeners() { dom.saveSettingsBtn.addEventListener('click', saveStorySettings); Object.values(dom.inputs).forEach(input => { if (input.tagName === 'TEXTAREA' || input.tagName === 'INPUT') { input.addEventListener('blur', saveStorySettings); } }); dom.inputs.nsfwToggle.addEventListener('change', saveStorySettings); }
+
+        const navigateChapter = (direction, autoPlay = false) => {
+            if (direction !== 0) {
+                stopReading();
+            }
+            if (isChapterEditMode) exitChapterEditMode(true);
+
+            let newIndex;
+            if (direction === 0) {
+                 const clickedChapterId = event.target.dataset.chapterId;
+                 newIndex = storyChapters.findIndex(c => c.id === clickedChapterId);
+            } else {
+                const currentIndex = storyChapters.findIndex(c => c.id === currentChapterId);
+                newIndex = currentIndex + direction;
+            }
+
+            if (newIndex >= 0 && newIndex < storyChapters.length) {
+                currentChapterId = storyChapters[newIndex].id;
+                speechState.charIndexOffset = 0;
+                displayCurrentChapter(true);
+                saveReadingState();
+                if (autoPlay) {
+                    setTimeout(() => {
+                        handlePlayPause();
+                    }, 200);
+                }
+            }
+        };
+
+        dom.modeOnlineBtn.addEventListener('click', switchToOnlineMode);
+        dom.modeOfflineBtn.addEventListener('click', switchToOfflineMode);
+        dom.connectFirebaseBtn.addEventListener('click', connectAndLoad);
+        dom.connectionHelpBtn.addEventListener('click', showConnectionHelpModal);
+        dom.autoGenerateBtn.addEventListener('click', generateNextChapter);
+        dom.summarizeStoryBtn.addEventListener('click', () => generateStorySummary(false));
+        dom.autoGenToggle.addEventListener('change', (e) => { if (e.target.checked) { if(operatingMode === 'online' && !storyKey) { showToast('Vui lòng kết nối và tải truyện trước khi bật tự động tạo chương.', 'error'); e.target.checked = false; return; } autoGenerateInterval = setInterval(generateNextChapter, 10000); showToast('Đã bật tự động tạo chương.'); if(storyChapters.length === 0) generateNextChapter(); } else { if (autoGenerateInterval) clearInterval(autoGenerateInterval); autoGenerateInterval = null; showToast('Đã tắt tự động tạo chương.'); } });
+        dom.playPauseBtn.addEventListener('click', handlePlayPause);
+        dom.speedControl.addEventListener('change', () => { if (speechState.currentUtterance) speechState.currentUtterance.rate = parseFloat(dom.speedControl.value); saveReadingState(); });
+        dom.voiceSelect.addEventListener('change', () => { if(speechState.reading) stopReading(); saveReadingState(); });
+        dom.clearContributionBtn.addEventListener('click', () => { dom.inputs.contribution.value = ''; saveStorySettings(); showToast('Đã xóa Góp Ý.'); });
+        dom.clearStyleExampleBtn.addEventListener('click', () => { dom.inputs.styleExample.value = ''; saveStorySettings(); showToast('Đã xóa Văn Mẫu.'); });
+        
+        dom.nextChapterBtn.addEventListener('click', () => navigateChapter(1, false));
+        dom.prevChapterBtn.addEventListener('click', () => navigateChapter(-1, false));
+
+        dom.deleteDataBtn.addEventListener('click', deleteAllData);
+        dom.deleteChaptersBtn.addEventListener('click', () => { const selectedId = dom.deleteChapterSelect.value; if(selectedId) deleteChaptersFrom(selectedId); else showToast("Vui lòng chọn một chương để xóa.", "error"); });
+        dom.exportDataBtn.addEventListener('click', exportStoryData);
+        dom.importDataBtn.addEventListener('click', () => dom.importFileInput.click());
+        dom.importFileInput.addEventListener('change', handleFileImport);
+        dom.importWorldBtn.addEventListener('click', () => dom.importWorldFileInput.click());
+        dom.importWorldFileInput.addEventListener('change', handleWorldImport);
+        dom.expandWorldBtn.addEventListener('click', expandWorldWithAI); // <-- Mới
+        dom.fullscreenBtn.addEventListener('click', toggleFocusMode);
+        dom.editControls.edit.addEventListener('click', enterChapterEditMode);
+        dom.editControls.save.addEventListener('click', saveChapterChanges);
+        dom.editControls.cancel.addEventListener('click', () => exitChapterEditMode(true));
+        dom.statusEditControls.edit.addEventListener('click', enterStatusEditMode);
+        dom.statusEditControls.save.addEventListener('click', saveStatusChanges);
+        dom.statusEditControls.cancel.addEventListener('click', () => exitStatusEditMode(true));
+        dom.genreControls.addBtn.addEventListener('click', openGenreModal);
+        dom.genreControls.closeModalBtn.addEventListener('click', closeGenreModal);
+        dom.characterManagement.updateBtn.addEventListener('click', () => updateNpcListFromStory(false));
+        dom.toggleRulesLockBtn.addEventListener('click', toggleCoreRulesLock);
+        dom.resetCoreRulesBtn.addEventListener('click', () => { if (isCoreRulesLocked) { showToast("Vui lòng mở khóa để khôi phục quy tắc.", "error"); return; } showConfirmationModal('Xác nhận Khôi phục', 'Bạn có chắc muốn khôi phục Quy Tắc Lõi về mặc định không? Mọi thay đổi của bạn trong ô này sẽ bị mất.', () => { dom.inputs.aiCoreRules.value = DEFAULT_AI_CORE_RULES; saveStorySettings(); showToast('Đã khôi phục quy tắc lõi mặc định.'); }); });
+        window.addEventListener('beforeunload', () => { if (speechState.reading && !speechState.paused) saveReadingState(); });
+        function toggleSidebar() { dom.sidebar.panel.classList.toggle('-translate-x-full'); dom.sidebar.backdrop.classList.toggle('hidden'); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            dom.inputs.aiCoreRules.readOnly = true; populateVoiceList(); if (speechApi.onvoiceschanged !== undefined) { speechApi.onvoiceschanged = populateVoiceList; }
+            setupSaveListeners();
+            const savedMode = localStorage.getItem('operatingMode'); if (savedMode === 'offline') { switchToOfflineMode(); } 
+            else { switchToOnlineMode(); const savedConfig = localStorage.getItem('userFirebaseConfig'); const savedKey = localStorage.getItem('userStoryKey'); const savedGeminiKey = localStorage.getItem('userGeminiApiKey'); if (savedConfig && savedKey) { dom.firebaseConfigInput.value = savedConfig; dom.storyKeyInput.value = savedKey; if (savedGeminiKey) dom.geminiApiKeyInput.value = savedGeminiKey; showToast("Đã tìm thấy cấu hình online đã lưu. Tự động kết nối...", "success"); connectAndLoad(); } }
+            lucide.createIcons();
+            dom.sidebar.openBtn.addEventListener('click', toggleSidebar); dom.sidebar.closeBtn.addEventListener('click', toggleSidebar); dom.sidebar.backdrop.addEventListener('click', toggleSidebar);
+            document.querySelectorAll('details').forEach(details => { const icon = details.querySelector('.collapsible-icon'); if(icon) icon.style.transform = details.open ? 'rotate(180deg)' : 'rotate(0deg)'; details.addEventListener('toggle', () => { if (icon) icon.style.transform = details.open ? 'rotate(180deg)' : 'rotate(0deg)'; }); });
+        });
+    </script>
+</body>
+</html>
