@@ -134,7 +134,7 @@ export function _bindEventListeners() {
 
   const subOptionControls = [
     this.dom.subPunctuationToggle_normalizePeriodComma, this.dom.subPunctuationToggle_formatColon, this.dom.subPunctuationToggle_normalizeBrackets,
-    this.dom.subCapitalization_firstLetter, this.dom.subCapitalization_afterPunctuation, this.dom.subCapitalization_afterColon,
+    this.dom.subCapitalization_firstLetter, this.dom.subCapitalization_afterPunctuation, this.dom.subCapitalization_afterColon, this.dom.subCapitalization_afterOpeningBracket,
     this.dom.subTitle_recognizeChapter, this.dom.subTitle_insertIntoTitleTag, this.dom.subTitle_headingLevelSelect
   ];
   subOptionControls.forEach(control => {

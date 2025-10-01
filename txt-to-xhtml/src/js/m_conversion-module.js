@@ -201,6 +201,13 @@ export function _processLine(line) {
       });
     }
 
+    // Tùy chọn: Viết hoa sau dấu ngoặc mở ( " “
+    if (this.dom.subCapitalization_afterOpeningBracket.checked) {
+      tempLine = tempLine.replace(/([(“"]\s*)([^a-zA-ZÀ-ỹ]*)([a-zA-ZÀ-ỹ])/gu, (match, p1, p2, p3) => {
+        return p1 + p2 + p3.toUpperCase();
+      });
+    }
+
     // Tùy chọn: Viết hoa chữ cái đầu dòng
     if (this.dom.subCapitalization_firstLetter.checked) {
       tempLine = this._capitalizeFirstAlphabetic(tempLine);

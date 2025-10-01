@@ -100,6 +100,7 @@ const App = {
     this.dom.subCapitalization_firstLetter = document.getElementById('subCapitalization_firstLetter');
     this.dom.subCapitalization_afterPunctuation = document.getElementById('subCapitalization_afterPunctuation');
     this.dom.subCapitalization_afterColon = document.getElementById('subCapitalization_afterColon');
+    this.dom.subCapitalization_afterOpeningBracket = document.getElementById('subCapitalization_afterOpeningBracket');
     this.dom.autoProcessTitleToggle = document.getElementById('autoProcessTitleToggle');
     this.dom.titleOptionsBtn = document.getElementById('titleOptionsBtn');
     this.dom.titleSubOptions = document.getElementById('titleSubOptions');
@@ -142,6 +143,7 @@ const App = {
         firstLetter: this.dom.subCapitalization_firstLetter.checked,
         afterPunctuation: this.dom.subCapitalization_afterPunctuation.checked,
         afterColon: this.dom.subCapitalization_afterColon.checked,
+        afterOpeningBracket: this.dom.subCapitalization_afterOpeningBracket.checked,
       },
       autoProcessTitle: this.dom.autoProcessTitleToggle.checked,
       subTitle: {
@@ -189,6 +191,7 @@ const App = {
         true;
       this.dom.subCapitalization_afterPunctuation.checked = state.subCapitalization.afterPunctuation ?? true;
       this.dom.subCapitalization_afterColon.checked = state.subCapitalization.afterColon ?? true;
+      this.dom.subCapitalization_afterOpeningBracket.checked = state.subCapitalization.afterOpeningBracket ?? true;
     }
     this.dom.autoProcessTitleToggle.checked = state.autoProcessTitle ?? true;
     this.dom.titleOptionsBtn.disabled = !(state.autoProcessTitle ?? true);
@@ -225,7 +228,8 @@ const App = {
       subCapitalization: {
         firstLetter: true,
         afterPunctuation: true,
-        afterColon: true
+        afterColon: true,
+        afterOpeningBracket: true
       },
       autoProcessTitle: true,
       subTitle: {
