@@ -126,7 +126,7 @@ export function _processLine(line) {
   if (!tempLine) return '';
   if (this.dom.autoProcessPunctuationToggle.checked) {
     if (this.dom.subPunctuationToggle_normalizeAll.checked) {
-      tempLine = tempLine.replace(/\s*((\.{2,}|\?{2,}|!{2,})|([.,:;?!]))\s*/g, '$1 ');
+      tempLine = tempLine.replace(/\s*(((\.{2,}|\?{2,}|!{2,})|[?!;]|(?<!\d)[.,:]|[.,:](?!\d)))\s*/g, '$1 ');
     }
 
     if (this.dom.subPunctuationToggle_normalizeBrackets.checked) {
